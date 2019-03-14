@@ -38,7 +38,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <list>
 #include <stack>
 
-
 using namespace spvtools;
 using namespace spvtools::opt;
 using namespace std;

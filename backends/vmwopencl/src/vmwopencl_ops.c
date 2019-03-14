@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmaccel_utils.h"
 #include "vmwopencl_utils.h"
 
-
 typedef struct VMWOpenCLCaps {
    cl_device_id deviceId;
 
@@ -109,12 +108,10 @@ static IdentifierDB *kernelIds = NULL;
 
 static VMWOpenCLMapping *mappings = NULL;
 
-
 const cl_int clDeviceTypes[VMACCEL_SELECT_MAX] = {
    CL_DEVICE_TYPE_GPU, CL_DEVICE_TYPE_ACCELERATOR, CL_DEVICE_TYPE_ACCELERATOR,
    CL_DEVICE_TYPE_CPU,
 };
-
 
 VMAccelStatus *vmwopencl_poweroff();
 

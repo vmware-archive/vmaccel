@@ -41,7 +41,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "opcode.h"
 #include "val/instruction.h"
 
-
 using namespace spvtools;
 
 // Returns the vector of words representing the concatenation
@@ -55,7 +54,6 @@ SPIRVConcatenate(const std::vector<std::vector<uint32_t>> &instructions) {
    return result;
 }
 
-
 // Returns the vector of words representing the concatenation
 // of all input vectors.
 inline void
@@ -67,7 +65,6 @@ SPIRVConcatenate(std::vector<uint32_t> &stream,
    }
 }
 
-
 // Returns a vector of words representing a single instruction with the
 // given opcode and operand words as a vector.
 inline std::vector<uint32_t>
@@ -77,7 +74,6 @@ SPIRVMakeInstruction(SpvOp opcode, const std::vector<uint32_t> &args) {
    result.insert(result.end(), args.begin(), args.end());
    return result;
 }
-
 
 // Encodes a string as a sequence of words, using the SPIR-V encoding.
 inline std::vector<uint32_t> SPIRVMakeVector(std::string input) {
@@ -103,7 +99,6 @@ inline std::vector<uint32_t> SPIRVMakeVector(std::string input) {
    }
    return result;
 }
-
 
 class VMXCSPIRVBase {
 

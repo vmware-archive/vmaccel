@@ -46,7 +46,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "vmaccel_allocator.cpp"
 
-
 using namespace std;
 
 VMAccelAllocator<VMAccelDesc, VMAccelDescCmp> *accelMgr = NULL;

@@ -26,12 +26,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ******************************************************************************/
 
-
 #ifndef _VMXC_H_RPCGEN
 #define _VMXC_H_RPCGEN
 
 #include <rpc/rpc.h>
-
 
 #ifdef __cplusplus
 extern "C" {

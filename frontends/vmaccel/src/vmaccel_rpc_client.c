@@ -28,7 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "vmaccel_rpc.h"
 
-
 void vmaccel_1(char *host) {
    CLIENT *clnt;
    VMAccelResourceAllocateReturnStatus *result_1;
@@ -63,7 +62,6 @@ void vmaccel_1(char *host) {
    clnt_destroy(clnt);
 #endif /* DEBUG */
 }
-
 
 int main(int argc, char *argv[]) {
    char *host;

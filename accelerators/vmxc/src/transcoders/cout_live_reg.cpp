@@ -40,7 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "opt/ir_context.h"
 #include "opt/register_pressure.h"
 
-
 using namespace spvtools;
 using namespace spvtools::opt;
 using namespace std;
@@ -98,7 +97,6 @@ bool CoutLiveReg::ProcessFn(Function *func) {
    return true;
 }
 
-
 Pass::Status CoutLiveReg::Process() {
    cout << "=== Begin CoutLiveReg ===" << endl;
    std::map<uint32_t, uint32_t> resultIDs;
@@ -130,7 +128,7 @@ Pass::Status CoutLiveReg::Process() {
    }
 
    ProcessFunction pfn = [this](Function *fp) { return ProcessFn(fp); };
-   modified |= ProcessReachableCallTree(pfn, context());
+   modified |= context()->ProcessReachableCallTree(pfn);
    cout << "=== End CoutLiveReg ===" << endl;
    return modified ? Status::SuccessWithChange : Status::SuccessWithoutChange;
 }

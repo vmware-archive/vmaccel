@@ -31,7 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmwopencl.h"
 #include <string.h>
 
-
 static VMCLOps *cl = &vmwopenclOps;
 
 VMAccelAllocateStatus *vmcl_poweron_svc(VMCLOps *ops) {

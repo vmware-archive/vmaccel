@@ -30,7 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include "vmaccel_utils.h"
 
-
 int BitMask_FindFirstZero(unsigned int bitMask) {
    int idx = 0;
    if (bitMask != 0xffffffff) {

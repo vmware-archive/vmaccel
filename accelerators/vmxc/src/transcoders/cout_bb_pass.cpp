@@ -38,7 +38,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <list>
 #include <stack>
 
-
 using namespace spvtools;
 using namespace spvtools::opt;
 using namespace std;
@@ -61,7 +60,7 @@ Pass::Status CoutBBPass::Process() {
    cout << "=== Begin CoutBBPass ===" << endl;
    // Process all entry point functions
    ProcessFunction pfn = [this](Function *fp) { return ProcessFn(fp); };
-   bool modified = ProcessReachableCallTree(pfn, context());
+   bool modified = context()->ProcessReachableCallTree(pfn);
    cout << "=== End CoutBBPass ===" << endl;
    return modified ? Status::SuccessWithChange : Status::SuccessWithoutChange;
 }

@@ -28,7 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "vmcl_callback_rpc.h"
 
-
 void vmcl_callback_1(char *host) {
    CLIENT *clnt;
    VMAccelReturnStatus *result_1;
@@ -50,7 +49,6 @@ void vmcl_callback_1(char *host) {
    clnt_destroy(clnt);
 #endif /* DEBUG */
 }
-
 
 int main(int argc, char *argv[]) {
    char *host;

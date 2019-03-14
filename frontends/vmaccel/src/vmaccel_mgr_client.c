@@ -28,7 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "vmaccel_mgr.h"
 
-
 void vmaccelmgr_1(char *host) {
    CLIENT *clnt;
    VMAccelAllocateReturnStatus *result_1;
@@ -68,7 +67,6 @@ void vmaccelmgr_1(char *host) {
    clnt_destroy(clnt);
 #endif /* DEBUG */
 }
-
 
 int main(int argc, char *argv[]) {
    char *host;

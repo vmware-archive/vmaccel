@@ -33,5 +33,4 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmaccel_utils.h"
 #include "vmaccel_allocator.hpp"
 
-
 #endif /* defined _VMACCEL_MANAGER_HPP_ */

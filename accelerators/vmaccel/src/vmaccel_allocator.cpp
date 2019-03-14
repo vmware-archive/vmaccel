@@ -58,7 +58,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "log_level.h"
 
-
 #define DEFER_FREE 1
 
 using namespace std;

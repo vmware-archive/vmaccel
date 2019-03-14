@@ -36,7 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <netinet/in.h>
 #include <syslog.h>
 
-
 #ifndef SIG_PF
 #define SIG_PF void (*)(int)
 #endif

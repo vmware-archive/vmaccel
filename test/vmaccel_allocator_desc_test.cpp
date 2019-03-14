@@ -35,7 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "log_level.h"
 
-
 using namespace std;
 
 int main(int argc, char **argv) {

@@ -38,7 +38,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "cout_pass.h"
 #include "opt/ir_context.h"
 
-
 using namespace spvtools;
 using namespace spvtools::opt;
 using namespace std;

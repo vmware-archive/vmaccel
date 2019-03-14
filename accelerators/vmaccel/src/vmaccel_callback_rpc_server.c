@@ -28,7 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "vmaccel_callback_rpc.h"
 
-
 VMAccelReturnStatus *vmaccel_callbackop_1_svc(VMAccelCallbackOp *argp,
                                               struct svc_req *rqstp) {
    static VMAccelReturnStatus result;

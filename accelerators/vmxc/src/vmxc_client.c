@@ -31,7 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <string.h>
 
-
 void vmxc_1(char *host, char *inFile) {
    CLIENT *clnt;
    VMXCReturnStatus *result_1;
@@ -134,7 +133,6 @@ void vmxc_1(char *host, char *inFile) {
    clnt_destroy(clnt);
 #endif /* DEBUG */
 }
-
 
 int main(int argc, char *argv[]) {
    char *host;

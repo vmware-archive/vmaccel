@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "vmcl_rpc.h"
 
-
 bool_t xdr_VMCLCaps(XDR *xdrs, VMCLCaps *objp) {
    register int32_t *buf;
 

@@ -48,9 +48,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "spirv-tools/optimizer.hpp"
 #include "tools/io.h"
 #include "opt/build_module.h"
-#include "opt/make_unique.h"
 #include "opt/pass_manager.h"
 #include "opt/passes.h"
+#include "util/make_unique.h"
 
 /*
  * Internal Passes
@@ -60,8 +60,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "transcoders/cout_cfg_pass.h"
 #include "transcoders/cout_live_reg.h"
 
-
 namespace spvtools {
+
+void DiagnosticsMessageHandler(spv_message_level_t level, const char *,
+                               const spv_position_t &position,
+                               const char *message) {
+   switch (level) {
+      case SPV_MSG_FATAL:
+      case SPV_MSG_INTERNAL_ERROR:
+      case SPV_MSG_ERROR:
+         std::cerr << "error: " << position.index << ": " << message
+                   << std::endl;
+         break;
+      case SPV_MSG_WARNING:
+         std::cout << "warning: " << position.index << ": " << message
+                   << std::endl;
+         break;
+      case SPV_MSG_INFO:
+         std::cout << "info: " << position.index << ": " << message
+                   << std::endl;
+         break;
+      default:
+         break;
+   }
+}
 
 struct Optimizer::PassToken::Impl {
    Impl(std::unique_ptr<opt::Pass> p) : pass(std::move(p)) {}
@@ -91,7 +113,6 @@ Optimizer::PassToken CreateCoutLiveReg() {
 
 } // namespace spvtools
 
-
 using namespace spvtools;
 
 spv_result_t vmxc_spirv_xcode(uint32_t *spirv_data, size_t spirv_size,
@@ -106,8 +127,7 @@ spv_result_t vmxc_spirv_xcode(uint32_t *spirv_data, size_t spirv_size,
    optimizer.SetMessageConsumer(
       [](spv_message_level_t level, const char *source,
          const spv_position_t &position, const char *message) {
-         std::cerr << StringifyMessage(level, source, position, message)
-                   << std::endl;
+         Log(DiagnosticsMessageHandler, level, source, position, message);
       });
 
 #ifdef _DEBUG

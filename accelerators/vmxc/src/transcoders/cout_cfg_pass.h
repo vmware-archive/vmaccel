@@ -36,7 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "opt/pass.h"
 
-
 using namespace spvtools;
 using namespace spvtools::opt;
 using namespace std;

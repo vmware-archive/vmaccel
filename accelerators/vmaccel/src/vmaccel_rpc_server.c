@@ -28,7 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "vmaccel_rpc.h"
 
-
 VMAccelResourceAllocateReturnStatus *
 vmaccel_resourcealloc_1_svc(VMAccelResourceDesc *argp, struct svc_req *rqstp) {
    static VMAccelResourceAllocateReturnStatus result;

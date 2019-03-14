@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "vmaccel_rpc.h"
 
-
 bool_t xdr_VMAccelStatusCode(XDR *xdrs, VMAccelStatusCode *objp) {
    register int32_t *buf;
 
@@ -208,7 +207,6 @@ bool_t xdr_VMAccelFormatDesc(XDR *xdrs, VMAccelFormatDesc *objp) {
 bool_t xdr_VMAccelWorkloadDesc(XDR *xdrs, VMAccelWorkloadDesc *objp) {
    register int32_t *buf;
 
-
    if (xdrs->x_op == XDR_ENCODE) {
       buf = XDR_INLINE(xdrs, 9 * BYTES_PER_XDR_UNIT);
       if (buf == NULL) {
@@ -300,7 +298,6 @@ bool_t xdr_VMAccelWorkloadDesc(XDR *xdrs, VMAccelWorkloadDesc *objp) {
 
 bool_t xdr_VMAccelDesc(XDR *xdrs, VMAccelDesc *objp) {
    register int32_t *buf;
-
 
    if (xdrs->x_op == XDR_ENCODE) {
       if (!xdr_VMAccelId(xdrs, &objp->parentId))
@@ -549,7 +546,6 @@ bool_t xdr_VMAccelElementFloat4D(XDR *xdrs, VMAccelElementFloat4D *objp) {
 bool_t xdr_VMAccelElementUINT4D(XDR *xdrs, VMAccelElementUINT4D *objp) {
    register int32_t *buf;
 
-
    if (xdrs->x_op == XDR_ENCODE) {
       buf = XDR_INLINE(xdrs, 4 * BYTES_PER_XDR_UNIT);
       if (buf == NULL) {
@@ -624,7 +620,6 @@ bool_t xdr_VMAccelCoordinate3DUINT(XDR *xdrs, VMAccelCoordinate3DUINT *objp) {
 bool_t xdr_VMAccelCoordinate4DUINT(XDR *xdrs, VMAccelCoordinate4DUINT *objp) {
    register int32_t *buf;
 
-
    if (xdrs->x_op == XDR_ENCODE) {
       buf = XDR_INLINE(xdrs, 4 * BYTES_PER_XDR_UNIT);
       if (buf == NULL) {
@@ -676,7 +671,6 @@ bool_t xdr_VMAccelCoordinate4DUINT(XDR *xdrs, VMAccelCoordinate4DUINT *objp) {
 
 bool_t xdr_VMAccelSurfaceDesc(XDR *xdrs, VMAccelSurfaceDesc *objp) {
    register int32_t *buf;
-
 
    if (xdrs->x_op == XDR_ENCODE) {
       if (!xdr_VMAccelSurfaceType(xdrs, &objp->type))

@@ -45,7 +45,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmaccel_types_address.h"
 #include "log_level.h"
 
-
 #ifndef SIG_PF
 #define SIG_PF void (*)(int)
 #endif

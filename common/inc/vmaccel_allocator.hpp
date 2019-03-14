@@ -37,7 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <set>
 #include <vector>
 
-
 template <class T>
 class VMAccelObject {
 
@@ -70,7 +69,6 @@ public:
    VMAccelObject<T> operator-=(const VMAccelObject<T> &rhs) const {
       return obj -= rhs.obj;
    }
-
 
    const T &GetObj() const { return obj; }
 
@@ -120,7 +118,6 @@ public:
 private:
    void CoalesceFreed();
    bool FindFreed(VMAccelObject<T> &req, VMAccelObject<T> &out);
-
 
    /*
     * List of resources in registered id space.

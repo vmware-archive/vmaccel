@@ -36,7 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "vmxc_spirv.h"
 
-
 spv_result_t vmxc_spirv_validate(uint32_t *spirv_data, size_t spirv_size) {
    spv_context ctx = spvContextCreate(SPV_ENV_UNIVERSAL_1_2);
    spv_validator_options validator_options = spvValidatorOptionsCreate();

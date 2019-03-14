@@ -39,7 +39,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "opt/ir_context.h"
 #include "opt/register_pressure.h"
 
-
 using namespace spvtools;
 using namespace spvtools::opt;
 using namespace std;
@@ -89,7 +88,6 @@ void RegAnalysisPass::HandleInstruction(Instruction *inst,
    }
 }
 
-
 void RegAnalysisPass::GetIDUsage(iterator begin, iterator end,
                                  map<uint32_t, uint32_t> &resultMap,
                                  map<uint32_t, uint32_t> &uniqueMap,
@@ -99,7 +97,6 @@ void RegAnalysisPass::GetIDUsage(iterator begin, iterator end,
       HandleInstruction(&inst, resultMap, uniqueMap, variableMap);
    }
 }
-
 
 bool RegAnalysisPass::MergeIDUsage(map<uint32_t, uint32_t> &mapA,
                                    map<uint32_t, uint32_t> &mapB,
@@ -117,7 +114,6 @@ bool RegAnalysisPass::MergeIDUsage(map<uint32_t, uint32_t> &mapA,
    }
    return true;
 }
-
 
 bool RegAnalysisPass::ProcessFn(Function *func) {
    RegisterLiveness liveness(context(), func);
@@ -150,7 +146,6 @@ bool RegAnalysisPass::ProcessFn(Function *func) {
    return true;
 }
 
-
 Pass::Status RegAnalysisPass::Process() {
    std::map<uint32_t, uint32_t> resultIDs;
    std::map<uint32_t, uint32_t> uniqueIDs;
@@ -176,7 +171,7 @@ Pass::Status RegAnalysisPass::Process() {
 
    ProcessFunction pfn = [this](Function *fp) { return ProcessFn(fp); };
 
-   modified |= ProcessReachableCallTree(pfn, context());
+   modified |= context()->ProcessReachableCallTree(pfn);
    cout << "=== End RegAnalysisPass ===" << endl;
 
    return modified ? Status::SuccessWithChange : Status::SuccessWithoutChange;

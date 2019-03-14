@@ -37,7 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "log_level.h"
 
-
 void Log_cl_bool(char *prefix, cl_bool val);
 void Log_cl_uint(char *prefix, cl_uint val);
 void Log_cl_ulong(char *prefix, cl_ulong val);

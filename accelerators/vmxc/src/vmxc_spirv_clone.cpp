@@ -51,14 +51,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "spirv-tools/libspirv.h"
 #include "spirv_endian.h"
 #include "spirv_validator_options.h"
-#include "util/bit_stream.h"
-#include "util/huffman_codec.h"
-#include "util/move_to_front.h"
+#include "comp/bit_stream.h"
+#include "comp/huffman_codec.h"
+#include "comp/move_to_front.h"
 #include "util/parse_number.h"
 #include "val/instruction.h"
 #include "val/validate.h"
 #include "val/validation_state.h"
-
 
 using namespace std;
 
@@ -73,7 +72,6 @@ public:
       return cloner->ProcessHeader(endian, magic, version, generator, id_bound,
                                    schema);
    }
-
 
    static spv_result_t CloneInstruction(void *user_data,
                                         const spv_parsed_instruction_t *inst) {
@@ -307,7 +305,6 @@ protected:
    // Valid until next DecodeInstruction call.
    std::vector<uint32_t> inst_words_;
 };
-
 
 spv_result_t vmxc_spirv_clone(uint32_t *spirv_data, size_t spirv_size,
                               uint32_t *spirv_out) {

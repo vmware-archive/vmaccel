@@ -32,7 +32,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmwopencl.h"
 #include "vmwopencl_utils.h"
 
-
 void Log_cl_bool(char *prefix, cl_bool val) {
    Log("%s: %s\n", prefix, val ? "TRUE" : "FALSE");
 }

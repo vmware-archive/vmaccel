@@ -40,7 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SIG_PF void (*)(int)
 #endif
 
-
 static void vmaccel_callback_1(struct svc_req *rqstp,
                                register SVCXPRT *transp) {
    union {
