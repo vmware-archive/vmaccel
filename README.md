@@ -64,18 +64,18 @@ The following steps assume paths relative to the project's root directory.
 * build/gen - Auto-generated files for the protocol specifications
 * build/test - Compiled unit tests for the framework
 
-4. To launch one of the accelerators, you'll need two shell instances.
+To launch one of the accelerators, you'll need two shell instances:
 
-> a. In one shell instance, launch the server as follows:
+In one shell instance, launch the server as follows:
 
 ``` shell
-        $ build/bin/<accelerator>_svr
+$ build/bin/<accelerator>_svr
 ```
 
-> b. In the other shell instance, launch the client as follows:
+In the other shell instance, launch the client as follows:
 
 ``` shell
-        $ build/bin/<accelerator>_clnt 127.0.0.1
+$ build/bin/<accelerator>_clnt 127.0.0.1
 ```
 
 Example:
@@ -159,7 +159,7 @@ utilization.
 1. Abstracts the communication from the Application to the Host's Backend.
 2. Handles Migration and Load Balancing to avoid expansion of runtime
    and storage complexity for a given Server, this avoids blocking clients
-   for unbounded management tasks adding to resource contention latency.
+   for unbounded management tasks that add to resource contention latency.
 3. Exposes either a low-level Accelerator API or a high-level Managed API,
    e.g. VMAccel.
 4. The Managed API abstraction allocates Accelerator resources on-demand,

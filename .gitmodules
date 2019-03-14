@@ -1,0 +1,19 @@
+[submodule "accelerators/vmcl/external/spirv-headers"]
+	path = accelerators/vmcl/external/spirv-headers
+	url = https://github.com/KhronosGroup/SPIRV-Headers.git
+[submodule "accelerators/vmxc/external/dxc"]
+	path = accelerators/vmxc/external/dxc
+	url = https://github.com/Microsoft/DirectXShaderCompiler.git
+[submodule "accelerators/vmxc/external/spirv-headers"]
+	path = accelerators/vmxc/external/spirv-headers
+	url = https://github.com/KhronosGroup/SPIRV-Headers.git
+[submodule "accelerators/vmxc/external/spirv-cross"]
+	path = accelerators/vmxc/external/spirv-cross
+	url = https://github.com/KhronosGroup/SPIRV-Cross.git
+[submodule "accelerators/vmxc/external/spirv-tools"]
+	path = accelerators/vmxc/external/spirv-tools
+	url = https://github.com/KhronosGroup/SPIRV-Tools.git
+[submodule "external/spirv-llvm"]
+	path = external/spirv-llvm
+	url = https://github.com/KhronosGroup/SPIRV-LLVM.git
+	branch = khronos/spirv-3.6.1
