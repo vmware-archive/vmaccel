@@ -1,6 +1,6 @@
 
 
-# Contributing to vmaccel
+# Contributing to vmaccel - VMware Interface for Accelerator APIs
 
 The vmaccel project team welcomes contributions from the community. If you wish to contribute code and you have not
 signed our contributor license agreement (CLA), our bot will update the issue when you open a Pull Request. For any
@@ -9,6 +9,8 @@ questions about the CLA process, please refer to our [FAQ](https://cla.vmware.co
 ## Community
 
 ## Getting Started
+
+First off, please read the [README.md](README.md) "Try it out", "Prerequisites", and "Build & Run" sections for information on how to build the project. Familiarize yourself with the accelerator you want to contribute to, a guideline for the design can be found in the "Design Overview..." section of [README.md](README.md).
 
 ## Contribution Flow
 
@@ -68,6 +70,22 @@ notification when you git push.
 
 ### Code Style
 
+Coding standards are specified by .clang-format. To apply the coding
+standards, run the following makefile directive:
+
+``` shell
+  $ build/make pre-checkin
+```
+
+OR clang-format as follows:
+
+``` shell
+  $ build/external/spirv-llvm/bin/clang-format <temp source> > <target file>
+```
+
+clang-format is generated with the spirv-llvm build target that is built
+from the project's top level build from [README.md](README.md) "Build & Run: Step 2".
+
 ### Formatting Commit Messages
 
 We follow the conventions on [How to Write a Git Commit Message](http://chris.beams.io/posts/git-commit/).
@@ -81,3 +99,22 @@ and commits.
 When opening a new issue, try to roughly follow the commit message format conventions above.
 
 ## Repository Structure
+
+### Source Structure
+* accelerators - A collection of accelerator types, abstracted by their protocol defined in accelerators/.../specs/*.x
+* backends - A collection of backends supporting the accelerator types
+* common - Headers and source for common functionality of the project
+* external - External projects referenced by the project
+* frontends - Frontends for the accelerator types
+* scripts - A collection of scripts used by the project
+* test - A collection of unit tests for functionality exposed by the project
+
+### Build Structure
+* build/bin - Executables for each component
+* build/external - External project build targets
+* build/lib - Libraries for each component
+* build/inc - Headers used for the libraries of each component
+* build/specs - Spec files for use with the libraries and headers
+* build/gen - Auto-generated files for the protocol specifications
+* build/test - Compiled unit tests for the framework
+
