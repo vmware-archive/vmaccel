@@ -144,7 +144,7 @@ utilization.
    must be handled in layers of Backend dispatch above *_ops (e.g. ...).
 
 #### Server:
-1. Handles retrieval of a worklaod from a Client.
+1. Handles retrieval of a workload from a Client.
 2. Manages mutual exclusion properties for the Backend, to avoid unbounded
    runtime complexity.
 3. Communicates workload to the top level Backend dispatch.
