@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _VMACCEL_TYPES_INT_HPP_
 #define _VMACCEL_TYPES_INT_HPP_ 1
 
+
 struct Int {
    int x;
 };
@@ -86,7 +87,7 @@ static bool Reserve(const Int &in, const Int &req, Int &out, Int &remainder) {
    return true;
 }
 
-static bool FreeObj(std::set<VMAccelObject<Int>, IntCmp> &pool,
+static bool FreeObj(std::multiset<VMAccelObject<Int>, IntCmp> &pool,
                     const VMAccelObject<Int> &obj) {
    /*
     * Update and replace the value, only one per-parent.
@@ -100,13 +101,13 @@ static bool FreeObj(std::set<VMAccelObject<Int>, IntCmp> &pool,
 
    if (it == pool.end()) {
       auto res = pool.insert(obj);
-      return res.second;
+      return res != pool.end();
    } else {
       Int val = it->GetObj();
       pool.erase(it);
       val.x += obj.GetObj().x;
       auto res = pool.insert(VMAccelObject<Int>(obj.GetParentId(), &val));
-      return res.second;
+      return res != pool.end();
    }
 }
 

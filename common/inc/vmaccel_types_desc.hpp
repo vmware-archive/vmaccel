@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "log_level.h"
 
+
 inline bool operator<(const VMAccelWorkloadDesc &lhs,
                       const VMAccelWorkloadDesc &rhs) {
    /*
@@ -176,8 +177,9 @@ static bool Reserve(const VMAccelDesc &a, const VMAccelDesc &req,
    return r.capacity < a.capacity;
 }
 
-static bool FreeObj(std::set<VMAccelObject<VMAccelDesc>, VMAccelDescCmp> &pool,
-                    const VMAccelObject<VMAccelDesc> obj) {
+static bool
+FreeObj(std::multiset<VMAccelObject<VMAccelDesc>, VMAccelDescCmp> &pool,
+        const VMAccelObject<VMAccelDesc> obj) {
    /*
     * Update and replace the value, only one per-parent.
     */
@@ -190,16 +192,16 @@ static bool FreeObj(std::set<VMAccelObject<VMAccelDesc>, VMAccelDescCmp> &pool,
 
    if (it == pool.end()) {
       auto res = pool.insert(obj);
-      if (res.second == 0)
+      if (res == pool.end())
          assert(0);
-      return res.second;
+      return res != pool.end();
    } else {
       VMAccelDesc desc = it->GetObj();
       pool.erase(it);
       desc.capacity += obj.GetObj().capacity;
       auto res =
          pool.insert(VMAccelObject<VMAccelDesc>(obj.GetParentId(), &desc));
-      return res.second;
+      return res != pool.end();
    }
 }
 

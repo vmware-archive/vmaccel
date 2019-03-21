@@ -52,15 +52,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmaccel_rpc.h"
 #include "vmaccel_manager.h"
 #include "vmaccel_manager.hpp"
+#include "vmaccel_allocator.hpp"
 #include "vmaccel_types_int.hpp"
 #include "vmaccel_types_desc.hpp"
+#include "vmaccel_types_allocrange.hpp"
 #include "vmaccel_utils.h"
 
 #include "log_level.h"
 
+
 #define DEFER_FREE 1
 
 using namespace std;
+
+template class VMAccelAllocator<Int, IntCmp>;
+template class VMAccelAllocator<AllocRange, AllocRangeCmp>;
+template class VMAccelAllocator<VMAccelDesc, VMAccelDescCmp>;
 
 template <class T, typename C>
 void VMAccelAllocator<T, C>::CoalesceFreed() {
@@ -123,7 +130,7 @@ bool VMAccelAllocator<T, C>::FindFreed(VMAccelObject<T> &req,
          }
          break;
       } else if (FreeObj(free, a)) {
-         typename set<VMAccelObject<T>, C>::iterator it = free.lower_bound(req);
+         auto it = free.lower_bound(req);
          if (it != free.end()) {
             T div, r;
             if (Reserve(it->GetObj(), req.GetObj(), div, r)) {
@@ -222,7 +229,7 @@ VMAccelAllocateStatus *VMAccelAllocator<T, C>::Alloc(VMAccelId parentId, T *a,
       return &result;
    }
 
-   typename set<VMAccelObject<T>, C>::iterator it = free.lower_bound(req);
+   auto it = free.lower_bound(req);
    if (it != free.end()) {
       T div, r;
       if (Reserve(it->GetObj(), req.GetObj(), div, r)) {

@@ -119,6 +119,7 @@ private:
    void CoalesceFreed();
    bool FindFreed(VMAccelObject<T> &req, VMAccelObject<T> &out);
 
+
    /*
     * List of resources in registered id space.
     *
@@ -137,7 +138,7 @@ private:
     * Set of sorted free elements. We use a set to sort capacity and reduce
     * lookup runtime.
     */
-   std::set<VMAccelObject<T>, C> free;
+   std::multiset<VMAccelObject<T>, C> free;
 
    /*
     * Queue of freed elements. These elements are released by the client

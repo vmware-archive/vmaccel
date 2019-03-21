@@ -40,15 +40,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmaccel_manager.hpp"
 #include "vmaccel_types_int.hpp"
 #include "vmaccel_types_desc.hpp"
+#include "vmaccel_types_allocrange.hpp"
 #include "vmaccel_utils.h"
 
 #include "log_level.h"
 
-#include "vmaccel_allocator.cpp"
 
 using namespace std;
 
 VMAccelAllocator<VMAccelDesc, VMAccelDescCmp> *accelMgr = NULL;
+VMAccelAllocator<AllocRange, AllocRangeCmp> *memMgr = NULL;
 
 unsigned int vmaccel_manager_poweron() {
    VMAccelAllocator<Int, IntCmp> *intMgr = NULL;
@@ -102,10 +103,19 @@ unsigned int vmaccel_manager_poweron() {
    accelMgr = new VMAccelAllocator<VMAccelDesc, VMAccelDescCmp>(
       VMACCEL_MAX_ACCELERATORS);
 
-   return (accelMgr != NULL) ? VMACCEL_SUCCESS : VMACCEL_FAIL;
+   memMgr =
+      new VMAccelAllocator<AllocRange, AllocRangeCmp>(VMACCEL_MAX_ACCELERATORS);
+
+   return (accelMgr != NULL) && (memMgr != NULL) ? VMACCEL_SUCCESS
+                                                 : VMACCEL_FAIL;
 }
 
 unsigned int vmaccel_manager_poweroff() {
+   if (memMgr != NULL) {
+      delete memMgr;
+      memMgr = NULL;
+   }
+
    if (accelMgr != NULL) {
       delete accelMgr;
       accelMgr = NULL;
