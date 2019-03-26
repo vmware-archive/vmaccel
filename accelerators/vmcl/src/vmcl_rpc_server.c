@@ -29,12 +29,27 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmcl_ops.h"
 #include "vmcl_rpc.h"
 #include "vmwopencl.h"
+#include <assert.h>
 #include <string.h>
+
+#include "log_level.h"
 
 static VMCLOps *cl = &vmwopenclOps;
 
 VMAccelAllocateStatus *vmcl_poweron_svc(VMCLOps *ops) {
-   return cl->poweron(NULL, VMACCEL_GPU, 0);
+   VMAccelAllocateStatus *ret = NULL;
+   /*
+    * Loop through all the Accelerator architectures until one powers on.
+    */
+   assert(VMACCEL_SELECT_MAX > 0);
+   for (int i = 0; i < VMACCEL_SELECT_MAX; i++) {
+      ret = cl->poweron(NULL, i, 0);
+      if (ret->status == VMACCEL_SUCCESS) {
+         return ret;
+      }
+   }
+   Warning("%s: Unable to power on any VMCL capable backends.\n", __FUNCTION__);
+   return ret;
 }
 
 VMAccelStatus *vmcl_poweroff_svc() {

@@ -133,6 +133,7 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
    int majorVersion;
    int minorVersion;
    int i, j;
+   bool platformFound = false;
 
    memset(&result, 0, sizeof(result));
 
@@ -150,6 +151,13 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
    Log("Number of platforms: %d\n", numPlatforms);
 
    for (i = 0; i < numPlatforms; i++) {
+      errNum = clGetDeviceIDs(platforms[i], clDeviceTypes[accelArch], 1,
+                              &deviceId, NULL);
+
+      if (errNum != CL_SUCCESS) {
+         continue;
+      }
+
       errNum =
          clGetPlatformInfo(platforms[i], CL_PLATFORM_VERSION,
                            sizeof(platformVersion), platformVersion, &sizeRet);
@@ -195,15 +203,6 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
 
       Log("Extensions: %s\n", platformExtensions);
 
-      errNum = clGetDeviceIDs(platforms[i], clDeviceTypes[accelArch], 1,
-                              &deviceId, NULL);
-
-      if (errNum != CL_SUCCESS) {
-         Warning("Unable to find device for type=%d\n",
-                 clDeviceTypes[accelArch]);
-         continue;
-      }
-
       caps[accelArch].deviceId = deviceId;
 
       errNum = clGetDeviceInfo(deviceId, CL_DEVICE_NAME, sizeof(deviceName),
@@ -244,6 +243,7 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
 
       if (errNum != CL_SUCCESS) {
          Warning("Unable to query CL_DEVICE_MAX_WORK_ITEM_SIZES\n");
+         continue;
       } else {
          for (j = 0; j < caps[accelArch].DEVICE_MAX_WORK_ITEM_DIMENSIONS; j++) {
             snprintf(capPrefix, sizeof(capPrefix),
@@ -252,6 +252,17 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
                        caps[accelArch].DEVICE_MAX_WORK_ITEM_SIZES[j]);
          }
       }
+
+      /*
+       * Report back first platform found.
+       */
+      platformFound = true;
+      break;
+   }
+
+   if (!platformFound) {
+      result.status = VMACCEL_FAIL;
+      return &result;
    }
 
    if ((strstr(platformVersion, "OpenCL 1.2") == NULL) &&
@@ -369,6 +380,8 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
       Warning("Unable to allocate object database...\n");
       result.status = VMACCEL_FAIL;
       vmwopencl_poweroff();
+   } else {
+      result.status = VMACCEL_SUCCESS;
    }
 
    result.desc.maxContexts = VMCL_MAX_CONTEXTS;
@@ -527,7 +540,6 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
             clGetDeviceIDs(platforms[i], clDeviceTypes[j], 1, &deviceId, NULL);
 
          if (errNum != CL_SUCCESS) {
-            Warning("Unable to find device for type=%d\n", clDeviceTypes[j]);
             continue;
          }
 
