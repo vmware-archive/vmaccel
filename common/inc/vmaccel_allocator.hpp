@@ -44,12 +44,24 @@ public:
    VMAccelObject<T>() {
       parentId = VMACCEL_INVALID_ID;
       fenceId = VMACCEL_INVALID_ID;
+      memset(&obj, 0, sizeof(obj));
    }
 
    VMAccelObject<T>(VMAccelId id, T *o) {
       parentId = id;
-      obj = *o;
+      fenceId = VMACCEL_INVALID_ID;
+      memset(&obj, 0, sizeof(obj));
+      DeepCopy(obj, *o);
    }
+
+   VMAccelObject<T>(const VMAccelObject<T> &o) {
+      parentId = o.parentId;
+      fenceId = o.fenceId;
+      memset(&obj, 0, sizeof(obj));
+      DeepCopy(obj, o.obj);
+   }
+
+   ~VMAccelObject<T>() { Destructor(obj); }
 
    bool operator==(const VMAccelObject<T> &rhs) const { return obj == rhs.obj; }
    bool operator!=(const VMAccelObject<T> &rhs) const { return obj != rhs.obj; }
@@ -118,7 +130,6 @@ public:
 private:
    void CoalesceFreed();
    bool FindFreed(VMAccelObject<T> &req, VMAccelObject<T> &out);
-
 
    /*
     * List of resources in registered id space.

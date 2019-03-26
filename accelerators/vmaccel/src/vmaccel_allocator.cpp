@@ -256,7 +256,7 @@ VMAccelAllocateStatus *VMAccelAllocator<T, C>::Alloc(VMAccelId parentId, T *a,
       return &result;
    }
 
-   d = obj.GetObj();
+   DeepCopy(d, obj.GetObj());
    registeredId = obj.GetParentId();
    allocated[externalId] = obj;
 

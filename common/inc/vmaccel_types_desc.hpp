@@ -31,9 +31,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstring>
 #include "vmaccel_types_address.h"
+#include "vmaccel_types_address.hpp"
 
 #include "log_level.h"
-
 
 inline bool operator<(const VMAccelWorkloadDesc &lhs,
                       const VMAccelWorkloadDesc &rhs) {
@@ -155,6 +155,54 @@ struct VMAccelDescCmp {
    }
 };
 
+static void Destructor(VMAccelDesc &obj) {
+   Destructor(obj.parentAddr);
+   free(obj.formatCaps.formatCaps_val);
+   free(obj.backendDesc.backendDesc_val);
+}
+
+static void DeepCopy(VMAccelDesc &lhs, const VMAccelDesc &rhs) {
+   if (&lhs != &rhs) {
+      lhs.parentId = rhs.parentId;
+      DeepCopy(lhs.parentAddr, rhs.parentAddr);
+      lhs.type = rhs.type;
+      lhs.architecture = rhs.architecture;
+      lhs.caps = rhs.caps;
+      lhs.formatCaps.formatCaps_len = rhs.formatCaps.formatCaps_len;
+      free(lhs.formatCaps.formatCaps_val);
+      if (rhs.formatCaps.formatCaps_len != 0) {
+         lhs.formatCaps.formatCaps_val = (VMAccelFormatDesc *)malloc(
+            rhs.formatCaps.formatCaps_len * sizeof(VMAccelFormatDesc));
+         if (lhs.formatCaps.formatCaps_val != NULL) {
+            memcpy(lhs.formatCaps.formatCaps_val, rhs.formatCaps.formatCaps_val,
+                   rhs.formatCaps.formatCaps_len * sizeof(VMAccelFormatDesc));
+         }
+      } else {
+         lhs.formatCaps.formatCaps_val = NULL;
+      }
+      lhs.capacity = rhs.capacity;
+      lhs.maxContexts = rhs.maxContexts;
+      lhs.maxQueues = rhs.maxQueues;
+      lhs.maxEvents = rhs.maxEvents;
+      lhs.maxFences = rhs.maxFences;
+      lhs.maxSurfaces = rhs.maxSurfaces;
+      lhs.maxMappings = rhs.maxMappings;
+      lhs.backendDesc.backendDesc_len = rhs.backendDesc.backendDesc_len;
+      free(lhs.backendDesc.backendDesc_val);
+      if (rhs.backendDesc.backendDesc_len != 0) {
+         lhs.backendDesc.backendDesc_val =
+            (char *)malloc(rhs.backendDesc.backendDesc_len * sizeof(char));
+         if (lhs.backendDesc.backendDesc_val != NULL) {
+            memcpy(lhs.backendDesc.backendDesc_val,
+                   rhs.backendDesc.backendDesc_val,
+                   rhs.backendDesc.backendDesc_len * sizeof(char));
+         }
+      } else {
+         lhs.backendDesc.backendDesc_val = NULL;
+      }
+   }
+}
+
 static bool IsEmpty(const VMAccelDesc val) {
    return (val.capacity.megaFlops + val.capacity.megaOps +
            val.capacity.llcSizeKB + val.capacity.llcBandwidthMBSec +
@@ -170,7 +218,11 @@ static bool Reserve(const VMAccelDesc &a, const VMAccelDesc &req,
       return false;
    }
 
-   d = r = a;
+   memset(&d, 0, sizeof(VMAccelDesc));
+   memset(&r, 0, sizeof(VMAccelDesc));
+
+   DeepCopy(d, a);
+   DeepCopy(r, a);
    d.capacity = req.capacity;
    r.capacity = a.capacity - d.capacity;
 
@@ -191,7 +243,7 @@ FreeObj(std::multiset<VMAccelObject<VMAccelDesc>, VMAccelDescCmp> &pool,
    }
 
    if (it == pool.end()) {
-      auto res = pool.insert(obj);
+      auto res = pool.emplace(obj);
       if (res == pool.end())
          assert(0);
       return res != pool.end();

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016-2019 VMware, Inc.
+# Copyright (c) 2019 VMware, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,37 +24,4 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-cmake_minimum_required(VERSION 3.4.3)
-project(vmwaccel)
-
-#
-# Apply settings for the project
-#
-IF (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-   set(CMAKE_INCLUDE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/inc)
-   set(CMAKE_SPECS_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/specs)
-   set(CMAKE_GEN_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/gen)
-   set(CMAKE_TEST_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
-   set(CMAKE_EXAMPLES_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples)
-
-   set(CMAKE_BUILD_TYPE Debug)
-   set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
-   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
-ENDIF()
-
-#
-# Build external dependencies first
-#
-add_subdirectory(external/spirv-llvm)
-
-set(CLANG_BINARY_DIR ${CMAKE_BINARY_DIR}/external/spirv-llvm/bin)
-add_subdirectory(cmake/developer)
-
-add_subdirectory(backends)
-add_subdirectory(accelerators)
-add_subdirectory(frontends)
-add_subdirectory(test)
-add_subdirectory(examples)
+add_subdirectory(cpp)

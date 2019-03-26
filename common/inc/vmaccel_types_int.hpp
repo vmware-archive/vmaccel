@@ -29,7 +29,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _VMACCEL_TYPES_INT_HPP_
 #define _VMACCEL_TYPES_INT_HPP_ 1
 
-
 struct Int {
    int x;
 };
@@ -71,6 +70,15 @@ struct IntCmp {
               lhs.GetObj().x < rhs.GetObj().x);
    }
 };
+
+static void Destructor(Int &obj) {
+}
+
+static void DeepCopy(Int &lhs, const Int &rhs) {
+   if (&lhs != &rhs) {
+      lhs.x = rhs.x;
+   }
+}
 
 static bool IsEmpty(const Int val) {
    return val.x == 0;

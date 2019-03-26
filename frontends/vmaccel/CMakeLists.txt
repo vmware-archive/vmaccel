@@ -51,3 +51,4 @@ include_directories(${GLOBAL_INC})
 
 add_subdirectory(cmake/vmaccel_client)
 add_subdirectory(cmake/vmaccelmgr_client)
+add_subdirectory(cmake/libvmaccel)

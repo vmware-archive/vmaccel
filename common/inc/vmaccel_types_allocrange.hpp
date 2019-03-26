@@ -86,6 +86,15 @@ struct AllocRangeCmp {
    }
 };
 
+static void Destructor(AllocRange &obj) {
+}
+
+static void DeepCopy(AllocRange &lhs, const AllocRange &rhs) {
+   if (&lhs != &rhs) {
+      lhs = rhs;
+   }
+}
+
 static bool IsEmpty(const AllocRange val) {
    if (val.size == 0) {
       return true;

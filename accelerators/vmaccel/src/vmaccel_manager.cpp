@@ -159,6 +159,7 @@ VMAccelStatus *vmaccel_manager_unregister(VMAccelId id) {
 
 VMAccelAllocateStatus *vmaccel_manager_alloc(VMAccelDesc *desc) {
    static VMAccelAllocateStatus result;
+   VMAccelAllocateStatus *res;
 
    memset(&result, 0, sizeof(VMAccelAllocateStatus));
 
@@ -170,7 +171,12 @@ VMAccelAllocateStatus *vmaccel_manager_alloc(VMAccelDesc *desc) {
 
    Log_VMAccelDesc("vmaccel_manager_alloc: desc:", desc);
 
-   return accelMgr->Alloc(desc->parentId, desc, result.desc);
+   res = accelMgr->Alloc(desc->parentId, desc, result.desc);
+
+   result.status = res->status;
+   result.id = res->id;
+
+   return &result;
 }
 
 VMAccelStatus *vmaccel_manager_free(VMAccelId id) {

@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2019 VMware, Inc.
+Copyright (c) 2019 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,57 +26,42 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ******************************************************************************/
 
-#ifndef _VMACCEL_TYPES_ADDRESS_H_
-#define _VMACCEL_TYPES_ADDRESS_H_ 1
+#ifndef _VMACCEL_TYPES_ADDRESS_HPP_
+#define _VMACCEL_TYPES_ADDRESS_HPP_ 1
 
-#include <assert.h>
-#include <string.h>
-#include <arpa/inet.h>
+static void Destructor(VMAccelAddress &obj) {
+   free(obj.addr.addr_val);
+   free(obj.obj.obj_val);
+}
 
-#include "log_level.h"
+static void DeepCopy(VMAccelAddress &lhs, const VMAccelAddress &rhs) {
+   if (&lhs != &rhs) {
+      lhs.addr.addr_len = rhs.addr.addr_len;
+      free(lhs.addr.addr_val);
+      if (rhs.addr.addr_len != 0) {
+         lhs.addr.addr_val = (char *)malloc(rhs.addr.addr_len * sizeof(char));
+         if (lhs.addr.addr_val != NULL) {
+            memcpy(lhs.addr.addr_val, rhs.addr.addr_val,
+                   rhs.addr.addr_len * sizeof(char));
+         }
+      } else {
+         lhs.addr.addr_val = NULL;
+      }
+      lhs.port = rhs.port;
+      lhs.resourceType = rhs.resourceType;
+      lhs.obj.obj_len = rhs.obj.obj_len;
+      free(lhs.obj.obj_val);
+      if (rhs.obj.obj_len != 0) {
+         lhs.obj.obj_val = (char *)malloc(rhs.obj.obj_len * sizeof(char));
+         if (lhs.obj.obj_val != NULL) {
+            memcpy(lhs.obj.obj_val, rhs.obj.obj_val,
+                   rhs.obj.obj_len * sizeof(char));
+         }
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-static bool VMAccelAddressOpaqueAddrToString(const VMAccelAddress *addr,
-                                             char *out, int len) {
-   // Enough to hold three digits per byte
-   if (len < 4 * addr->addr.addr_len) {
-      return false;
+      } else {
+         lhs.obj.obj_val = NULL;
+      }
    }
-   if (addr->addr.addr_len == 4) {
-      // IPV4
-      struct in_addr inetaddr;
-      inetaddr.s_addr = *((in_addr_t *)addr->addr.addr_val);
-      strcpy(out, inet_ntoa(inetaddr));
-      return true;
-   }
-   return false;
 }
 
-static bool VMAccelAddressStringToOpaqueAddr(const char *addr, char *out,
-                                             int len) {
-   if (len == 4) {
-      // IPV4
-      assert(sizeof(in_addr_t) == 4);
-      *((in_addr_t *)out) = inet_addr(addr);
-      return true;
-   }
-   return false;
-}
-
-static void Log_VMAccelAddress(const char *prefix, const VMAccelAddress *addr) {
-   char str[256];
-
-   VMAccelAddressOpaqueAddrToString(addr, str, sizeof(str));
-   Log("%s addr=<%s>\n", prefix, str);
-   Log("%s port=%u\n", prefix, addr->port);
-   Log("%s resourceType=%u\n", prefix, addr->resourceType);
-}
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* defined _VMACCEL_TYPES_ADDRESS_H_ */
+#endif /* defined _VMACCEL_TYPES_ADDRESS_HPP_ */
