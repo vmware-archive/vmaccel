@@ -66,6 +66,7 @@ inline bool operator<=(const AllocRange &lhs, const AllocRange &rhs) {
    } else {
       return lhs.size <= rhs.size;
    }
+   return false;
 }
 
 inline AllocRange operator+=(AllocRange &lhs, const AllocRange &rhs) {
