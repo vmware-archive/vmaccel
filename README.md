@@ -165,7 +165,96 @@ utilization.
    e.g. VMAccel.
 4. The Managed API abstraction allocates Accelerator resources on-demand,
    and maintains a stateless design.
- 
+
+### Memory Model
+
+#### Application Memory
+
+Due to the remote procedure call (RPC) abstraction, the memory model must
+handle the asynchronous access of a network device. The lifetime of an object
+is determined not only by the scope of the caller, but the operation itself.
+Since an operation's asynchronous execution window may reference an object
+at any given time, the vmaccel::ref_object class was created with the
+following semantics, implemented by usage of std::shared_ptr:
+
+1. Reference count is incremented for the producer and consumer when handing
+   an object to the consumer.
+2. Reference count is decremented for the producer within the scope of the
+   application code.
+3. Reference count is decremented for the consumer when the consumer has
+   either copied the contents or an operation has completed and control is
+   returned to the caller, e.g. completion of enqueueing the associated
+   RPC Call from a client.
+
+Example:
+
+``` shell
+   {
+      std::shared_ptr<char> obj;                     // obj.REFCOUNT == 1
+      std::shared_ptr<char> obj2;                    // obj2.REFCOUNT == 1
+      vmaccel::ref_object<char> ref(obj, ...);       // obj.REFCOUNT == 2
+      ...
+      {
+         vmaccel::ref_object<char> ref2(obj2, ...);  // obj2.REFCOUNT == 2
+         RPC Call(obj, obj2);
+         ...
+      }                                              // obj2.REFCOUNT == 1
+   }                                                 // obj and obj2 deleted
+```
+
+The above keeps an allocation alive within the context of an operation's time
+within a queue, e.g. queue extent. C++ provides a construct in std::shared_ptr,
+which a client *MUST* use with vmaccel::ref_object to retain an allocation.
+
+#### RPC Memory
+
+RPC Memory can be considered a transient storage. One can enqueue multiple
+objects over the wire, but until they reach their destination they take no
+memory on the destination. This property lends to a producer/consumer over-
+commit, and relies on detecting backpressure to avoid a deinal of service
+attack.
+
+In the context of the rpcgen model, we will denote handoff of completed
+contents through the protocol as "==>" and "~~" as wire transmission of
+the content. Contents of memory are passed between abstraction layers
+for a VMAccel Client as follows:
+
+``` shell
+  std::shared_ptr ==> ref_object<std::shared_ptr> ==> RPC Call (*_clnt.c)
+  ~~
+  RPC Results ==> temp allocation ==> caller copies content and frees
+```
+
+Contents of memory are passed between abstraction layers for a VMAccel Server
+as follows:
+
+``` shell
+  ~~
+  Service RPC Call (*rpc_svc.c, *rpc_server.c)
+     ==> temp allocation ==> server copies content and frees
+  ...
+  global memory
+     ==> RPC Results ... deferred re-use of memory at next Service RPC Call
+  ~~
+```
+
+Asynchronous content handoff will be denoted as "~>", where the completion of
+transmission and receiving of memory is noticed through an Event or Fence
+object. Below is a diagram depicting the client/server interaction in
+execution order:
+
+``` shell
+  CLIENT: RPC Call
+  ~~
+  SERVER: Service RPC ==> Execute Asynchronous Operation ~> RPC Results
+  ~~
+  CLIENT: Wait or Event ...
+  ~~
+  SERVER: Asynchronous Operation complete, trigger Event
+  ~~
+  CLIENT: Event Triggered ==> caller copies content and frees
+```
+
 ### Auto-generated Files
 1. Auto-generated files are placed in build/gen
 2. Header files should be copied as follows
