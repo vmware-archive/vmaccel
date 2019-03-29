@@ -63,6 +63,7 @@ The following steps assume paths relative to the project's root directory.
 * build/specs - Spec files for use with the libraries and headers
 * build/gen - Auto-generated files for the protocol specifications
 * build/test - Compiled unit tests for the framework
+* build/examples - Compiled examples for the framework
 
 To launch one of the accelerators, you'll need two shell instances:
 
