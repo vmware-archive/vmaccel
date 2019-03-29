@@ -210,8 +210,8 @@ which a client *MUST* use with vmaccel::ref_object to retain an allocation.
 
 RPC Memory can be considered a transient storage. One can enqueue multiple
 objects over the wire, but until they reach their destination they take no
-memory on the destination. This property lends to a producer/consumer over-
-commit, and relies on detecting backpressure to avoid a deinal of service
+memory on the destination. This property lends to a producer/consumer
+over-commit, and relies on detecting backpressure to avoid a deinal of service
 attack.
 
 In the context of the rpcgen model, we will denote handoff of completed
@@ -239,8 +239,8 @@ as follows:
 ```
 
 Asynchronous content handoff will be denoted as "~>", where the completion of
-transmission and receiving of memory is noticed through an Event or Fence
-object. Below is a diagram depicting the client/server interaction in
+transmission and receiving of memory contents is noticed through an Event or
+Fence object. Below is a diagram depicting the client/server interaction in
 execution order:
 
 ``` shell
