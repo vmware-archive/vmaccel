@@ -143,6 +143,12 @@ bool prepareComputeArgs(CLIENT *clnt, unsigned int contextId,
          return false;
       }
 
+      /*
+       * Free the allocation from vmcl_surfacemap_1 -> xdr_bytes. Note this
+       * should match the allocation function for XDR.
+       */
+      free(ptr);
+
       kernelArgs[argIndex].index = argIndex;
       kernelArgs[argIndex].type = VMCL_ARG_SURFACE;
       kernelArgs[argIndex].surf.id = vmcl_surfacealloc_1_arg.client.accel.id;

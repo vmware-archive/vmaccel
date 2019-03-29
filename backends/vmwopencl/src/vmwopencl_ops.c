@@ -1046,6 +1046,13 @@ VMAccelStatus *vmwopencl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp) {
 
    memcpy(ptr, argp->op.ptr.ptr_val, argp->op.ptr.ptr_len);
 
+   /*
+    * We are done with the contents, free the pointer.
+    */
+   free(argp->op.ptr.ptr_val);
+   argp->op.ptr.ptr_val = NULL;
+   argp->op.ptr.ptr_len = 0;
+
    errNum = clEnqueueUnmapMemObject(queues[qid].queue, surfaces[sid].mem, ptr,
                                     0, NULL, NULL);
 
