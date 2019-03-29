@@ -177,9 +177,6 @@ bool_t xdr_VMAccelAddress(XDR *xdrs, VMAccelAddress *objp) {
       return FALSE;
    if (!xdr_VMAccelResourceType(xdrs, &objp->resourceType))
       return FALSE;
-   if (!xdr_bytes(xdrs, (char **)&objp->obj.obj_val,
-                  (u_int *)&objp->obj.obj_len, ~0))
-      return FALSE;
    return TRUE;
 }
 
@@ -206,6 +203,7 @@ bool_t xdr_VMAccelFormatDesc(XDR *xdrs, VMAccelFormatDesc *objp) {
 
 bool_t xdr_VMAccelWorkloadDesc(XDR *xdrs, VMAccelWorkloadDesc *objp) {
    register int32_t *buf;
+
 
    if (xdrs->x_op == XDR_ENCODE) {
       buf = XDR_INLINE(xdrs, 9 * BYTES_PER_XDR_UNIT);
@@ -299,6 +297,7 @@ bool_t xdr_VMAccelWorkloadDesc(XDR *xdrs, VMAccelWorkloadDesc *objp) {
 bool_t xdr_VMAccelDesc(XDR *xdrs, VMAccelDesc *objp) {
    register int32_t *buf;
 
+
    if (xdrs->x_op == XDR_ENCODE) {
       if (!xdr_VMAccelId(xdrs, &objp->parentId))
          return FALSE;
@@ -331,7 +330,6 @@ bool_t xdr_VMAccelDesc(XDR *xdrs, VMAccelDesc *objp) {
             return FALSE;
          if (!xdr_u_int(xdrs, &objp->maxMappings))
             return FALSE;
-
       } else {
          IXDR_PUT_U_LONG(buf, objp->maxContexts);
          IXDR_PUT_U_LONG(buf, objp->maxQueues);
@@ -340,9 +338,6 @@ bool_t xdr_VMAccelDesc(XDR *xdrs, VMAccelDesc *objp) {
          IXDR_PUT_U_LONG(buf, objp->maxSurfaces);
          IXDR_PUT_U_LONG(buf, objp->maxMappings);
       }
-      if (!xdr_bytes(xdrs, (char **)&objp->backendDesc.backendDesc_val,
-                     (u_int *)&objp->backendDesc.backendDesc_len, ~0))
-         return FALSE;
       return TRUE;
    } else if (xdrs->x_op == XDR_DECODE) {
       if (!xdr_VMAccelId(xdrs, &objp->parentId))
@@ -376,7 +371,6 @@ bool_t xdr_VMAccelDesc(XDR *xdrs, VMAccelDesc *objp) {
             return FALSE;
          if (!xdr_u_int(xdrs, &objp->maxMappings))
             return FALSE;
-
       } else {
          objp->maxContexts = IXDR_GET_U_LONG(buf);
          objp->maxQueues = IXDR_GET_U_LONG(buf);
@@ -385,9 +379,6 @@ bool_t xdr_VMAccelDesc(XDR *xdrs, VMAccelDesc *objp) {
          objp->maxSurfaces = IXDR_GET_U_LONG(buf);
          objp->maxMappings = IXDR_GET_U_LONG(buf);
       }
-      if (!xdr_bytes(xdrs, (char **)&objp->backendDesc.backendDesc_val,
-                     (u_int *)&objp->backendDesc.backendDesc_len, ~0))
-         return FALSE;
       return TRUE;
    }
 
@@ -418,21 +409,6 @@ bool_t xdr_VMAccelDesc(XDR *xdrs, VMAccelDesc *objp) {
    if (!xdr_u_int(xdrs, &objp->maxSurfaces))
       return FALSE;
    if (!xdr_u_int(xdrs, &objp->maxMappings))
-      return FALSE;
-   if (!xdr_bytes(xdrs, (char **)&objp->backendDesc.backendDesc_val,
-                  (u_int *)&objp->backendDesc.backendDesc_len, ~0))
-      return FALSE;
-   return TRUE;
-}
-
-bool_t xdr_VMAccelPoolStatus(XDR *xdrs, VMAccelPoolStatus *objp) {
-   register int32_t *buf;
-
-   if (!xdr_VMAccelStatusCode(xdrs, &objp->status))
-      return FALSE;
-   if (!xdr_array(xdrs, (char **)&objp->accelerators.accelerators_val,
-                  (u_int *)&objp->accelerators.accelerators_len, ~0,
-                  sizeof(VMAccelDesc), (xdrproc_t)xdr_VMAccelDesc))
       return FALSE;
    return TRUE;
 }
@@ -546,6 +522,7 @@ bool_t xdr_VMAccelElementFloat4D(XDR *xdrs, VMAccelElementFloat4D *objp) {
 bool_t xdr_VMAccelElementUINT4D(XDR *xdrs, VMAccelElementUINT4D *objp) {
    register int32_t *buf;
 
+
    if (xdrs->x_op == XDR_ENCODE) {
       buf = XDR_INLINE(xdrs, 4 * BYTES_PER_XDR_UNIT);
       if (buf == NULL) {
@@ -620,6 +597,7 @@ bool_t xdr_VMAccelCoordinate3DUINT(XDR *xdrs, VMAccelCoordinate3DUINT *objp) {
 bool_t xdr_VMAccelCoordinate4DUINT(XDR *xdrs, VMAccelCoordinate4DUINT *objp) {
    register int32_t *buf;
 
+
    if (xdrs->x_op == XDR_ENCODE) {
       buf = XDR_INLINE(xdrs, 4 * BYTES_PER_XDR_UNIT);
       if (buf == NULL) {
@@ -672,7 +650,10 @@ bool_t xdr_VMAccelCoordinate4DUINT(XDR *xdrs, VMAccelCoordinate4DUINT *objp) {
 bool_t xdr_VMAccelSurfaceDesc(XDR *xdrs, VMAccelSurfaceDesc *objp) {
    register int32_t *buf;
 
+
    if (xdrs->x_op == XDR_ENCODE) {
+      if (!xdr_VMAccelId(xdrs, &objp->parentId))
+         return FALSE;
       if (!xdr_VMAccelSurfaceType(xdrs, &objp->type))
          return FALSE;
       buf = XDR_INLINE(xdrs, 6 * BYTES_PER_XDR_UNIT);
@@ -712,6 +693,8 @@ bool_t xdr_VMAccelSurfaceDesc(XDR *xdrs, VMAccelSurfaceDesc *objp) {
          return FALSE;
       return TRUE;
    } else if (xdrs->x_op == XDR_DECODE) {
+      if (!xdr_VMAccelId(xdrs, &objp->parentId))
+         return FALSE;
       if (!xdr_VMAccelSurfaceType(xdrs, &objp->type))
          return FALSE;
       buf = XDR_INLINE(xdrs, 6 * BYTES_PER_XDR_UNIT);
@@ -752,6 +735,8 @@ bool_t xdr_VMAccelSurfaceDesc(XDR *xdrs, VMAccelSurfaceDesc *objp) {
       return TRUE;
    }
 
+   if (!xdr_VMAccelId(xdrs, &objp->parentId))
+      return FALSE;
    if (!xdr_VMAccelSurfaceType(xdrs, &objp->type))
       return FALSE;
    if (!xdr_u_int(xdrs, &objp->width))
@@ -795,9 +780,6 @@ bool_t xdr_VMAccelSurfaceId(XDR *xdrs, VMAccelSurfaceId *objp) {
    if (!xdr_VMAccelSurfaceType(xdrs, &objp->type))
       return FALSE;
    if (!xdr_VMAccelHandleType(xdrs, &objp->handleType))
-      return FALSE;
-   if (!xdr_bytes(xdrs, (char **)&objp->handle.handle_val,
-                  (u_int *)&objp->handle.handle_len, ~0))
       return FALSE;
    if (!xdr_VMAccelId(xdrs, &objp->id))
       return FALSE;
@@ -917,10 +899,6 @@ bool_t xdr_VMAccelFenceDesc(XDR *xdrs, VMAccelFenceDesc *objp) {
    if (!xdr_VMAccelCoordinate3DUINT(xdrs, &objp->elementLocation))
       return FALSE;
    if (!xdr_u_int(xdrs, &objp->markerValue))
-      return FALSE;
-   if (!xdr_array(xdrs, (char **)&objp->callbacks.callbacks_val,
-                  (u_int *)&objp->callbacks.callbacks_len, ~0,
-                  sizeof(VMAccelCallback), (xdrproc_t)xdr_VMAccelCallback))
       return FALSE;
    return TRUE;
 }
@@ -1123,24 +1101,6 @@ bool_t xdr_VMAccelReturnStatus(XDR *xdrs, VMAccelReturnStatus *objp) {
       case 0:
          if (!xdr_pointer(xdrs, (char **)&objp->VMAccelReturnStatus_u.ret,
                           sizeof(VMAccelStatus), (xdrproc_t)xdr_VMAccelStatus))
-            return FALSE;
-         break;
-      default:
-         break;
-   }
-   return TRUE;
-}
-
-bool_t xdr_VMAccelPoolReturnStatus(XDR *xdrs, VMAccelPoolReturnStatus *objp) {
-   register int32_t *buf;
-
-   if (!xdr_int(xdrs, &objp->errno))
-      return FALSE;
-   switch (objp->errno) {
-      case 0:
-         if (!xdr_pointer(xdrs, (char **)&objp->VMAccelPoolReturnStatus_u.ret,
-                          sizeof(VMAccelPoolStatus),
-                          (xdrproc_t)xdr_VMAccelPoolStatus))
             return FALSE;
          break;
       default:

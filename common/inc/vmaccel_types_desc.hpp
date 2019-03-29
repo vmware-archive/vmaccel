@@ -158,7 +158,6 @@ struct VMAccelDescCmp {
 static void Destructor(VMAccelDesc &obj) {
    Destructor(obj.parentAddr);
    free(obj.formatCaps.formatCaps_val);
-   free(obj.backendDesc.backendDesc_val);
 }
 
 static void DeepCopy(VMAccelDesc &lhs, const VMAccelDesc &rhs) {
@@ -187,19 +186,6 @@ static void DeepCopy(VMAccelDesc &lhs, const VMAccelDesc &rhs) {
       lhs.maxFences = rhs.maxFences;
       lhs.maxSurfaces = rhs.maxSurfaces;
       lhs.maxMappings = rhs.maxMappings;
-      lhs.backendDesc.backendDesc_len = rhs.backendDesc.backendDesc_len;
-      free(lhs.backendDesc.backendDesc_val);
-      if (rhs.backendDesc.backendDesc_len != 0) {
-         lhs.backendDesc.backendDesc_val =
-            (char *)malloc(rhs.backendDesc.backendDesc_len * sizeof(char));
-         if (lhs.backendDesc.backendDesc_val != NULL) {
-            memcpy(lhs.backendDesc.backendDesc_val,
-                   rhs.backendDesc.backendDesc_val,
-                   rhs.backendDesc.backendDesc_len * sizeof(char));
-         }
-      } else {
-         lhs.backendDesc.backendDesc_val = NULL;
-      }
    }
 }
 

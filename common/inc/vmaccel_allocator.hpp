@@ -84,7 +84,7 @@ public:
 
    const T &GetObj() const { return obj; }
 
-   void SetObj(T &o) { obj = o; }
+   void SetObj(T &o) { DeepCopy(obj, o); }
 
    VMAccelId GetParentId() const { return parentId; }
 

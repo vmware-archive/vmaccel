@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <rpc/rpc.h>
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -326,235 +327,214 @@ typedef struct VMCLKernelAllocateReturnStatus VMCLKernelAllocateReturnStatus;
 #define VMCL_VERSION 1
 
 #if defined(__STDC__) || defined(__cplusplus)
-#define VMCL_POOLSTATUS 1
-extern VMAccelPoolReturnStatus *vmcl_poolstatus_1(void *, CLIENT *);
-extern VMAccelPoolReturnStatus *vmcl_poolstatus_1_svc(void *, struct svc_req *);
-#define VMCL_ACCELALLOC 2
-extern VMAccelAllocateReturnStatus *vmcl_accelalloc_1(VMAccelResourceDesc *,
-                                                      CLIENT *);
-extern VMAccelAllocateReturnStatus *vmcl_accelalloc_1_svc(VMAccelResourceDesc *,
-                                                          struct svc_req *);
-#define VMCL_ACCELDESTROY 3
-extern VMAccelReturnStatus *vmcl_acceldestroy_1(VMAccelId *, CLIENT *);
-extern VMAccelReturnStatus *vmcl_acceldestroy_1_svc(VMAccelId *,
-                                                    struct svc_req *);
-#define VMCL_CONTEXTALLOC 4
+#define VMCL_CONTEXTALLOC 1
 extern VMCLContextAllocateReturnStatus *
 vmcl_contextalloc_1(VMCLContextAllocateDesc *, CLIENT *);
 extern VMCLContextAllocateReturnStatus *
 vmcl_contextalloc_1_svc(VMCLContextAllocateDesc *, struct svc_req *);
-#define VMCL_CONTEXTDESTROY 5
+#define VMCL_CONTEXTDESTROY 2
 extern VMAccelReturnStatus *vmcl_contextdestroy_1(VMCLContextId *, CLIENT *);
 extern VMAccelReturnStatus *vmcl_contextdestroy_1_svc(VMCLContextId *,
                                                       struct svc_req *);
-#define VMCL_SURFACEALLOC 6
+#define VMCL_SURFACEALLOC 3
 extern VMAccelSurfaceAllocateReturnStatus *
 vmcl_surfacealloc_1(VMCLSurfaceAllocateDesc *, CLIENT *);
 extern VMAccelSurfaceAllocateReturnStatus *
 vmcl_surfacealloc_1_svc(VMCLSurfaceAllocateDesc *, struct svc_req *);
-#define VMCL_SURFACEDESTROY 7
+#define VMCL_SURFACEDESTROY 4
 extern VMAccelReturnStatus *vmcl_surfacedestroy_1(VMCLSurfaceId *, CLIENT *);
 extern VMAccelReturnStatus *vmcl_surfacedestroy_1_svc(VMCLSurfaceId *,
                                                       struct svc_req *);
-#define VMCL_SURFACEGETSHAREDHANDLE 8
+#define VMCL_SURFACEGETSHAREDHANDLE 5
 extern VMAccelSharedHandleReturnStatus *
 vmcl_surfacegetsharedhandle_1(VMCLSurfaceId *, CLIENT *);
 extern VMAccelSharedHandleReturnStatus *
 vmcl_surfacegetsharedhandle_1_svc(VMCLSurfaceId *, struct svc_req *);
-#define VMCL_SURFACERELEASESHAREDHANDLE 9
+#define VMCL_SURFACERELEASESHAREDHANDLE 6
 extern VMAccelReturnStatus *
 vmcl_surfacereleasesharedhandle_1(VMCLSharedHandle *, CLIENT *);
 extern VMAccelReturnStatus *
 vmcl_surfacereleasesharedhandle_1_svc(VMCLSharedHandle *, struct svc_req *);
-#define VMCL_QUEUEALLOC 10
+#define VMCL_QUEUEALLOC 7
 extern VMAccelQueueReturnStatus *vmcl_queuealloc_1(VMCLQueueAllocateDesc *,
                                                    CLIENT *);
 extern VMAccelQueueReturnStatus *vmcl_queuealloc_1_svc(VMCLQueueAllocateDesc *,
                                                        struct svc_req *);
-#define VMCL_QUEUEDESTROY 11
+#define VMCL_QUEUEDESTROY 8
 extern VMAccelReturnStatus *vmcl_queuedestroy_1(VMCLQueueId *, CLIENT *);
 extern VMAccelReturnStatus *vmcl_queuedestroy_1_svc(VMCLQueueId *,
                                                     struct svc_req *);
-#define VMCL_EVENTALLOC 12
+#define VMCL_EVENTALLOC 9
 extern VMAccelEventReturnStatus *vmcl_eventalloc_1(VMCLEventAllocateDesc *,
                                                    CLIENT *);
 extern VMAccelEventReturnStatus *vmcl_eventalloc_1_svc(VMCLEventAllocateDesc *,
                                                        struct svc_req *);
-#define VMCL_EVENTGETSTATUS 13
+#define VMCL_EVENTGETSTATUS 10
 extern VMAccelEventReturnStatus *vmcl_eventgetstatus_1(VMCLEventId *, CLIENT *);
 extern VMAccelEventReturnStatus *vmcl_eventgetstatus_1_svc(VMCLEventId *,
                                                            struct svc_req *);
-#define VMCL_EVENTDESTROY 14
+#define VMCL_EVENTDESTROY 11
 extern VMAccelEventReturnStatus *vmcl_eventdestroy_1(VMCLEventId *, CLIENT *);
 extern VMAccelEventReturnStatus *vmcl_eventdestroy_1_svc(VMCLEventId *,
                                                          struct svc_req *);
-#define VMCL_FENCEALLOC 15
+#define VMCL_FENCEALLOC 12
 extern VMAccelFenceReturnStatus *vmcl_fencealloc_1(VMCLFenceAllocateDesc *,
                                                    CLIENT *);
 extern VMAccelFenceReturnStatus *vmcl_fencealloc_1_svc(VMCLFenceAllocateDesc *,
                                                        struct svc_req *);
-#define VMCL_FENCEGETSTATUS 16
+#define VMCL_FENCEGETSTATUS 13
 extern VMAccelFenceReturnStatus *vmcl_fencegetstatus_1(VMCLFenceId *, CLIENT *);
 extern VMAccelFenceReturnStatus *vmcl_fencegetstatus_1_svc(VMCLFenceId *,
                                                            struct svc_req *);
-#define VMCL_FENCEDESTROY 17
+#define VMCL_FENCEDESTROY 14
 extern VMAccelFenceReturnStatus *vmcl_fencedestroy_1(VMCLFenceId *, CLIENT *);
 extern VMAccelFenceReturnStatus *vmcl_fencedestroy_1_svc(VMCLFenceId *,
                                                          struct svc_req *);
-#define VMCL_QUEUEFLUSH 18
+#define VMCL_QUEUEFLUSH 15
 extern VMAccelReturnStatus *vmcl_queueflush_1(VMCLQueueId *, CLIENT *);
 extern VMAccelReturnStatus *vmcl_queueflush_1_svc(VMCLQueueId *,
                                                   struct svc_req *);
-#define VMCL_EVENTINSERT 19
+#define VMCL_EVENTINSERT 16
 extern VMAccelReturnStatus *vmcl_eventinsert_1(VMCLEventInsertOp *, CLIENT *);
 extern VMAccelReturnStatus *vmcl_eventinsert_1_svc(VMCLEventInsertOp *,
                                                    struct svc_req *);
-#define VMCL_FENCEINSERT 20
+#define VMCL_FENCEINSERT 17
 extern VMAccelReturnStatus *vmcl_fenceinsert_1(VMCLFenceInsertOp *, CLIENT *);
 extern VMAccelReturnStatus *vmcl_fenceinsert_1_svc(VMCLFenceInsertOp *,
                                                    struct svc_req *);
-#define VMCL_IMAGEUPLOAD 21
+#define VMCL_IMAGEUPLOAD 18
 extern VMAccelReturnStatus *vmcl_imageupload_1(VMCLImageUploadOp *, CLIENT *);
 extern VMAccelReturnStatus *vmcl_imageupload_1_svc(VMCLImageUploadOp *,
                                                    struct svc_req *);
-#define VMCL_IMAGEDOWNLOAD 22
+#define VMCL_IMAGEDOWNLOAD 19
 extern VMAccelDownloadReturnStatus *vmcl_imagedownload_1(VMCLImageDownloadOp *,
                                                          CLIENT *);
 extern VMAccelDownloadReturnStatus *
 vmcl_imagedownload_1_svc(VMCLImageDownloadOp *, struct svc_req *);
-#define VMCL_SURFACEMAP 23
+#define VMCL_SURFACEMAP 20
 extern VMAccelSurfaceMapReturnStatus *vmcl_surfacemap_1(VMCLSurfaceMapOp *,
                                                         CLIENT *);
 extern VMAccelSurfaceMapReturnStatus *vmcl_surfacemap_1_svc(VMCLSurfaceMapOp *,
                                                             struct svc_req *);
-#define VMCL_SURFACEUNMAP 24
+#define VMCL_SURFACEUNMAP 21
 extern VMAccelReturnStatus *vmcl_surfaceunmap_1(VMCLSurfaceUnmapOp *, CLIENT *);
 extern VMAccelReturnStatus *vmcl_surfaceunmap_1_svc(VMCLSurfaceUnmapOp *,
                                                     struct svc_req *);
-#define VMCL_SURFACECOPY 25
+#define VMCL_SURFACECOPY 22
 extern VMAccelReturnStatus *vmcl_surfacecopy_1(VMCLSurfaceCopyOp *, CLIENT *);
 extern VMAccelReturnStatus *vmcl_surfacecopy_1_svc(VMCLSurfaceCopyOp *,
                                                    struct svc_req *);
-#define VMCL_IMAGEFILL 26
+#define VMCL_IMAGEFILL 23
 extern VMAccelReturnStatus *vmcl_imagefill_1(VMCLImageFillOp *, CLIENT *);
 extern VMAccelReturnStatus *vmcl_imagefill_1_svc(VMCLImageFillOp *,
                                                  struct svc_req *);
-#define VMCL_SAMPLERALLOC 27
+#define VMCL_SAMPLERALLOC 24
 extern VMCLSamplerAllocateReturnStatus *
 vmcl_sampleralloc_1(VMCLSamplerAllocateDesc *, CLIENT *);
 extern VMCLSamplerAllocateReturnStatus *
 vmcl_sampleralloc_1_svc(VMCLSamplerAllocateDesc *, struct svc_req *);
-#define VMCL_SAMPLERDESTROY 28
+#define VMCL_SAMPLERDESTROY 25
 extern VMAccelReturnStatus *vmcl_samplerdestroy_1(VMCLSamplerId *, CLIENT *);
 extern VMAccelReturnStatus *vmcl_samplerdestroy_1_svc(VMCLSamplerId *,
                                                       struct svc_req *);
-#define VMCL_KERNELALLOC 29
+#define VMCL_KERNELALLOC 26
 extern VMCLKernelAllocateReturnStatus *
 vmcl_kernelalloc_1(VMCLKernelAllocateDesc *, CLIENT *);
 extern VMCLKernelAllocateReturnStatus *
 vmcl_kernelalloc_1_svc(VMCLKernelAllocateDesc *, struct svc_req *);
-#define VMCL_KERNELDESTROY 30
+#define VMCL_KERNELDESTROY 27
 extern VMAccelReturnStatus *vmcl_kerneldestroy_1(VMCLKernelId *, CLIENT *);
 extern VMAccelReturnStatus *vmcl_kerneldestroy_1_svc(VMCLKernelId *,
                                                      struct svc_req *);
-#define VMCL_DISPATCH 31
+#define VMCL_DISPATCH 28
 extern VMAccelReturnStatus *vmcl_dispatch_1(VMCLDispatchOp *, CLIENT *);
 extern VMAccelReturnStatus *vmcl_dispatch_1_svc(VMCLDispatchOp *,
                                                 struct svc_req *);
 extern int vmcl_1_freeresult(SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
-#define VMCL_POOLSTATUS 1
-extern VMAccelPoolReturnStatus *vmcl_poolstatus_1();
-extern VMAccelPoolReturnStatus *vmcl_poolstatus_1_svc();
-#define VMCL_ACCELALLOC 2
-extern VMAccelAllocateReturnStatus *vmcl_accelalloc_1();
-extern VMAccelAllocateReturnStatus *vmcl_accelalloc_1_svc();
-#define VMCL_ACCELDESTROY 3
-extern VMAccelReturnStatus *vmcl_acceldestroy_1();
-extern VMAccelReturnStatus *vmcl_acceldestroy_1_svc();
-#define VMCL_CONTEXTALLOC 4
+#define VMCL_CONTEXTALLOC 1
 extern VMCLContextAllocateReturnStatus *vmcl_contextalloc_1();
 extern VMCLContextAllocateReturnStatus *vmcl_contextalloc_1_svc();
-#define VMCL_CONTEXTDESTROY 5
+#define VMCL_CONTEXTDESTROY 2
 extern VMAccelReturnStatus *vmcl_contextdestroy_1();
 extern VMAccelReturnStatus *vmcl_contextdestroy_1_svc();
-#define VMCL_SURFACEALLOC 6
+#define VMCL_SURFACEALLOC 3
 extern VMAccelSurfaceAllocateReturnStatus *vmcl_surfacealloc_1();
 extern VMAccelSurfaceAllocateReturnStatus *vmcl_surfacealloc_1_svc();
-#define VMCL_SURFACEDESTROY 7
+#define VMCL_SURFACEDESTROY 4
 extern VMAccelReturnStatus *vmcl_surfacedestroy_1();
 extern VMAccelReturnStatus *vmcl_surfacedestroy_1_svc();
-#define VMCL_SURFACEGETSHAREDHANDLE 8
+#define VMCL_SURFACEGETSHAREDHANDLE 5
 extern VMAccelSharedHandleReturnStatus *vmcl_surfacegetsharedhandle_1();
 extern VMAccelSharedHandleReturnStatus *vmcl_surfacegetsharedhandle_1_svc();
-#define VMCL_SURFACERELEASESHAREDHANDLE 9
+#define VMCL_SURFACERELEASESHAREDHANDLE 6
 extern VMAccelReturnStatus *vmcl_surfacereleasesharedhandle_1();
 extern VMAccelReturnStatus *vmcl_surfacereleasesharedhandle_1_svc();
-#define VMCL_QUEUEALLOC 10
+#define VMCL_QUEUEALLOC 7
 extern VMAccelQueueReturnStatus *vmcl_queuealloc_1();
 extern VMAccelQueueReturnStatus *vmcl_queuealloc_1_svc();
-#define VMCL_QUEUEDESTROY 11
+#define VMCL_QUEUEDESTROY 8
 extern VMAccelReturnStatus *vmcl_queuedestroy_1();
 extern VMAccelReturnStatus *vmcl_queuedestroy_1_svc();
-#define VMCL_EVENTALLOC 12
+#define VMCL_EVENTALLOC 9
 extern VMAccelEventReturnStatus *vmcl_eventalloc_1();
 extern VMAccelEventReturnStatus *vmcl_eventalloc_1_svc();
-#define VMCL_EVENTGETSTATUS 13
+#define VMCL_EVENTGETSTATUS 10
 extern VMAccelEventReturnStatus *vmcl_eventgetstatus_1();
 extern VMAccelEventReturnStatus *vmcl_eventgetstatus_1_svc();
-#define VMCL_EVENTDESTROY 14
+#define VMCL_EVENTDESTROY 11
 extern VMAccelEventReturnStatus *vmcl_eventdestroy_1();
 extern VMAccelEventReturnStatus *vmcl_eventdestroy_1_svc();
-#define VMCL_FENCEALLOC 15
+#define VMCL_FENCEALLOC 12
 extern VMAccelFenceReturnStatus *vmcl_fencealloc_1();
 extern VMAccelFenceReturnStatus *vmcl_fencealloc_1_svc();
-#define VMCL_FENCEGETSTATUS 16
+#define VMCL_FENCEGETSTATUS 13
 extern VMAccelFenceReturnStatus *vmcl_fencegetstatus_1();
 extern VMAccelFenceReturnStatus *vmcl_fencegetstatus_1_svc();
-#define VMCL_FENCEDESTROY 17
+#define VMCL_FENCEDESTROY 14
 extern VMAccelFenceReturnStatus *vmcl_fencedestroy_1();
 extern VMAccelFenceReturnStatus *vmcl_fencedestroy_1_svc();
-#define VMCL_QUEUEFLUSH 18
+#define VMCL_QUEUEFLUSH 15
 extern VMAccelReturnStatus *vmcl_queueflush_1();
 extern VMAccelReturnStatus *vmcl_queueflush_1_svc();
-#define VMCL_EVENTINSERT 19
+#define VMCL_EVENTINSERT 16
 extern VMAccelReturnStatus *vmcl_eventinsert_1();
 extern VMAccelReturnStatus *vmcl_eventinsert_1_svc();
-#define VMCL_FENCEINSERT 20
+#define VMCL_FENCEINSERT 17
 extern VMAccelReturnStatus *vmcl_fenceinsert_1();
 extern VMAccelReturnStatus *vmcl_fenceinsert_1_svc();
-#define VMCL_IMAGEUPLOAD 21
+#define VMCL_IMAGEUPLOAD 18
 extern VMAccelReturnStatus *vmcl_imageupload_1();
 extern VMAccelReturnStatus *vmcl_imageupload_1_svc();
-#define VMCL_IMAGEDOWNLOAD 22
+#define VMCL_IMAGEDOWNLOAD 19
 extern VMAccelDownloadReturnStatus *vmcl_imagedownload_1();
 extern VMAccelDownloadReturnStatus *vmcl_imagedownload_1_svc();
-#define VMCL_SURFACEMAP 23
+#define VMCL_SURFACEMAP 20
 extern VMAccelSurfaceMapReturnStatus *vmcl_surfacemap_1();
 extern VMAccelSurfaceMapReturnStatus *vmcl_surfacemap_1_svc();
-#define VMCL_SURFACEUNMAP 24
+#define VMCL_SURFACEUNMAP 21
 extern VMAccelReturnStatus *vmcl_surfaceunmap_1();
 extern VMAccelReturnStatus *vmcl_surfaceunmap_1_svc();
-#define VMCL_SURFACECOPY 25
+#define VMCL_SURFACECOPY 22
 extern VMAccelReturnStatus *vmcl_surfacecopy_1();
 extern VMAccelReturnStatus *vmcl_surfacecopy_1_svc();
-#define VMCL_IMAGEFILL 26
+#define VMCL_IMAGEFILL 23
 extern VMAccelReturnStatus *vmcl_imagefill_1();
 extern VMAccelReturnStatus *vmcl_imagefill_1_svc();
-#define VMCL_SAMPLERALLOC 27
+#define VMCL_SAMPLERALLOC 24
 extern VMCLSamplerAllocateReturnStatus *vmcl_sampleralloc_1();
 extern VMCLSamplerAllocateReturnStatus *vmcl_sampleralloc_1_svc();
-#define VMCL_SAMPLERDESTROY 28
+#define VMCL_SAMPLERDESTROY 25
 extern VMAccelReturnStatus *vmcl_samplerdestroy_1();
 extern VMAccelReturnStatus *vmcl_samplerdestroy_1_svc();
-#define VMCL_KERNELALLOC 29
+#define VMCL_KERNELALLOC 26
 extern VMCLKernelAllocateReturnStatus *vmcl_kernelalloc_1();
 extern VMCLKernelAllocateReturnStatus *vmcl_kernelalloc_1_svc();
-#define VMCL_KERNELDESTROY 30
+#define VMCL_KERNELDESTROY 27
 extern VMAccelReturnStatus *vmcl_kerneldestroy_1();
 extern VMAccelReturnStatus *vmcl_kerneldestroy_1_svc();
-#define VMCL_DISPATCH 31
+#define VMCL_DISPATCH 28
 extern VMAccelReturnStatus *vmcl_dispatch_1();
 extern VMAccelReturnStatus *vmcl_dispatch_1_svc();
 extern int vmcl_1_freeresult();

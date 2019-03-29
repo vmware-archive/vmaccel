@@ -127,7 +127,6 @@ struct VMAccelAddress {
     * See: inc/vmaccel_defs.h::VMAccelResourceTypeEnum
     */
    VMAccelResourceType       resourceType;
-   opaque                    obj<>;
 };
 
 /*
@@ -209,21 +208,7 @@ struct VMAccelDesc {
    unsigned int              maxFences;
    unsigned int              maxSurfaces;
    unsigned int              maxMappings;
-
-   /*
-    * Backend specific state visible to only the server.
-    */
-   opaque                    backendDesc<>;
 };
-
-/*
- * Accelerator pool status.
- */
-struct VMAccelPoolStatus {
-   VMAccelStatusCode         status;
-   VMAccelDesc               accelerators<>;
-};
-
 
 /*
  * Accelerator resource descriptor structure.
@@ -341,6 +326,12 @@ struct VMAccelCoordinate4DUINT {
  */
 struct VMAccelSurfaceDesc {
    /*
+    * Identifier for parent object, e.g. shared surface or explicit
+    * accelerator assignment.
+    */
+   VMAccelId                 parentId;
+
+   /*
     * Type of the surface.
     */
    VMAccelSurfaceType        type;
@@ -387,12 +378,7 @@ typedef unsigned int VMAccelHandleType;
 
 struct VMAccelSurfaceId {
    VMAccelSurfaceType        type;
- 
-   /*
-    * Host based handle.
-    */
    VMAccelHandleType         handleType;
-   opaque                    handle<>;
    VMAccelId                 id; 
 };
 
@@ -475,12 +461,6 @@ struct VMAccelFenceDesc {
    VMAccelSurfaceId          notifyMemory;
    VMAccelCoordinate3DUINT   elementLocation;
    unsigned int              markerValue;
-
-   /*
-    * Callbacks to a driver, callbacks to other accelerators are forbidden,
-    * see above.
-    */
-   VMAccelCallback           callbacks<>;
 };
 
 struct VMAccelFenceStatus {
@@ -659,16 +639,6 @@ struct VMAccelComputeStatus {
 union VMAccelReturnStatus switch (int errno) {
    case 0:
       VMAccelStatus *ret;
-   default:
-      void;
-};
-
-/*
- * The result of a VMAccel pool query operation.
- */
-union VMAccelPoolReturnStatus switch (int errno) {
-   case 0:
-      VMAccelPoolStatus *ret;
    default:
       void;
 };

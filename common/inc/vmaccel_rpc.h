@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <rpc/rpc.h>
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -90,10 +91,6 @@ struct VMAccelAddress {
    } addr;
    u_int port;
    VMAccelResourceType resourceType;
-   struct {
-      u_int obj_len;
-      char *obj_val;
-   } obj;
 };
 typedef struct VMAccelAddress VMAccelAddress;
 
@@ -142,21 +139,8 @@ struct VMAccelDesc {
    u_int maxFences;
    u_int maxSurfaces;
    u_int maxMappings;
-   struct {
-      u_int backendDesc_len;
-      char *backendDesc_val;
-   } backendDesc;
 };
 typedef struct VMAccelDesc VMAccelDesc;
-
-struct VMAccelPoolStatus {
-   VMAccelStatusCode status;
-   struct {
-      u_int accelerators_len;
-      VMAccelDesc *accelerators_val;
-   } accelerators;
-};
-typedef struct VMAccelPoolStatus VMAccelPoolStatus;
 
 struct VMAccelResourceDesc {
    VMAccelId parentId;
@@ -248,6 +232,7 @@ struct VMAccelCoordinate4DUINT {
 typedef struct VMAccelCoordinate4DUINT VMAccelCoordinate4DUINT;
 
 struct VMAccelSurfaceDesc {
+   VMAccelId parentId;
    VMAccelSurfaceType type;
    u_int width;
    u_int height;
@@ -269,10 +254,6 @@ typedef u_int VMAccelHandleType;
 struct VMAccelSurfaceId {
    VMAccelSurfaceType type;
    VMAccelHandleType handleType;
-   struct {
-      u_int handle_len;
-      char *handle_val;
-   } handle;
    VMAccelId id;
 };
 typedef struct VMAccelSurfaceId VMAccelSurfaceId;
@@ -330,10 +311,6 @@ struct VMAccelFenceDesc {
    VMAccelSurfaceId notifyMemory;
    VMAccelCoordinate3DUINT elementLocation;
    u_int markerValue;
-   struct {
-      u_int callbacks_len;
-      VMAccelCallback *callbacks_val;
-   } callbacks;
 };
 typedef struct VMAccelFenceDesc VMAccelFenceDesc;
 
@@ -486,14 +463,6 @@ struct VMAccelReturnStatus {
 };
 typedef struct VMAccelReturnStatus VMAccelReturnStatus;
 
-struct VMAccelPoolReturnStatus {
-   int errno;
-   union {
-      VMAccelPoolStatus *ret;
-   } VMAccelPoolReturnStatus_u;
-};
-typedef struct VMAccelPoolReturnStatus VMAccelPoolReturnStatus;
-
 struct VMAccelAllocateReturnStatus {
    int errno;
    union {
@@ -643,7 +612,6 @@ extern bool_t xdr_VMAccelCallback(XDR *, VMAccelCallback *);
 extern bool_t xdr_VMAccelFormatDesc(XDR *, VMAccelFormatDesc *);
 extern bool_t xdr_VMAccelWorkloadDesc(XDR *, VMAccelWorkloadDesc *);
 extern bool_t xdr_VMAccelDesc(XDR *, VMAccelDesc *);
-extern bool_t xdr_VMAccelPoolStatus(XDR *, VMAccelPoolStatus *);
 extern bool_t xdr_VMAccelResourceDesc(XDR *, VMAccelResourceDesc *);
 extern bool_t xdr_VMAccelAllocateStatus(XDR *, VMAccelAllocateStatus *);
 extern bool_t xdr_VMAccelRegisterDesc(XDR *, VMAccelRegisterDesc *);
@@ -688,7 +656,6 @@ extern bool_t xdr_VMAccelComputeArgDesc(XDR *, VMAccelComputeArgDesc *);
 extern bool_t xdr_VMAccelComputeOp(XDR *, VMAccelComputeOp *);
 extern bool_t xdr_VMAccelComputeStatus(XDR *, VMAccelComputeStatus *);
 extern bool_t xdr_VMAccelReturnStatus(XDR *, VMAccelReturnStatus *);
-extern bool_t xdr_VMAccelPoolReturnStatus(XDR *, VMAccelPoolReturnStatus *);
 extern bool_t xdr_VMAccelAllocateReturnStatus(XDR *,
                                               VMAccelAllocateReturnStatus *);
 extern bool_t
@@ -733,7 +700,6 @@ extern bool_t xdr_VMAccelCallback();
 extern bool_t xdr_VMAccelFormatDesc();
 extern bool_t xdr_VMAccelWorkloadDesc();
 extern bool_t xdr_VMAccelDesc();
-extern bool_t xdr_VMAccelPoolStatus();
 extern bool_t xdr_VMAccelResourceDesc();
 extern bool_t xdr_VMAccelAllocateStatus();
 extern bool_t xdr_VMAccelRegisterDesc();
@@ -775,7 +741,6 @@ extern bool_t xdr_VMAccelComputeArgDesc();
 extern bool_t xdr_VMAccelComputeOp();
 extern bool_t xdr_VMAccelComputeStatus();
 extern bool_t xdr_VMAccelReturnStatus();
-extern bool_t xdr_VMAccelPoolReturnStatus();
 extern bool_t xdr_VMAccelAllocateReturnStatus();
 extern bool_t xdr_VMAccelResourceAllocateReturnStatus();
 extern bool_t xdr_VMAccelRegisterReturnStatus();

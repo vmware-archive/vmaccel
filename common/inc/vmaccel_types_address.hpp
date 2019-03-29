@@ -31,7 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static void Destructor(VMAccelAddress &obj) {
    free(obj.addr.addr_val);
-   free(obj.obj.obj_val);
 }
 
 static void DeepCopy(VMAccelAddress &lhs, const VMAccelAddress &rhs) {
@@ -49,18 +48,6 @@ static void DeepCopy(VMAccelAddress &lhs, const VMAccelAddress &rhs) {
       }
       lhs.port = rhs.port;
       lhs.resourceType = rhs.resourceType;
-      lhs.obj.obj_len = rhs.obj.obj_len;
-      free(lhs.obj.obj_val);
-      if (rhs.obj.obj_len != 0) {
-         lhs.obj.obj_val = (char *)malloc(rhs.obj.obj_len * sizeof(char));
-         if (lhs.obj.obj_val != NULL) {
-            memcpy(lhs.obj.obj_val, rhs.obj.obj_val,
-                   rhs.obj.obj_len * sizeof(char));
-         }
-
-      } else {
-         lhs.obj.obj_val = NULL;
-      }
    }
 }
 

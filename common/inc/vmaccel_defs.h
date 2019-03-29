@@ -282,7 +282,7 @@ typedef enum VMAccessPipelineBindPointsEnum {
 #define VMACCEL_BIND_MASK ((1 << VMACCEL_BIND_MAX) - 1)
 
 typedef enum VMAccelHandleTypeEnum {
-   VMACCEL_HANDLE_LOCAL,
+   VMACCEL_HANDLE_ID,
    VMACCEL_HANDLE_HOST_SHARED_FILE,
    VMACCEL_HANDLE_HOST_SHARED_GPU_API,
 } VMAccelHandleTypeEnum;
