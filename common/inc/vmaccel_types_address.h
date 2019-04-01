@@ -52,6 +52,7 @@ static bool VMAccelAddressOpaqueAddrToString(const VMAccelAddress *addr,
       strcpy(out, inet_ntoa(inetaddr));
       return true;
    }
+   memset(out, 0, len);
    return false;
 }
 
@@ -69,8 +70,11 @@ static bool VMAccelAddressStringToOpaqueAddr(const char *addr, char *out,
 static void Log_VMAccelAddress(const char *prefix, const VMAccelAddress *addr) {
    char str[256];
 
-   VMAccelAddressOpaqueAddrToString(addr, str, sizeof(str));
-   Log("%s addr=<%s>\n", prefix, str);
+   if (VMAccelAddressOpaqueAddrToString(addr, str, sizeof(str))) {
+      Log("%s addr=<%s>\n", prefix, str);
+   } else {
+      Log("%s addr=n/a\n", prefix);
+   }
    Log("%s port=%u\n", prefix, addr->port);
    Log("%s resourceType=%u\n", prefix, addr->resourceType);
 }

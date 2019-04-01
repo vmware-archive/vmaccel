@@ -548,7 +548,8 @@ int compute(
 
    if (result_1 != NULL) {
       vmaccelmgr_free_1_arg = result_1->VMAccelAllocateReturnStatus_u.ret->id;
-      result_10 = vmaccelmgr_free_1(&vmaccelmgr_free_1_arg, clnt);
+      result_10 =
+         vmaccelmgr_free_1(&vmaccelmgr_free_1_arg, accel.get_manager());
       if (result_10 == NULL) {
          Warning("%s: Unable to free compute resource = %u\n", __FUNCTION__,
                  vmaccelmgr_free_1_arg);

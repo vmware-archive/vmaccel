@@ -670,6 +670,7 @@ VMAccelStatus *vmwopencl_surfacedestroy_1(VMCLSurfaceId *argp) {
    memset(&surfaces[sid], 0, sizeof(surfaces[0]));
 
    IdentifierDB_ReleaseId(surfaceIds, sid);
+   result.status = VMACCEL_SUCCESS;
 
    return (&result);
 }

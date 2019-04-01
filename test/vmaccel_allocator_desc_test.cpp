@@ -56,8 +56,7 @@ int main(int argc, char **argv) {
    desc.parentId = VMACCEL_INVALID_ID;
    desc.parentAddr.addr.addr_len = VMACCEL_MAX_LOCATION_SIZE;
    desc.parentAddr.addr.addr_val = (char *)malloc(VMACCEL_MAX_LOCATION_SIZE);
-   snprintf(desc.parentAddr.addr.addr_val, VMACCEL_MAX_LOCATION_SIZE,
-            "1234");
+   snprintf(desc.parentAddr.addr.addr_val, VMACCEL_MAX_LOCATION_SIZE, "1234");
    desc.capacity.megaFlops = 65535;
    desc.capacity.megaOps = 1;
    parent = *descMgr->Register(&desc);
