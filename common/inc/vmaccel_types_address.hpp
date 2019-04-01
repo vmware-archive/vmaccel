@@ -29,8 +29,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _VMACCEL_TYPES_ADDRESS_HPP_
 #define _VMACCEL_TYPES_ADDRESS_HPP_ 1
 
+static void Constructor(VMAccelAddress &obj) {
+   obj.addr.addr_len = 0;
+   obj.addr.addr_val = NULL;
+   obj.port = 0;
+   obj.resourceType = 0;
+}
+
 static void Destructor(VMAccelAddress &obj) {
    free(obj.addr.addr_val);
+   obj.addr.addr_val = NULL;
 }
 
 static void DeepCopy(VMAccelAddress &lhs, const VMAccelAddress &rhs) {
@@ -48,6 +56,25 @@ static void DeepCopy(VMAccelAddress &lhs, const VMAccelAddress &rhs) {
       }
       lhs.port = rhs.port;
       lhs.resourceType = rhs.resourceType;
+   }
+}
+
+static void Move(VMAccelAddress &lhs, VMAccelAddress &rhs) {
+   if (&lhs != &rhs) {
+      lhs.addr.addr_len = rhs.addr.addr_len;
+      /*
+       * The following line causes a Valgrind warning:
+       *
+       *   Conditional jump or move depends on uninitialised value(s)
+       *
+       * This is avoided by memset of objects for VMAccelObject to zero on
+       * construction.
+       */
+      free(lhs.addr.addr_val);
+      lhs.addr.addr_val = rhs.addr.addr_val;
+      lhs.port = rhs.port;
+      lhs.resourceType = rhs.resourceType;
+      memset(&rhs, 0, sizeof(rhs));
    }
 }
 

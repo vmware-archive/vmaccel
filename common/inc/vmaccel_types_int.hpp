@@ -71,12 +71,23 @@ struct IntCmp {
    }
 };
 
+static void Constructor(Int &obj) {
+   obj.x = 0;
+}
+
 static void Destructor(Int &obj) {
 }
 
 static void DeepCopy(Int &lhs, const Int &rhs) {
    if (&lhs != &rhs) {
       lhs.x = rhs.x;
+   }
+}
+
+static void Move(Int &lhs, Int &rhs) {
+   if (&lhs != &rhs) {
+      lhs.x = rhs.x;
+      memset(&rhs, 0, sizeof(rhs));
    }
 }
 

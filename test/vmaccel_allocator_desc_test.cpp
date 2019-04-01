@@ -41,6 +41,7 @@ int main(int argc, char **argv) {
    VMAccelAllocator<VMAccelDesc, VMAccelDescCmp> *descMgr = NULL;
    VMAccelAllocateStatus parent;
    VMAccelAllocateStatus alloc[2048];
+
    VMAccelDesc desc;
    VMAccelDesc val;
 
@@ -52,10 +53,19 @@ int main(int argc, char **argv) {
    memset(&val, 0, sizeof(val));
 
    // Register the resource.
+   desc.parentId = VMACCEL_INVALID_ID;
+   desc.parentAddr.addr.addr_len = VMACCEL_MAX_LOCATION_SIZE;
+   desc.parentAddr.addr.addr_val = (char *)malloc(VMACCEL_MAX_LOCATION_SIZE);
+   snprintf(desc.parentAddr.addr.addr_val, VMACCEL_MAX_LOCATION_SIZE,
+            "1234");
    desc.capacity.megaFlops = 65535;
    desc.capacity.megaOps = 1;
    parent = *descMgr->Register(&desc);
    assert(parent.status == VMACCEL_SUCCESS);
+
+   desc.parentAddr.addr.addr_len = 0;
+   free(desc.parentAddr.addr.addr_val);
+   desc.parentAddr.addr.addr_val = NULL;
 
    // Allocate half+1 of the resource.
    desc.capacity.megaFlops = 32768;

@@ -87,12 +87,25 @@ struct AllocRangeCmp {
    }
 };
 
+static void Constructor(AllocRange &obj) {
+   obj.cmpRange = false;
+   obj.size = 0;
+   obj.begin = obj.end = 0;
+}
+
 static void Destructor(AllocRange &obj) {
 }
 
 static void DeepCopy(AllocRange &lhs, const AllocRange &rhs) {
    if (&lhs != &rhs) {
       lhs = rhs;
+   }
+}
+
+static void Move(AllocRange &lhs, AllocRange &rhs) {
+   if (&lhs != &rhs) {
+      lhs = rhs;
+      memset(&rhs, 0, sizeof(rhs));
    }
 }
 

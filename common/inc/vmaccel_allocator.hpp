@@ -64,26 +64,62 @@ template <class T>
 class VMAccelObject {
 
 public:
+   /*
+    * Default constructor.
+    */
    VMAccelObject<T>() {
       parentId = VMACCEL_INVALID_ID;
       fenceId = VMACCEL_INVALID_ID;
-      memset(&obj, 0, sizeof(obj));
+      Constructor(obj);
    }
 
+   /*
+    * Copy constructors.
+    */
    VMAccelObject<T>(VMAccelId id, T *o) {
       parentId = id;
       fenceId = VMACCEL_INVALID_ID;
-      memset(&obj, 0, sizeof(obj));
+      Constructor(obj);
       DeepCopy(obj, *o);
    }
 
    VMAccelObject<T>(const VMAccelObject<T> &o) {
       parentId = o.parentId;
       fenceId = o.fenceId;
-      memset(&obj, 0, sizeof(obj));
+      Constructor(obj);
       DeepCopy(obj, o.obj);
    }
 
+   /*
+    * Move constructors.
+    */
+   VMAccelObject<T>(VMAccelObject<T> &&o) {
+      parentId = o.parentId;
+      o.parentId = VMACCEL_INVALID_ID;
+      fenceId = o.fenceId;
+      o.fenceId = VMACCEL_INVALID_ID;
+      Move(obj, o.obj);
+   }
+
+   VMAccelObject<T> &operator=(const VMAccelObject<T> &o) {
+      parentId = o.parentId;
+      fenceId = o.fenceId;
+      DeepCopy(obj, o.obj);
+      return *this;
+   }
+
+   VMAccelObject<T> &operator=(VMAccelObject<T> &&o) {
+      parentId = o.parentId;
+      o.parentId = VMACCEL_INVALID_ID;
+      fenceId = o.fenceId;
+      o.fenceId = VMACCEL_INVALID_ID;
+      Move(obj, o.obj);
+      return *this;
+   }
+
+   /*
+    * Destructor.
+    */
    ~VMAccelObject<T>() { Destructor(obj); }
 
    bool operator==(const VMAccelObject<T> &rhs) const { return obj == rhs.obj; }
@@ -138,6 +174,9 @@ public:
       externalIds = IdentifierDB_Alloc(num);
    }
 
+   /*
+    * Destructor.
+    */
    ~VMAccelAllocator<T, C>() {
       IdentifierDB_Free(externalIds);
       IdentifierDB_Free(registeredIds);
@@ -209,7 +248,7 @@ void VMAccelAllocator<T, C>::CoalesceFreed() {
     * allocations in temporal order of completion.
     */
    while (!freed.empty()) {
-      a = freed.front();
+      a = VMAccelObject<T>(freed.front());
 
       if (!vmaccel_manager_wait_for_fence(a.GetFenceId())) {
          Warning("Unable to wait for fence %d\n", a.GetFenceId());
@@ -254,7 +293,9 @@ bool VMAccelAllocator<T, C>::FindFreed(VMAccelObject<T> &req,
                   Warning("Unable to add remainder to free set...\n");
                }
             }
+            Destructor(r);
             d = VMAccelObject<T>(req.GetParentId(), &div);
+            Destructor(div);
             found = true;
          }
          break;
@@ -265,11 +306,13 @@ bool VMAccelAllocator<T, C>::FindFreed(VMAccelObject<T> &req,
             if (Reserve(it->GetObj(), req.GetObj(), div, r)) {
                free.erase(it);
                d = VMAccelObject<T>(req.GetParentId(), &div);
+               Destructor(div);
                if (!IsEmpty(r)) {
                   if (!FreeObj(free, VMAccelObject<T>(req.GetParentId(), &r))) {
                      Warning("Unable to add remainder to free set...\n");
                   }
                }
+               Destructor(r);
                found = true;
             }
          }
@@ -364,11 +407,13 @@ VMAccelAllocateStatus *VMAccelAllocator<T, C>::Alloc(VMAccelId parentId, T *a,
       if (Reserve(it->GetObj(), req.GetObj(), div, r)) {
          free.erase(it);
          obj = VMAccelObject<T>(req.GetParentId(), &div);
+         Destructor(div);
          if (!IsEmpty(r)) {
             if (!FreeObj(free, VMAccelObject<T>(req.GetParentId(), &r))) {
                Warning("Unable to add remainder to free set...\n");
             }
          }
+         Destructor(r);
          found = true;
       }
    } else if (FindFreed(req, obj)) {
@@ -385,10 +430,10 @@ VMAccelAllocateStatus *VMAccelAllocator<T, C>::Alloc(VMAccelId parentId, T *a,
       return &result;
    }
 
-   DeepCopy(d, obj.GetObj());
    registeredId = obj.GetParentId();
    allocated[externalId] = obj;
 
+   d = allocated[externalId].GetObj();
    capacity[registeredId] -= d;
    load[registeredId] += d;
    refCount[registeredId]++;
