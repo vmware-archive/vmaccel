@@ -42,7 +42,15 @@ const char *helloKernel = "__kernel void hello_kernel(__global int *a)\n"
                           "}\n";
 
 int main(int argc, char **argv) {
-   address mgrAddr("127.0.0.1");
+   std::string host;
+
+   if (argc > 1) {
+      host = argv[1];
+   } else {
+      host = "127.0.0.1";
+   }
+
+   address mgrAddr(host);
    work_topology workTopology({0}, {ARRAY_SIZE}, {1});
    accelerator accel(mgrAddr);
 
