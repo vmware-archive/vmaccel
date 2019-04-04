@@ -255,6 +255,49 @@ execution order:
   CLIENT: Event Triggered ==> caller copies content and frees
 ```
 
+#### Addressing Resources
+
+Addressing of resources in the networked Accelerator fabric is different than
+addressing a local resource. When allocating an Accelerator resource, there
+needs to be a way for each resource to be uniquely assigned to a given
+application/client. To achieve this, each resource request will be identified
+using a two-dimensional identification:
+
+1. Client unique identifier, e.g. unique accelerator resource database id.
+2. A virtualized identifier, representing uniqueness within the client's
+   address space.
+
+With these two identifiers, a server can then map a reference to a resource
+to a global resource allocation pool. The above is analogous to the virtual
+address space that is handled by an operating system using process id's.
+
+Example:
+
+&nbsp; (Process Id, Client Id) -> Global Id
+&nbsp; (Client IP, Global Id) -> Server Local Id
+
+Example:
+
+&nbsp; (0, 1) -> 2 -> (Client IP, 2) within context -> Context A's resource
+
+By allowing the client to utilize resources and satisfying those requests
+on-demand, a client does not need to interact with a centralized allocator
+for each request for residency. Such an operation is serializing to parallel
+workload submissions and can burden the fabric. Alternatively, the burden
+of over-commit is placed on the server so a scheduler must be aware of the
+workload requirements and make intelligent placement decisions to avoid
+T(context switch) from above.
+
+#### Address Indirection Across Resources
+
+Address indirection across resources could burden the fabric with residency
+requests. Furthermore, virtual address indirection across resources requires
+an MMU that can translate addresses when executing an operation on the host.
+Since the virtual address space is different between the client and server,
+and operations are remoted in user-space, virtual address indirection encoded
+into resources is not supported, e.g. a linked list walking mechanism accross
+resources.
+
 ### Auto-generated Files
 1. Auto-generated files are placed in build/gen
 2. Header files should be copied as follows
