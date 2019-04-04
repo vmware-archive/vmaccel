@@ -257,9 +257,9 @@ execution order:
 
 #### Addressing Resources
 
-Addressing of resources in the networked Accelerator fabric is different than
-addressing a local resource. When allocating an Accelerator resource, there
-needs to be a way for each resource to be uniquely assigned to a given
+Addressing of resources in a networked Accelerator fabric is different than
+addressing a local resource. When allocating a server's Accelerator resource,
+there needs to be a way for each resource to be uniquely assigned to a given
 application/client. To achieve this, each resource request will be identified
 using a two-dimensional identification:
 
@@ -267,36 +267,34 @@ using a two-dimensional identification:
 2. A virtualized identifier, representing uniqueness within the client's
    address space.
 
-With these two identifiers, a server can then map a reference to a resource
-to a global resource allocation pool. The above is analogous to the virtual
-address space that is handled by an operating system using process id's.
+With these two identifiers, a server can then map a resource reference to a
+resource in the server's allocation pool. The above is analogous to a virtual
+address space that is managed by an operating system using process id's.
 
 Example:
 
-&nbsp; (Process Id, Client Id) -> Global Id
-&nbsp; (Client IP, Global Id) -> Server Local Id
-
-Example:
+&nbsp; (Process Id, Client Id) -> Global Id -> (Client IP, Global Id) -> Server Local Id
 
 &nbsp; (0, 1) -> 2 -> (Client IP, 2) within context -> Context A's resource
 
-By allowing the client to utilize resources and satisfying those requests
-on-demand, a client does not need to interact with a centralized allocator
-for each request for residency. Such an operation is serializing to parallel
-workload submissions and can burden the fabric. Alternatively, the burden
-of over-commit is placed on the server so a scheduler must be aware of the
-workload requirements and make intelligent placement decisions to avoid
-T(context switch) from above.
+By allowing the client to utilize resources as if it was the only client
+in the system, and satisfying those requests on-demand, a client does not
+need to interact with a centralized allocator for each request for residency.
+Interacting with a centralized allocator is serializing to parallel workload
+submissions and can burden the fabric. However, allowing each client to act
+as if it was the only client in the system, places the burden of over-commit
+on the server. A scheduler must be aware of the workload requirements and make
+intelligent placement decisions to avoid T(context switch) from above.
 
 #### Address Indirection Across Resources
 
 Address indirection across resources could burden the fabric with residency
 requests. Furthermore, virtual address indirection across resources requires
-an MMU that can translate addresses when executing an operation on the host.
-Since the virtual address space is different between the client and server,
-and operations are remoted in user-space, virtual address indirection encoded
-into resources is not supported, e.g. a linked list walking mechanism accross
-resources.
+an MMU that can map addresses to a server's resources when executing an
+operation on the host. Since the virtual address space is different between a
+client and server, and operations are remoted in user-space, virtual address
+indirection encoded into resources is not supported (e.g. a linked list
+walking mechanism accross resources).
 
 ### Auto-generated Files
 1. Auto-generated files are placed in build/gen
