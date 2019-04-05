@@ -291,10 +291,11 @@ intelligent placement decisions to avoid T(context switch) from above.
 Address indirection across resources could burden the fabric with residency
 requests. Furthermore, virtual address indirection across resources requires
 an MMU that can map addresses to a server's resources when executing an
-operation on the host. Since the virtual address space is different between a
-client and server, and operations are remoted in user-space, virtual address
-indirection encoded into resources is not supported (e.g. a linked list
-walking mechanism accross resources).
+operation on the server's host. Since the virtual address space for a client
+is different than the server's virtual addres space and operations are
+remoted in user-space, virtual address indirection encoded into resources
+is not supported (e.g. for an algorithm that walks a linked list that is
+distributed across multiple resources).
 
 ### Auto-generated Files
 1. Auto-generated files are placed in build/gen
