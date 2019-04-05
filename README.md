@@ -255,6 +255,34 @@ execution order:
   CLIENT: Event Triggered ==> caller copies content and frees
 ```
 
+#### Surfaces - Abstracted Memory Objects
+
+Surfaces provide an allocation a defined lifetime within an Accelerator,
+topology for the content stored in the Surface, and also provide a uniqueness
+hint for the backing memory with regards to the working set. When a client
+allocates a Surface, the contents are managed via Map/Unmap or Upload/Download
+operations. This gives a hint to the Accelerator when pages of the backing
+memory are dirtied and the ability for a stack to copy-on-write if the Surface
+is used in a pending operation.
+
+Data consistency is best handled at the granularity of the whole Surface, as
+parallelism of the Accelerator may have different semantics depending on the
+implementation. To provide consistency across a whole Surface, a Map or
+Download operation will wait until serialization of the Accelerator's Surface.
+An Unmap or Upload operation will destroy any updates by the Accelerator with
+the contents of the update, leaving this aspect of the consistency model up to
+the client.
+
+Surfaces are Accelerator objects first and foremost, thus the topology of
+the contents can be adjusted on the Accelerator for performance reasons.
+When a client writes to the memory provided by a Map operation, the format
+used in writing to that memory is determined by the backing format's
+serialization contract. Upon Unmap, the Accelerator will use the format's
+serialization contract to translate the new contents to an Accelerator format.
+When introducing planar or compressed formats, the serialization contracts
+require the resolving of multiple pixels for one block before serialization
+can occur.
+
 #### Addressing Resources
 
 Addressing of resources in a networked Accelerator fabric is different than
@@ -292,7 +320,7 @@ Address indirection across resources could burden the fabric with residency
 requests. Furthermore, virtual address indirection across resources requires
 an MMU that can map addresses to a server's resources when executing an
 operation on the server's host. Since the virtual address space for a client
-is different than the server's virtual addres space and operations are
+is different than the server's virtual address space and operations are
 remoted in user-space, virtual address indirection encoded into resources
 is not supported (e.g. for an algorithm that walks a linked list that is
 distributed across multiple resources).
