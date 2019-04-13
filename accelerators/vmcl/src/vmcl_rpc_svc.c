@@ -73,14 +73,17 @@ static VMAccelMgrClient vmaccelmgr_register(char *host, char *iface,
    while (netif != NULL) {
       int family, ret;
 
-      if (netif->ifa_addr == NULL)
+      if (netif->ifa_addr == NULL) {
+         netif = netif->ifa_next;
          continue;
+      }
 
       ret = getnameinfo(netif->ifa_addr, sizeof(struct sockaddr_in), localHost,
                         NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
 
       if (ret != 0) {
          Warning("getnameinfo() failed: %s\n", gai_strerror(ret));
+         netif = netif->ifa_next;
          continue;
       }
 
@@ -127,15 +130,14 @@ static VMAccelMgrClient vmaccelmgr_register(char *host, char *iface,
 
       result_2 =
          vmaccelmgr_register_1(&vmaccelmgr_register_1_arg, mgrClient.clnt);
-      if (result_2 == (VMAccelAllocateReturnStatus *)NULL) {
+      if ((result_2 == (VMAccelAllocateReturnStatus *)NULL) ||
+          (result_2->VMAccelAllocateReturnStatus_u.ret == NULL)) {
          clnt_perror(mgrClient.clnt, "call failed");
          clnt_destroy(mgrClient.clnt);
          mgrClient.clnt = NULL;
+      } else {
+         mgrClient.accelId = result_2->VMAccelAllocateReturnStatus_u.ret->id;
       }
-
-      assert(result_2->VMAccelAllocateReturnStatus_u.ret != NULL);
-
-      mgrClient.accelId = result_2->VMAccelAllocateReturnStatus_u.ret->id;
    }
 
    freeifaddrs(netifs);
