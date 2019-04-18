@@ -1,4 +1,5 @@
 set(SOURCES
+   ../../../../common/src/vmaccel_utils.c
    ../../src/vmaccel.c
    ../../src/vmaccel.cpp)
 

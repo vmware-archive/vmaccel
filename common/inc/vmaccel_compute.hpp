@@ -55,6 +55,176 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace vmaccel {
 
+/**
+ * VMCLContext structure.
+ *
+ * Bare minimum information for transferring surface contents.
+ */
+class clcontext : public context {
+
+public:
+   /**
+    * Constructor.
+    */
+   clcontext(std::shared_ptr<accelerator> &a)
+      : context(a, VMACCEL_COMPUTE_ACCELERATOR) {
+      accelId = contextId = queueId = VMACCEL_INVALID_ID;
+   }
+
+   /**
+    * Destructor.
+    */
+   ~clcontext() { destroy(); }
+
+   /**
+    * Allocation of a context and an associated queue.
+    */
+   int alloc(unsigned int megaFlops, VMAccelId contextId,
+             unsigned int selectionMask, unsigned int requiredCaps,
+             VMAccelId queueId) {
+      VMAccelAllocateReturnStatus *result_1;
+      VMAccelDesc vmaccelmgr_alloc_1_arg;
+      VMCLContextAllocateReturnStatus *result_2;
+      VMCLContextAllocateDesc vmcl_contextalloc_1_arg;
+      VMAccelQueueReturnStatus *result_3;
+      VMCLQueueAllocateDesc vmcl_queuealloc_1_arg;
+      char host[4 * VMACCEL_MAX_LOCATION_SIZE];
+
+      strcpy(&host[0], "127.0.0.1");
+      accelId = VMACCEL_INVALID_ID;
+
+      if (accel->get_manager() != NULL) {
+         memset(&vmaccelmgr_alloc_1_arg, 0, sizeof(vmaccelmgr_alloc_1_arg));
+         vmaccelmgr_alloc_1_arg.type = VMACCEL_COMPUTE_ACCELERATOR;
+         vmaccelmgr_alloc_1_arg.capacity.megaFlops = megaFlops;
+         result_1 =
+            vmaccelmgr_alloc_1(&vmaccelmgr_alloc_1_arg, accel->get_manager());
+         if (result_1 != NULL) {
+            if (!VMAccelAddressOpaqueAddrToString(
+                   &result_1->VMAccelAllocateReturnStatus_u.ret->desc
+                       .parentAddr,
+                   host, sizeof(host))) {
+               VMAccelId vmaccelmgr_free_1_arg;
+               Warning("%s: Unable to resolve Compute Accelerator host\n",
+                       __FUNCTION__);
+               vmaccelmgr_free_1_arg =
+                  result_1->VMAccelAllocateReturnStatus_u.ret->id;
+               vmaccelmgr_free_1(&vmaccelmgr_free_1_arg, accel->get_manager());
+               return VMACCEL_FAIL;
+            }
+            accelId = result_1->VMAccelAllocateReturnStatus_u.ret->id;
+         } else {
+            Warning("%s: Unable to connect to Accelerator manager %p, "
+                    "attempting direct connect to VMCL localhost\n",
+                    __FUNCTION__, accel->get_manager());
+         }
+      }
+
+      clnt = clnt_create(host, VMCL, VMCL_VERSION, "udp");
+      if (clnt == NULL) {
+         Warning("%s: Unable to instantiate VMCL for host = %s\n", __FUNCTION__,
+                 host);
+         return VMACCEL_FAIL;
+      }
+
+      /*
+       * Allocate a context from the Compute Accelerator.
+       */
+      memset(&vmcl_contextalloc_1_arg, 0, sizeof(vmcl_contextalloc_1_arg));
+      vmcl_contextalloc_1_arg.accelId = 0;
+      vmcl_contextalloc_1_arg.clientId = contextId;
+      vmcl_contextalloc_1_arg.selectionMask = selectionMask;
+      vmcl_contextalloc_1_arg.requiredCaps = requiredCaps;
+
+      result_2 = vmcl_contextalloc_1(&vmcl_contextalloc_1_arg, clnt);
+      if (result_2 == NULL) {
+         Warning("%s: Unable to create a VMCL context\n", __FUNCTION__);
+         destroy();
+         return VMACCEL_FAIL;
+      }
+
+      /*
+       * Allocate a queue from the Compute Accelerator.
+       */
+      memset(&vmcl_queuealloc_1_arg, 0, sizeof(vmcl_queuealloc_1_arg));
+      vmcl_queuealloc_1_arg.client.cid = contextId;
+      vmcl_queuealloc_1_arg.client.id = queueId;
+      vmcl_queuealloc_1_arg.desc.flags = VMACCEL_QUEUE_ON_DEVICE_FLAG;
+      vmcl_queuealloc_1_arg.desc.size = -1; /* Unbounded? */
+
+      result_3 = vmcl_queuealloc_1(&vmcl_queuealloc_1_arg, clnt);
+      if (result_3 == NULL) {
+         Warning("%s: Unable to create a VMCL queue\n", __FUNCTION__);
+         destroy();
+         return VMACCEL_FAIL;
+      }
+
+      return VMACCEL_SUCCESS;
+   }
+
+   /**
+    * Forced destruction.
+    */
+   void destroy() {
+      VMAccelReturnStatus *result_1;
+      VMCLQueueId vmcl_queuedestroy_1_arg;
+      VMAccelReturnStatus *result_2;
+      VMCLContextId vmcl_contextdestroy_1_arg;
+
+      if (clnt == NULL) {
+         return;
+      }
+
+      if (contextId != VMACCEL_INVALID_ID && queueId != VMACCEL_INVALID_ID) {
+         vmcl_queuedestroy_1_arg.cid = contextId;
+         vmcl_queuedestroy_1_arg.id = queueId;
+         result_1 = vmcl_queuedestroy_1(&vmcl_queuedestroy_1_arg, clnt);
+         if (result_1 == NULL) {
+            Warning("%s: Unable to destroy queue id = %u\n", __FUNCTION__,
+                    vmcl_queuedestroy_1_arg.id);
+         }
+         queueId = VMACCEL_INVALID_ID;
+      }
+
+      if (contextId != VMACCEL_INVALID_ID) {
+         vmcl_contextdestroy_1_arg = contextId;
+         result_2 = vmcl_contextdestroy_1(&vmcl_contextdestroy_1_arg, clnt);
+         if (result_2 == NULL) {
+            Warning("%s: Unable to destroy context id = %u\n", __FUNCTION__,
+                    vmcl_contextdestroy_1_arg);
+         }
+         contextId = VMACCEL_INVALID_ID;
+      }
+
+      clnt_destroy(clnt);
+      clnt = NULL;
+
+      if (accelId != VMACCEL_INVALID_ID) {
+         VMAccelId vmaccelmgr_free_1_arg;
+         vmaccelmgr_free_1_arg = accelId;
+         vmaccelmgr_free_1(&vmaccelmgr_free_1_arg, accel->get_manager());
+         accelId = VMACCEL_INVALID_ID;
+      }
+   }
+
+   /**
+    * Accessors.
+    */
+   CLIENT *get_client() { return clnt; }
+
+   VMAccelId get_accelId() { return accelId; }
+
+   VMAccelId get_contextId() { return contextId; }
+
+   VMAccelId get_queueId() { return queueId; }
+
+private:
+   CLIENT *clnt;
+   VMAccelId accelId;
+   VMAccelId contextId;
+   VMAccelId queueId;
+};
+
 typedef unsigned int VMCLKernelArchitecture;
 
 /**
@@ -297,31 +467,20 @@ bool quiesceComputeArgs(CLIENT *clnt, unsigned int contextId,
 
 template <class... ARGTYPES>
 int compute(
-   vmaccel::accelerator &accel, const VMCLKernelLanguageType kernelType,
+   std::shared_ptr<vmaccel::accelerator> &accel,
+   const VMCLKernelLanguageType kernelType,
    const std::map<VMCLKernelArchitecture, vmaccel::ref_object<char>> &kernel,
    const std::string &kernelFunction,
    const vmaccel::work_topology &computeTopology, ARGTYPES... args) {
-   CLIENT *clnt;
-   VMAccelAllocateReturnStatus *result_1;
-   VMAccelDesc vmaccelmgr_alloc_1_arg;
-   VMCLContextAllocateReturnStatus *result_2;
-   VMCLContextAllocateDesc vmcl_contextalloc_1_arg;
-   VMAccelQueueReturnStatus *result_3;
-   VMCLQueueAllocateDesc vmcl_queuealloc_1_arg;
-   VMCLKernelAllocateReturnStatus *result_4;
+   std::shared_ptr<clcontext> ctx(new clcontext(accel));
+   VMCLKernelAllocateReturnStatus *result_1;
    VMCLKernelAllocateDesc vmcl_kernelalloc_1_arg;
-   VMAccelReturnStatus *result_5;
+   VMAccelReturnStatus *result_2;
    VMCLDispatchOp vmcl_dispatch_1_arg;
-   VMAccelReturnStatus *result_6;
+   VMAccelReturnStatus *result_3;
    VMCLQueueId vmcl_queueflush_1_arg;
-   VMAccelReturnStatus *result_7;
+   VMAccelReturnStatus *result_4;
    VMCLKernelId vmcl_kerneldestroy_1_arg;
-   VMAccelReturnStatus *result_8;
-   VMCLQueueId vmcl_queuedestroy_1_arg;
-   VMAccelReturnStatus *result_9;
-   VMCLContextId vmcl_contextdestroy_1_arg;
-   VMAccelReturnStatus *result_10;
-   VMAccelId vmaccelmgr_free_1_arg;
    VMCLKernelArgDesc *kernelArgs = NULL;
    unsigned int *surfaceIds = NULL;
    unsigned int numArguments = sizeof...(args);
@@ -333,79 +492,10 @@ int compute(
    /*
     * Query an accelerator manager for the Compute Resource.
     */
-   char host[4 * VMACCEL_MAX_LOCATION_SIZE];
-
-   memset(&vmaccelmgr_alloc_1_arg, 0, sizeof(vmaccelmgr_alloc_1_arg));
-   vmaccelmgr_alloc_1_arg.type = VMACCEL_COMPUTE_ACCELERATOR;
-   vmaccelmgr_alloc_1_arg.capacity.megaFlops = 1;
-   result_1 = vmaccelmgr_alloc_1(&vmaccelmgr_alloc_1_arg, accel.get_manager());
-   if (result_1 != NULL) {
-      if (!VMAccelAddressOpaqueAddrToString(
-             &result_1->VMAccelAllocateReturnStatus_u.ret->desc.parentAddr,
-             host, sizeof(host))) {
-         Warning("%s: Unable to resolve Compute Accelerator host\n",
-                 __FUNCTION__);
-         vmaccelmgr_free_1_arg =
-            result_1->VMAccelAllocateReturnStatus_u.ret->id;
-         vmaccelmgr_free_1(&vmaccelmgr_free_1_arg, accel.get_manager());
-         return VMACCEL_FAIL;
-      }
-   } else {
-      Warning("%s: Unable to connect to Accelerator manager %p, attempting "
-              "direct connect to VMCL localhost\n",
-              __FUNCTION__, accel.get_manager());
-      strcpy(&host[0], "127.0.0.1");
-   }
-
-   clnt = clnt_create(host, VMCL, VMCL_VERSION, "udp");
-   if (clnt == NULL) {
-      Warning("%s: Unable to instantiate VMCL for host = %s\n", __FUNCTION__,
-              host);
-      vmaccelmgr_free_1_arg = result_1->VMAccelAllocateReturnStatus_u.ret->id;
-      vmaccelmgr_free_1(&vmaccelmgr_free_1_arg, accel.get_manager());
-      return VMACCEL_FAIL;
-   }
-
-   /*
-    * Allocate a context from the Compute Accelerator.
-    */
-   memset(&vmcl_contextalloc_1_arg, 0, sizeof(vmcl_contextalloc_1_arg));
-   vmcl_contextalloc_1_arg.accelId = 0;
-   vmcl_contextalloc_1_arg.clientId = contextId;
-   vmcl_contextalloc_1_arg.selectionMask = VMACCEL_CPU_MASK | VMACCEL_GPU_MASK;
-   vmcl_contextalloc_1_arg.requiredCaps = 0;
-   //      (spirv != NULL) ? VMCL_SPIRV_1_0_CAP : 0;
-
-   result_2 = vmcl_contextalloc_1(&vmcl_contextalloc_1_arg, clnt);
-   if (result_2 == NULL) {
-      Warning("%s: Unable to create a VMCL context\n", __FUNCTION__);
-      if (result_1 != NULL) {
-         vmaccelmgr_free_1_arg =
-            result_1->VMAccelAllocateReturnStatus_u.ret->id;
-         vmaccelmgr_free_1(&vmaccelmgr_free_1_arg, accel.get_manager());
-      }
-      return VMACCEL_FAIL;
-   }
-
-   /*
-    * Allocate a queue from the Compute Accelerator.
-    */
-   memset(&vmcl_queuealloc_1_arg, 0, sizeof(vmcl_queuealloc_1_arg));
-   vmcl_queuealloc_1_arg.client.cid = contextId;
-   vmcl_queuealloc_1_arg.client.id = queueId;
-   vmcl_queuealloc_1_arg.desc.flags = VMACCEL_QUEUE_ON_DEVICE_FLAG;
-   vmcl_queuealloc_1_arg.desc.size = -1; /* Unbounded? */
-
-   result_3 = vmcl_queuealloc_1(&vmcl_queuealloc_1_arg, clnt);
-   if (result_3 == NULL) {
-      Warning("%s: Unable to create a VMCL queue\n", __FUNCTION__);
-      vmcl_contextdestroy_1_arg = contextId;
-      vmcl_contextdestroy_1(&vmcl_contextdestroy_1_arg, clnt);
-      if (result_1 != NULL) {
-         vmaccelmgr_free_1_arg =
-            result_1->VMAccelAllocateReturnStatus_u.ret->id;
-         vmaccelmgr_free_1(&vmaccelmgr_free_1_arg, accel.get_manager());
-      }
+   if (ctx->alloc(1, contextId, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
+                  0, //      (spirv != NULL) ? VMCL_SPIRV_1_0_CAP : 0;
+                  queueId) != VMACCEL_SUCCESS) {
+      Warning("%s: Unable to instantiate VMCL\n", __FUNCTION__);
       return VMACCEL_FAIL;
    }
 
@@ -433,15 +523,7 @@ int compute(
    if (kernelArgs == NULL || surfaceIds == NULL) {
       Warning("%s: Unable to create a kernel arguments and surface ids\n",
               __FUNCTION__);
-      vmcl_queuedestroy_1_arg = vmcl_queuealloc_1_arg.client;
-      vmcl_queuedestroy_1(&vmcl_queuedestroy_1_arg, clnt);
-      vmcl_contextdestroy_1_arg = contextId;
-      vmcl_contextdestroy_1(&vmcl_contextdestroy_1_arg, clnt);
-      if (result_1 != NULL) {
-         vmaccelmgr_free_1_arg =
-            result_1->VMAccelAllocateReturnStatus_u.ret->id;
-         vmaccelmgr_free_1(&vmaccelmgr_free_1_arg, accel.get_manager());
-      }
+      ctx->destroy();
       return VMACCEL_FAIL;
    }
 
@@ -455,8 +537,8 @@ int compute(
       surfaceIds[i] = VMACCEL_INVALID_ID;
    }
 
-   if (prepareComputeArgs(clnt, contextId, queueId, kernelArgs, surfaceIds, 0,
-                          args...)) {
+   if (prepareComputeArgs(ctx->get_client(), contextId, queueId, kernelArgs,
+                          surfaceIds, 0, args...)) {
       /*
        * Allocate a Compute Kernel given the source/binaries provided.
        */
@@ -474,8 +556,8 @@ int compute(
       vmcl_kernelalloc_1_arg.source.source_val =
          (char *)kernel.find(VMCL_IR_NATIVE)->second.get_ptr();
 
-      result_4 = vmcl_kernelalloc_1(&vmcl_kernelalloc_1_arg, clnt);
-      if (result_4 != NULL) {
+      result_1 = vmcl_kernelalloc_1(&vmcl_kernelalloc_1_arg, ctx->get_client());
+      if (result_1 != NULL) {
          /*
           * Execute the compute kernel
           */
@@ -499,17 +581,19 @@ int compute(
          vmcl_dispatch_1_arg.args.args_len = numArguments;
          vmcl_dispatch_1_arg.args.args_val = &kernelArgs[0];
 
-         result_5 = vmcl_dispatch_1(&vmcl_dispatch_1_arg, clnt);
-         if (result_5 != NULL) {
-            vmcl_queueflush_1_arg = vmcl_queuealloc_1_arg.client;
+         result_2 = vmcl_dispatch_1(&vmcl_dispatch_1_arg, ctx->get_client());
+         if (result_2 != NULL) {
+            vmcl_queueflush_1_arg.cid = contextId;
+            vmcl_queueflush_1_arg.id = queueId;
 
-            result_6 = vmcl_queueflush_1(&vmcl_queueflush_1_arg, clnt);
-            if (result_6 != NULL) {
+            result_3 =
+               vmcl_queueflush_1(&vmcl_queueflush_1_arg, ctx->get_client());
+            if (result_3 != NULL) {
                /*
                 * Quiesce the Compute Kernel arguments and retrieve the data.
                 */
-               quiesceComputeArgs(clnt, contextId, queueId, kernelArgs,
-                                  surfaceIds, 0, args...);
+               quiesceComputeArgs(ctx->get_client(), contextId, queueId,
+                                  kernelArgs, surfaceIds, 0, args...);
             }
          }
       }
@@ -523,38 +607,14 @@ int compute(
     */
    vmcl_kerneldestroy_1_arg = vmcl_kernelalloc_1_arg.client;
 
-   result_7 = vmcl_kerneldestroy_1(&vmcl_kerneldestroy_1_arg, clnt);
-   if (result_7 == NULL) {
+   result_4 =
+      vmcl_kerneldestroy_1(&vmcl_kerneldestroy_1_arg, ctx->get_client());
+   if (result_4 == NULL) {
       Warning("%s: Unable to destroy kernel id = %u\n", __FUNCTION__,
               vmcl_kerneldestroy_1_arg.id);
    }
 
-   vmcl_queuedestroy_1_arg = vmcl_queuealloc_1_arg.client;
-
-   result_8 = vmcl_queuedestroy_1(&vmcl_queuedestroy_1_arg, clnt);
-   if (result_8 == NULL) {
-      Warning("%s: Unable to destroy queue id = %u\n", __FUNCTION__,
-              vmcl_queuedestroy_1_arg.id);
-   }
-
-   vmcl_contextdestroy_1_arg = contextId;
-   result_9 = vmcl_contextdestroy_1(&vmcl_contextdestroy_1_arg, clnt);
-   if (result_9 == NULL) {
-      Warning("%s: Unable to destroy context id = %u\n", __FUNCTION__,
-              vmcl_contextdestroy_1_arg);
-   }
-
-   clnt_destroy(clnt);
-
-   if (result_1 != NULL) {
-      vmaccelmgr_free_1_arg = result_1->VMAccelAllocateReturnStatus_u.ret->id;
-      result_10 =
-         vmaccelmgr_free_1(&vmaccelmgr_free_1_arg, accel.get_manager());
-      if (result_10 == NULL) {
-         Warning("%s: Unable to free compute resource = %u\n", __FUNCTION__,
-                 vmaccelmgr_free_1_arg);
-      }
-   }
+   ctx->destroy();
 
    return VMACCEL_SUCCESS;
 }

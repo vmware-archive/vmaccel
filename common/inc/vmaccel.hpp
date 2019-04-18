@@ -47,11 +47,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmaccel_utils.h"
 #include "vmaccel_types_address.h"
 #include <cassert>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
 namespace vmaccel {
+
+class accelerator;
+class operation;
+template <class T>
+class ref_object;
+extern vmaccel::ref_object<vmaccel::operation> noop;
 
 /**
  * VMAccel exception class.
@@ -253,8 +260,241 @@ public:
       data = obj.data;
    }
 
+   /**
+    * Accessor for the encapsulated object.
+    */
+   std::shared_ptr<T> &get() { return data; }
+
 private:
    std::shared_ptr<T> data;
+};
+
+/**
+ * VMAccel surface object class.
+ *
+ * Surfaces are Accelerator objects first and foremost, thus the topology of
+ * the contents can be adjusted on the Accelerator for performance reasons.
+ * Surfaces identify current content state and topology on the Accelerator,
+ * so this class is designed to interact with the surface as if it was an
+ * opaque remote object (e.g. Upload and Download). An Upload/Download model
+ * was chosen to avoid non-deterministic contention between open mappings
+ * and the producers/consumers of the operations, since Surfaces are process
+ * global to the client.
+ */
+class surface : public object {
+
+public:
+   /**
+    * Default constructor.
+    */
+   surface() : object() {
+      backing = nullptr;
+      producer = noop;
+   }
+
+   /**
+    * Constructor.
+    */
+   surface(VMAccelSurfaceDesc desc) : object() {
+      backing = nullptr;
+      producer = noop;
+   }
+
+   /**
+    * Copy constructor.
+    */
+   surface(const surface &obj)
+      : object(obj.backing.get(), obj.get_size(), obj.get_usage()) {
+      backing = obj.backing;
+      producer = obj.producer;
+   }
+
+   /**
+    * upload
+    *
+    * Uploads contents of "in" to a given image region within a surface.
+    * Uploads to a surface to avoid holding open map operations. Concurrent
+    * map operations can lead to contention between two or more threads for
+    * the same surface contents.
+    *
+    * @return VMAccelStatusCodeEnum value.
+    */
+   template <class E>
+   int upload(VMAccelSurfaceRegion imgRegion, ref_object<E> &in) {
+      return VMACCEL_FAIL;
+   }
+
+   /**
+    * download
+    *
+    * Downloads from a given image region within a surface to the memory
+    * referenced by "out". Downloads from a surface to avoid holding open
+    * map operations. Concurrent map operations can lead to contention
+    * between two or more threads for the same surface contents.
+    *
+    * @return VMAccelStatusCodeEnum value.
+    */
+   template <class E>
+   int download(VMAccelSurfaceRegion imgRegion, ref_object<E> &out) {
+      return VMACCEL_FAIL;
+   }
+
+   /**
+    * set_producer
+    *
+    * Updates the producer op for this surface.
+    */
+   void set_producer(ref_object<class operation> &op) {
+      /*
+       * Depending on the data consistency contract, a swap of the operation
+       * may decrement the operation to zero and signal an end of the scope
+       * for the variable. At the end of the scope, the application will wait
+       * for the operation to complete and update all output bindings with
+       * the latest content.
+       */
+      producer = op;
+   }
+
+private:
+   std::shared_ptr<char> backing;
+   ref_object<class operation> producer;
+};
+
+/**
+ * VMAccel context object class.
+ *
+ * Context Objects represent the persistent state for a given group of
+ * operations. As long as the Context Object is live, the Accelerator state
+ * associated with the context instance is retained. By defining a context's
+ * lifetime, through the variable scope for a Context Object, disjoint
+ * workloads can be coalesced to optimal placement based upon an
+ * application's usage.
+ */
+class context : public object {
+
+public:
+   /**
+    * Default constructor.
+    */
+   context() : object() {}
+
+   context(std::shared_ptr<accelerator> &a, VMAccelResourceType t) : object() {
+      accel = a;
+      type = t;
+   }
+
+   /**
+    * Accessor functions.
+    */
+   std::shared_ptr<accelerator> &get_accel() { return accel; }
+
+   VMAccelResourceType get_type() { return type; }
+
+protected:
+   std::shared_ptr<accelerator> accel;
+   VMAccelResourceType type;
+};
+
+/**
+ * VMAccel binding class.
+ *
+ * Bindings represent the relationship between a context's persistent state
+ * and a surface. Each binding is configured to attach a surface to a point
+ * in the Accelerator's pipeline with the desired VMAccelSurfaceUsage.
+ */
+class binding {
+
+public:
+   /**
+    * Constructor.
+    */
+   binding(VMAccelResourceType type, VMAccelSurfaceBindFlags bindFlags,
+           VMAccelSurfaceUsage bindUsage, ref_object<surface> &target) {
+      accel = type;
+      flags = bindFlags;
+      usage = bindUsage;
+      surf = target;
+   }
+
+private:
+   VMAccelResourceType accel;
+   VMAccelSurfaceBindFlags flags;
+   VMAccelSurfaceUsage usage;
+   ref_object<surface> surf;
+};
+
+
+/**
+ * VMAccel operation object class.
+ *
+ * Operation Objects represent the lifetime of an operation, from submission
+ * to completion/notification. An operation is associated to an Accelerator
+ * Context and will keep a context alive until the operation completion has
+ * been acknowledged. This allows for transparent abstraction of a queue extent
+ * when handling asynchronous operations and their content across multiple
+ * Accelerator resources. Referenced Objects (e.g. Surfaces) will also be kept
+ * alive for the lifetime of the Operation Object, thus avoiding faults due to
+ * freed objects that are in-flight.
+ */
+class operation : public object {
+
+public:
+   /**
+    * Helper function for populating bindings vector.
+    */
+   template <typename T, typename... B>
+   static void prepareArgs(std::vector<binding> &b, T arg, B... args) {
+      b.push_back(arg);
+      prepareArgs(b, args...);
+   }
+
+   /**
+    * Default constructor.
+    */
+   operation() : object() {
+      ctx = nullptr;
+      tag = "NOP";
+   }
+
+   /**
+    * Constructor.
+    */
+   template <class... B>
+   operation(std::shared_ptr<context> &c, std::string &t, B &... args) {
+      ctx = c;
+      tag = t;
+      prepareArgs(bindings, args...);
+   }
+
+   /**
+    * If an Operation Object's association is reassigned, then complete the
+    * operation and update all Referenced Objects.
+    */
+
+   /**
+    * get_context
+    *
+    * Retrieves a reference to the Context Object associated with this
+    * operation.
+    */
+   std::shared_ptr<context> &get_context() { return ctx; }
+
+private:
+   /**
+    * Context used for the operation.
+    */
+   std::shared_ptr<context> ctx;
+
+   /**
+    * Tag for the operation.
+    */
+   std::string tag;
+
+   /**
+    * Hold a binding for each argument to keep the surface object alive as long
+    * as the Operation Object is alive.
+    */
+   std::vector<binding> bindings;
 };
 
 /**
@@ -350,17 +590,22 @@ public:
     * @param addr Specifies the address of the Accelerator Managment server,
     *             in VMAccelAddress format.
     */
-   accelerator(const address &mgr) {
+   accelerator(const address &mgr, int maxSurfaces = VMACCEL_MAX_SURFACES) {
       char host[256];
       if (VMAccelAddressOpaqueAddrToString(mgr.get_accel_addr(), host,
                                            sizeof(host))) {
          Log("%s: Connecting to Accelerator manager %s\n", __FUNCTION__, host);
          mgrClnt = clnt_create(host, VMACCELMGR, VMACCELMGR_VERSION, "udp");
          if (mgrClnt == NULL) {
-            clnt_pcreateerror(host);
-            exit(1);
+            Warning("Failed to create VMAccelMgr client.");
          }
          Log("%s: mgrClient = %p\n", __FUNCTION__, mgrClnt);
+      }
+      surfaceIds = IdentifierDB_Alloc(maxSurfaces);
+      if (surfaceIds == NULL) {
+         clnt_destroy(mgrClnt);
+         throw exception(VMACCEL_FAIL,
+                         "Failed to create context identifier database.");
       }
    }
 
@@ -369,7 +614,17 @@ public:
     *
     * Closes the connection to the Accelerator Management server.
     */
-   ~accelerator() { clnt_destroy(mgrClnt); }
+   ~accelerator() {
+      if (surfaceIds != NULL) {
+         IdentifierDB_Free(surfaceIds);
+         surfaceIds = NULL;
+      }
+
+      if (mgrClnt != NULL) {
+         clnt_destroy(mgrClnt);
+         mgrClnt = NULL;
+      }
+   }
 
    /**
     * get_manager
@@ -378,8 +633,79 @@ public:
     */
    CLIENT *get_manager() { return mgrClnt; }
 
+   /**
+    * alloc_surface
+    *
+    * Allocates a surface given surface descriptor.
+    *
+    * @return A valid accelerator id for this process if available,
+    *         INVALID otherwise.
+    */
+   VMAccelId alloc_surface(VMAccelSurfaceDesc desc) {
+      VMAccelId ret = VMACCEL_INVALID_ID;
+      if (IdentifierDB_AllocId(surfaceIds, &ret)) {
+         try {
+            std::shared_ptr<surface> surf(new surface(desc));
+            surfaces[ret] = ref_object<surface>(surf, 0, 0);
+         } catch (exception e) {
+            IdentifierDB_ReleaseId(surfaceIds, ret);
+            throw e;
+         }
+      }
+   }
+
+   /**
+    * destroy_surface
+    *
+    * Destroy a surface for a given surface identifier.
+    */
+   void destroy_surface(VMAccelId id) {
+      auto it = surfaces.find(id);
+      if (it != surfaces.end()) {
+         surfaces.erase(it);
+         IdentifierDB_ReleaseId(surfaceIds, id);
+      }
+   }
+
+   /**
+    * surface_upload
+    *
+    * Uploads contents of "in" to a given image region within a surface.
+    *
+    * @return VMAccelStatusCodeEnum value.
+    */
+   template <class E>
+   int surface_upload(VMAccelId id, VMAccelSurfaceRegion imgRegion,
+                      ref_object<E> &in) {
+      auto it = surfaces.find(id);
+      if (it == surfaces.end()) {
+         return VMACCEL_FAIL;
+      }
+      return it->second.get()->upload<E>(in);
+   }
+
+   /**
+    * surface_download
+    *
+    * Downloads from a given image region within a surface to the memory
+    * referenced by "out".
+    *
+    * @return VMAccelStatusCodeEnum value.
+    */
+   template <class E>
+   int surface_download(VMAccelId id, VMAccelSurfaceRegion imgRegion,
+                        ref_object<E> &out) {
+      auto it = surfaces.find(id);
+      if (it == surfaces.end()) {
+         return VMACCEL_FAIL;
+      }
+      return it->second.get()->download<E>(out);
+   }
+
 private:
    CLIENT *mgrClnt;
+   IdentifierDB *surfaceIds;
+   std::map<VMAccelId, ref_object<surface>> surfaces;
 };
 };
 

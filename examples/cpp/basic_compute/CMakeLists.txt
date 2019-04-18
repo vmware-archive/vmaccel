@@ -26,11 +26,14 @@
 
 set(CMAKE_CXX_STANDARD 11)
 
+set(SOURCES
+    basic_compute.cpp)
+
 set(GLOBAL_INC ../../../common/inc)
 
 include_directories(${GLOBAL_INC})
 
-add_executable(basic_compute basic_compute.cpp)
+add_executable(basic_compute ${SOURCES})
 target_link_libraries(basic_compute vmaccel)
 set_target_properties(basic_compute
    PROPERTIES

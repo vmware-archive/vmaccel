@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * VMAccelerator global definitions.
  */
 #define VMACCEL_MAX_ACCELERATORS 256
+#define VMACCEL_MAX_SURFACES 32
 #define VMACCEL_INVALID_ID -1
 
 typedef enum VMAccelStatusCodeEnum {
@@ -224,7 +225,7 @@ typedef enum VMAccelSurfaceMapEnum {
 #define VMACCEL_MAP_NO_OVERWRITE_FLAG (1 << VMACCEL_SURFACE_MAP_NO_OVERWRITE)
 #define VMACCEL_MAP_MASK ((1 << VMACCEL_SURFACE_MAP_MAX) - 1)
 
-typedef enum VMAccessPipelineBindPointsEnum {
+typedef enum VMAccelPipelineBindPointsEnum {
    /*
     * Basic surface topologies.
     */
@@ -260,7 +261,7 @@ typedef enum VMAccessPipelineBindPointsEnum {
    VMACCEL_BIND_VIDEO_ENCODER,
 
    VMACCEL_BIND_MAX,
-} VMAccessPipelineBindPointsEnum;
+} VMAccelPipelineBindPointsEnum;
 
 #define VMACCEL_BIND_SVM_FLAG (1 << VMACCEL_BIND_SVM)
 #define VMACCEL_BIND_BUFFER_FLAG (1 << VMACCEL_BIND_BUFFER)

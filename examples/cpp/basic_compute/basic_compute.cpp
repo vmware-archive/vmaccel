@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 
    address mgrAddr(host);
    work_topology workTopology({0}, {ARRAY_SIZE}, {1});
-   accelerator accel(mgrAddr);
+   std::shared_ptr<accelerator> accel(new accelerator(mgrAddr));
 
    /*
     * Initialize the Compute Kernel.
