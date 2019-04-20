@@ -24,5 +24,17 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_subdirectory(async_compute)
-add_subdirectory(basic_compute)
+set(CMAKE_CXX_STANDARD 11)
+
+set(SOURCES
+    async_compute.cpp)
+
+set(GLOBAL_INC ../../../common/inc)
+
+include_directories(${GLOBAL_INC})
+
+add_executable(async_compute ${SOURCES})
+target_link_libraries(async_compute vmaccel)
+set_target_properties(async_compute
+   PROPERTIES
+   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_EXAMPLES_OUTPUT_DIRECTORY}")

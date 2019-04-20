@@ -283,6 +283,57 @@ When introducing planar or compressed formats, the serialization contracts
 require the resolving of multiple pixels for one block before serialization
 can occur.
 
+#### Operation Objects (Asynchronous Data Consistency Model)
+
+Operation Objects represent the lifetime of an operation on the Accelerator and
+define a data consistency model for the associated Surfaces. Operation Objects
+base their lifetime and data consistency hints off of their scope in the
+application's source code, thus a more global scope will loosely define when
+an operation must complete and the modified Surfaces content downloaded.
+
+The following defines the basis for the Asynchronous Data Consistency Model:
+
+Workload Submission (Dispatching):
+
+- A context is active in the system once one or more associated operations are
+  dispatched within the same context.
+- An operation is active in the system once dispatched.
+- A surface is active in the system once bound to one or more dispatched
+  operations.
+
+Workload Results Available (Quiescent):
+
+- A surface is quiesced when all requested modifications are in effect.
+- An operation is quiesced when all bound surfaces are quiesced, observed,
+  and all state modifications are in effect.
+- A context is quiesced when all operations are quiesced.
+
+Examples:
+1. If you want an asynchronous operation to finish before exiting a function,
+   make the Operation Object's variable scope limited to the function.
+
+2. If you want an extended lifetime of the operation, make the variable scope
+   for the Operation Object global.
+
+3. If you want operation D to execute after operation A, and not all previous
+   operations, pass operation A into construction of operation B.
+
+Operation Objects utilizes programming language concepts in an effort to
+explicitly declare storage and runtime complexity for an asynchronous
+Accelerator process. By binding scope to the queue extent for an operation,
+fences and reference counting for resource liveliness are now hidden details
+of Accelerators. Asynchronous optimizations that increase an operation's
+storage complexity, such as copy-on-write, can be avoided due to explicit
+declaration of lifetime within the application's source language without the
+complexity of event or fences for synchronization purposes.
+
+##### Remarks
+
+If the observation window does not overlap with the quiescing window for an
+operation, and the operation's modifications are overwritten by a later
+operation before the next observation window, the operation can be discarded
+as long as it does not perturb the stability of the system.
+
 #### Addressing Resources
 
 Addressing of resources in a networked Accelerator fabric is different than

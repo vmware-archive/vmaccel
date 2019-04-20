@@ -58,7 +58,7 @@ class accelerator;
 class operation;
 template <class T>
 class ref_object;
-extern vmaccel::ref_object<vmaccel::operation> noop;
+extern vmaccel::ref_object<class vmaccel::operation> noop;
 
 /**
  * VMAccel exception class.
@@ -247,6 +247,21 @@ public:
     * Dereferences a shared_ptr instance to ensure the lifespan of the object
     * within the context of the Accelerator.
     */
+   ref_object(T *ptr)
+      : object(ptr, sizeof(T), VMACCEL_SURFACE_USAGE_READWRITE) {
+      data = std::shared_ptr<T>(ptr);
+   }
+
+   ref_object(T *ptr, size_t s)
+      : object(ptr, s, VMACCEL_SURFACE_USAGE_READWRITE) {
+      data = std::shared_ptr<T>(ptr);
+   }
+
+   ref_object(T *ptr, size_t s, unsigned int u) : object(ptr, s, u) {
+      data = std::shared_ptr<T>(ptr);
+      ;
+   }
+
    ref_object(std::shared_ptr<T> &o, size_t s, unsigned int u)
       : object(o.get(), s, u) {
       data = o;
@@ -263,6 +278,10 @@ public:
    /**
     * Accessor for the encapsulated object.
     */
+   T *operator->() const { return data.get(); }
+
+   T &operator[](int index) { return data.get()[index]; }
+
    std::shared_ptr<T> &get() { return data; }
 
 private:
@@ -295,10 +314,16 @@ public:
    /**
     * Constructor.
     */
-   surface(VMAccelSurfaceDesc desc) : object() {
-      backing = nullptr;
+   surface(VMAccelSurfaceDesc d) : object() {
+      desc = d;
+      backing = std::shared_ptr<char>(new char[d.width]);
       producer = noop;
    }
+
+   /**
+    * Destructor.
+    */
+   ~surface() {}
 
    /**
     * Copy constructor.
@@ -308,6 +333,13 @@ public:
       backing = obj.backing;
       producer = obj.producer;
    }
+
+   /**
+    * Accessors.
+    */
+   VMAccelSurfaceDesc &get_desc() { return desc; }
+
+   std::shared_ptr<char> &get_backing() { return backing; }
 
    /**
     * upload
@@ -321,6 +353,13 @@ public:
     */
    template <class E>
    int upload(VMAccelSurfaceRegion imgRegion, ref_object<E> &in) {
+      if (desc.format == VMACCEL_FORMAT_R8_TYPELESS && imgRegion.coord.x == 0 &&
+          imgRegion.coord.y == 0 && imgRegion.coord.z == 0 &&
+          imgRegion.size.x * sizeof(E) == desc.width &&
+          imgRegion.size.y == desc.height && imgRegion.size.z == desc.depth) {
+         memcpy(backing.get(), in.get_ptr(), MIN(desc.width, in.get_size()));
+         return VMACCEL_SUCCESS;
+      }
       return VMACCEL_FAIL;
    }
 
@@ -336,6 +375,13 @@ public:
     */
    template <class E>
    int download(VMAccelSurfaceRegion imgRegion, ref_object<E> &out) {
+      if (desc.format == VMACCEL_FORMAT_R8_TYPELESS && imgRegion.coord.x == 0 &&
+          imgRegion.coord.y == 0 && imgRegion.coord.z == 0 &&
+          imgRegion.size.x * sizeof(E) == desc.width &&
+          imgRegion.size.y == desc.height && imgRegion.size.z == desc.depth) {
+         memcpy(out.get_ptr(), backing.get(), MIN(desc.width, out.get_size()));
+         return VMACCEL_SUCCESS;
+      }
       return VMACCEL_FAIL;
    }
 
@@ -356,6 +402,7 @@ public:
    }
 
 private:
+   VMAccelSurfaceDesc desc;
    std::shared_ptr<char> backing;
    ref_object<class operation> producer;
 };
@@ -378,7 +425,8 @@ public:
     */
    context() : object() {}
 
-   context(std::shared_ptr<accelerator> &a, VMAccelResourceType t) : object() {
+   context(const std::shared_ptr<accelerator> &a, VMAccelResourceType t)
+      : object() {
       accel = a;
       type = t;
    }
@@ -386,9 +434,9 @@ public:
    /**
     * Accessor functions.
     */
-   std::shared_ptr<accelerator> &get_accel() { return accel; }
+   const std::shared_ptr<accelerator> &get_accel() const { return accel; }
 
-   VMAccelResourceType get_type() { return type; }
+   const VMAccelResourceType get_type() const { return type; }
 
 protected:
    std::shared_ptr<accelerator> accel;
@@ -416,6 +464,27 @@ public:
       surf = target;
    }
 
+   /**
+    * get_flags
+    *
+    * Retrieves the bind flags for the binding.
+    */
+   VMAccelSurfaceBindFlags get_flags() { return flags; }
+
+   /**
+    * get_usage
+    *
+    * Retrieves the usage for the binding.
+    */
+   VMAccelSurfaceUsage get_usage() { return usage; }
+
+   /**
+    * get_surf
+    *
+    * Retrieves the surf object for the binding.
+    */
+   ref_object<surface> &get_surf() { return surf; }
+
 private:
    VMAccelResourceType accel;
    VMAccelSurfaceBindFlags flags;
@@ -442,28 +511,35 @@ public:
    /**
     * Helper function for populating bindings vector.
     */
-   template <typename T, typename... B>
-   static void prepareArgs(std::vector<binding> &b, T arg, B... args) {
+   template <typename T>
+   void prepareArgs(std::vector<ref_object<binding>> &b, T &arg) {
       b.push_back(arg);
-      prepareArgs(b, args...);
+   }
+
+   template <typename T, typename... B>
+   void prepareArgs(std::vector<ref_object<binding>> &b, T arg, B &... args) {
+      prepareArgs<T>(b, arg);
+      prepareArgs<B...>(b, args...);
    }
 
    /**
     * Default constructor.
     */
    operation() : object() {
-      ctx = nullptr;
+      ctxType = VMACCEL_NONE;
       tag = "NOP";
    }
 
    /**
-    * Constructor.
+    * prepare
+    *
+    * Prepares the operation.
     */
    template <class... B>
-   operation(std::shared_ptr<context> &c, std::string &t, B &... args) {
-      ctx = c;
+   void prepare(VMAccelResourceType type, std::string &t, B &... args) {
+      ctxType = type;
       tag = t;
-      prepareArgs(bindings, args...);
+      prepareArgs<B...>(bindings, args...);
    }
 
    /**
@@ -471,19 +547,11 @@ public:
     * operation and update all Referenced Objects.
     */
 
+protected:
    /**
-    * get_context
-    *
-    * Retrieves a reference to the Context Object associated with this
-    * operation.
+    * Type of context used for the operation.
     */
-   std::shared_ptr<context> &get_context() { return ctx; }
-
-private:
-   /**
-    * Context used for the operation.
-    */
-   std::shared_ptr<context> ctx;
+   VMAccelResourceType ctxType;
 
    /**
     * Tag for the operation.
@@ -494,7 +562,7 @@ private:
     * Hold a binding for each argument to keep the surface object alive as long
     * as the Operation Object is alive.
     */
-   std::vector<binding> bindings;
+   std::vector<ref_object<binding>> bindings;
 };
 
 /**
@@ -511,6 +579,11 @@ private:
 class work_topology {
 
 public:
+   /**
+    * Default constructor.
+    */
+   work_topology() {}
+
    /**
     * Constructor.
     *
@@ -681,7 +754,7 @@ public:
       if (it == surfaces.end()) {
          return VMACCEL_FAIL;
       }
-      return it->second.get()->upload<E>(in);
+      return it->second->upload<E>(in);
    }
 
    /**
@@ -699,7 +772,7 @@ public:
       if (it == surfaces.end()) {
          return VMACCEL_FAIL;
       }
-      return it->second.get()->download<E>(out);
+      return it->second->download<E>(out);
    }
 
 private:

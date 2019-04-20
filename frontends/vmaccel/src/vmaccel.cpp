@@ -30,7 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmaccel_rpc.h"
 #include "vmaccel.hpp"
 
+namespace vmaccel {
 /**
  * Global operation representing noop.
  */
-vmaccel::ref_object<vmaccel::operation> noop();
+vmaccel::ref_object<vmaccel::operation> noop;
+};

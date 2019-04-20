@@ -43,6 +43,8 @@ const char *helloKernel = "__kernel void hello_kernel(__global int *a)\n"
 
 int main(int argc, char **argv) {
    std::string host;
+   unsigned int contextId = 0;
+   unsigned int queueId = 0;
 
    if (argc > 1) {
       host = argv[1];
@@ -53,6 +55,23 @@ int main(int argc, char **argv) {
    address mgrAddr(host);
    work_topology workTopology({0}, {ARRAY_SIZE}, {1});
    ref_object<accelerator> accel(new accelerator(mgrAddr));
+
+   /*
+    * Query an accelerator manager for the Compute Resource.
+    */
+   std::shared_ptr<vmaccel::clcontext> clctx;
+
+   try {
+      clctx = std::shared_ptr<clcontext>(new clcontext(
+         accel.get(), 1, contextId, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
+         0, // (spirv != NULL) ? VMCL_SPIRV_1_0_CAP : 0;
+         queueId));
+   } catch (vmaccel::exception &e) {
+      Warning("%s: Unable to instantiate VMCL\n", __FUNCTION__);
+      return VMACCEL_FAIL;
+   }
+
+   ref_object<vmaccel::clcontext> c(clctx, sizeof(vmaccel::clcontext), 0);
 
    /*
     * Initialize the Compute Kernel.
@@ -83,10 +102,39 @@ int main(int argc, char **argv) {
    /*
     * Execute the compute operation.
     */
-   int ret = compute<ref_object<int>>(accel.get(), VMCL_OPENCL_C_1_0, kernels,
-                                      "hello_kernel", workTopology, a);
+   VMAccelSurfaceDesc desc = {
+      0,
+   };
+   desc.type = VMACCEL_SURFACE_BUFFER;
+   desc.width = sizeof(int) * ARRAY_SIZE;
+   desc.format = VMACCEL_FORMAT_R8_TYPELESS;
+   desc.usage = VMACCEL_SURFACE_USAGE_READWRITE;
+   desc.bindFlags = VMACCEL_BIND_UNORDERED_ACCESS_FLAG;
+   ref_object<surface> s(new surface(desc));
 
-   Log("%s: compute ret = %d\n", __FUNCTION__, ret);
+   VMAccelSurfaceRegion rgn = {0, {0, 0, 0}, {ARRAY_SIZE, 0, 0}};
+   if (s->upload<int>(rgn, a) != VMACCEL_SUCCESS) {
+      return VMACCEL_FAIL;
+   }
+
+   ref_object<binding> b(new binding(VMACCEL_COMPUTE_ACCELERATOR,
+                                     VMACCEL_BIND_UNORDERED_ACCESS_FLAG,
+                                     VMACCEL_SURFACE_USAGE_READWRITE, s));
+
+   /*
+    * Create a scope for the Operation Object that forces quiescing before
+    * the surface download.
+    */
+   {
+      ref_object<compute_operation> opobj;
+
+      compute<ref_object<binding>>(c, opobj, VMCL_OPENCL_C_1_0, kernels,
+                                   "hello_kernel", workTopology, b);
+   }
+
+   if (s->download<int>(rgn, a) != VMACCEL_SUCCESS) {
+      return VMACCEL_FAIL;
+   }
 
    for (int i = 0; i < ARRAY_SIZE; i++) {
       Log("%s: a[%d] = %u\n", __FUNCTION__, i, a[i]);

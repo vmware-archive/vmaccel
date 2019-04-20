@@ -593,10 +593,12 @@ VMAccelStatus *vmwopencl_contextdestroy_1(VMCLContextId *argp) {
 
    memset(&result, 0, sizeof(result));
 
-   assert(IdentifierDB_ActiveId(contextIds, cid));
-
-   clReleaseContext(contexts[cid].context);
-   contexts[cid].context = NULL;
+   if (IdentifierDB_ActiveId(contextIds, cid) && contexts[cid].context) {
+      clReleaseContext(contexts[cid].context);
+      contexts[cid].context = NULL;
+   } else {
+      Warning("%s: Destroying id %d, already destroyed\n", __FUNCTION__, cid);
+   }
 
    IdentifierDB_ReleaseId(contextIds, cid);
 
