@@ -57,15 +57,7 @@ int main(int argc, char **argv) {
    /*
     * Initialize the Compute Kernel.
     */
-   char *kernelSource = new char[strlen(helloKernel) + 1];
-
-   strcpy(kernelSource, helloKernel);
-
-   ref_object<char> kernel(kernelSource, strlen(kernelSource) + 1,
-                           VMACCEL_SURFACE_USAGE_READONLY);
-   map<unsigned int, ref_object<char>> kernels;
-
-   kernels[VMCL_IR_NATIVE] = kernel;
+   compute_kernel k(VMCL_IR_NATIVE, helloKernel);
 
    /*
     * Setup the working set.
@@ -83,7 +75,7 @@ int main(int argc, char **argv) {
    /*
     * Execute the compute operation.
     */
-   int ret = compute<ref_object<int>>(accel.get(), VMCL_OPENCL_C_1_0, kernels,
+   int ret = compute<ref_object<int>>(accel.get(), VMCL_OPENCL_C_1_0, k,
                                       "hello_kernel", workTopology, a);
 
    Log("%s: compute ret = %d\n", __FUNCTION__, ret);

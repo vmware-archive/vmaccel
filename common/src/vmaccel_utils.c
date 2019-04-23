@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assert.h>
 #include <stdlib.h>
 #include "vmaccel_utils.h"
+#include "log_level.h"
 
 int BitMask_FindFirstZero(unsigned int bitMask) {
    int idx = 0;
@@ -96,12 +97,21 @@ IdentifierDB *IdentifierDB_Alloc(unsigned int size) {
    IdentifierDB *db = calloc(1, sizeof(IdentifierDB));
 
    if (db != NULL) {
+      db->size = size;
       db->numWords = (size + 31) / 32;
       db->free = size;
       db->bits = calloc(1, db->numWords * sizeof(unsigned int));
    }
 
    return db;
+}
+
+unsigned int IdentifierDB_Count(IdentifierDB *db) {
+   return db->size - db->free;
+}
+
+unsigned int IdentifierDB_Size(IdentifierDB *db) {
+   return db->size;
 }
 
 void IdentifierDB_Free(IdentifierDB *db) {
@@ -121,6 +131,21 @@ bool IdentifierDB_AcquireId(IdentifierDB *db, unsigned int id) {
       return false;
    }
    db->bits[id / 32] |= (1 << (id % 32));
+   return true;
+}
+
+bool IdentifierDB_AcquireIdRange(IdentifierDB *db, unsigned int start,
+                                 unsigned int end) {
+   assert(db != NULL);
+   for (unsigned int i = start / 32; i <= end / 32; i++) {
+      unsigned int numBits = MIN(32, end - start);
+      unsigned int mask = (1 << (numBits - 1)) - 1;
+      if (db->bits[i] & mask) {
+         return false;
+      }
+      db->bits[i] |= mask;
+      start += numBits;
+   }
    return true;
 }
 
@@ -153,12 +178,30 @@ bool IdentifierDB_AllocId(IdentifierDB *db, unsigned int *id) {
 
 void IdentifierDB_ReleaseId(IdentifierDB *db, unsigned int id) {
    assert(db != NULL);
-
    if (db->bits[id / 32] & (1 << (id % 32))) {
       db->bits[id / 32] &= ~(1 << (id % 32));
       db->free++;
    } else {
       // Double free...
       assert(0);
+   }
+}
+
+bool IdentifierDB_ReleaseIdRange(IdentifierDB *db, unsigned int start,
+                                 unsigned int end) {
+   assert(db != NULL);
+   for (unsigned int i = start / 32; i <= end / 32; i++) {
+      unsigned int numBits = MIN(32, end - start);
+      unsigned int mask = (1 << (numBits - 1)) - 1;
+      db->bits[i] &= ~mask;
+      start += numBits;
+   }
+   return true;
+}
+
+void IdentifierDB_Log(IdentifierDB *db, const char *prefix) {
+   assert(db != NULL);
+   for (unsigned int i = 0; i <= db->numWords; i++) {
+      Log("%s: bits[%d]=0x%x\n", prefix, i, db->bits[i]);
    }
 }

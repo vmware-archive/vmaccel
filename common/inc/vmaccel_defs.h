@@ -33,7 +33,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * VMAccelerator global definitions.
  */
 #define VMACCEL_MAX_ACCELERATORS 256
+#define VMACCEL_MAX_CONTEXTS 32
 #define VMACCEL_MAX_SURFACES 32
+#define VMACCEL_MAX_KERNELS 32
+#define VMACCEL_MAX_REF_OBJECTS                                                \
+   (VMACCEL_MAX_CONTEXTS * (VMACCEL_MAX_SURFACES + VMACCEL_MAX_KERNELS))
 #define VMACCEL_INVALID_ID -1
 
 typedef enum VMAccelStatusCodeEnum {

@@ -54,10 +54,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace vmaccel {
 
-class accelerator;
+class context;
 class operation;
 template <class T>
 class ref_object;
+class surface;
 extern vmaccel::ref_object<class vmaccel::operation> noop;
 
 /**
@@ -259,7 +260,6 @@ public:
 
    ref_object(T *ptr, size_t s, unsigned int u) : object(ptr, s, u) {
       data = std::shared_ptr<T>(ptr);
-      ;
    }
 
    ref_object(std::shared_ptr<T> &o, size_t s, unsigned int u)
@@ -272,7 +272,9 @@ public:
     */
    ref_object(const ref_object &obj)
       : object(obj.data.get(), obj.get_size(), obj.get_usage()) {
+      LOG_ENTRY(("ref_object::Copy Constructor {\n"));
       data = obj.data;
+      LOG_EXIT(("} ref_object::Copy Constructor\n"));
    }
 
    /**
@@ -286,6 +288,173 @@ public:
 
 private:
    std::shared_ptr<T> data;
+};
+
+/**
+ * VMAccel Accelerator interface class.
+ */
+class accelerator {
+
+public:
+   /**
+    * Constructor.
+    *
+    * Opens a connection to the Accelerator Management server.
+    *
+    * @param mgr Specifies the address of the Accelerator Managment server,
+    *            in VMAccelAddress format.
+    */
+   accelerator(const address &mgr,
+               int accelMaxRefObjects = VMACCEL_MAX_REF_OBJECTS) {
+      char host[256];
+      if (VMAccelAddressOpaqueAddrToString(mgr.get_accel_addr(), host,
+                                           sizeof(host))) {
+         Log("%s: Connecting to Accelerator manager %s\n", __FUNCTION__, host);
+         mgrClnt = clnt_create(host, VMACCELMGR, VMACCELMGR_VERSION, "udp");
+         if (mgrClnt == NULL) {
+            Warning("Failed to create VMAccelMgr client.");
+         }
+         Log("%s: mgrClient = %p\n", __FUNCTION__, mgrClnt);
+      }
+      refObjectDB = IdentifierDB_Alloc(accelMaxRefObjects);
+      if (refObjectDB == NULL) {
+         clnt_destroy(mgrClnt);
+         throw exception(VMACCEL_FAIL,
+                         "Failed to create context identifier database.");
+      }
+   }
+
+   /**
+    * Destructor.
+    *
+    * Closes the connection to the Accelerator Management server.
+    */
+   ~accelerator() {
+      if (refObjectDB != NULL) {
+         IdentifierDB_Free(refObjectDB);
+         refObjectDB = NULL;
+      }
+
+      if (mgrClnt != NULL) {
+         clnt_destroy(mgrClnt);
+         mgrClnt = NULL;
+      }
+   }
+
+   /**
+    * get_manager
+    *
+    * @return A pointer to the manager client.
+    */
+   CLIENT *get_manager() { return mgrClnt; }
+
+   /**
+    * alloc_id
+    *
+    * @return A valid accelerator id if available.
+    */
+   VMAccelId alloc_id() {
+      VMAccelId ret = VMACCEL_INVALID_ID;
+      IdentifierDB_AllocId(refObjectDB, &ret);
+      return ret;
+   }
+
+   /**
+    * release_id
+    *
+    * Releases an accelerator id.
+    */
+   void release_id(VMAccelId id) { IdentifierDB_ReleaseId(refObjectDB, id); }
+
+   /**
+    * get_max_ref_objects
+    *
+    * @return A maximum number of ref objects.
+    */
+   int get_max_ref_objects() { return IdentifierDB_Size(refObjectDB); }
+
+   /**
+    * add_context
+    */
+   void add_context(VMAccelId id, ref_object<context> &c) { contexts[id] = c; }
+
+   /**
+    * remove_context
+    */
+   void remove_context(VMAccelId id) {
+      auto it = contexts.find(id);
+      if (it != contexts.end()) {
+         contexts.erase(it);
+      }
+#if DEBUG_OBJECT_LIFETIME
+      else {
+         Warning("%s: Context %d not tracked by accelerator\n", __FUNCTION__,
+                 id);
+      }
+#endif
+   }
+
+   /**
+    * get_context_database
+    *
+    * @return A reference to the context database.
+    */
+   std::map<VMAccelId, ref_object<context>> &get_context_database() {
+      return contexts;
+   }
+
+   /**
+    * add_surface
+    */
+   void add_surface(VMAccelId id, ref_object<surface> &s) { surfaces[id] = s; }
+
+   /**
+    * remove_surface
+    */
+   void remove_surface(VMAccelId id) {
+      auto it = surfaces.find(id);
+      if (it != surfaces.end()) {
+         surfaces.erase(it);
+      }
+#if DEBUG_OBJECT_LIFETIME
+      else {
+         Warning("%s: Surface %d not tracked by accelerator.\n", __FUNCTION__,
+                 id);
+      }
+#endif
+   }
+
+   /**
+    * get_surface_database
+    *
+    * @return A reference to the surface database.
+    */
+   std::map<VMAccelId, ref_object<surface>> &get_surface_database() {
+      return surfaces;
+   }
+
+private:
+   CLIENT *mgrClnt;
+
+   /*
+    * Maximum ref_objects allowed for the accelerator.
+    */
+   int maxRefObjects;
+
+   /*
+    * ref_object ID database.
+    */
+   IdentifierDB *refObjectDB;
+
+   /*
+    * Mapping from ref_object ID to the Context Objects allocated.
+    */
+   std::map<VMAccelId, ref_object<context>> contexts;
+
+   /*
+    * Mapping from ref_object ID to the Surface Objects allocated.
+    */
+   std::map<VMAccelId, ref_object<surface>> surfaces;
 };
 
 /**
@@ -306,37 +475,55 @@ public:
    /**
     * Default constructor.
     */
-   surface() : object() {
-      backing = nullptr;
-      producer = noop;
-   }
+   surface() : object() { backing = nullptr; }
 
    /**
     * Constructor.
     */
-   surface(VMAccelSurfaceDesc d) : object() {
+   surface(const std::shared_ptr<accelerator> &a, VMAccelSurfaceDesc d)
+      : object() {
+      LOG_ENTRY(("surface::Constructor {\n"));
+      accel = a;
       desc = d;
+      id = a->alloc_id();
       backing = std::shared_ptr<char>(new char[d.width]);
-      producer = noop;
+      consistencyDB = IdentifierDB_Alloc(a->get_max_ref_objects());
+      LOG_EXIT(("} surface::Constructor\n"));
    }
 
    /**
     * Destructor.
     */
-   ~surface() {}
+   ~surface() {
+      LOG_ENTRY(("surface::Destructor {\n"));
+      destroy();
+      accel->release_id(id);
+      IdentifierDB_Free(consistencyDB);
+      consistencyDB = NULL;
+      LOG_EXIT(("} surface::Destructor\n"));
+   }
 
    /**
     * Copy constructor.
     */
    surface(const surface &obj)
       : object(obj.backing.get(), obj.get_size(), obj.get_usage()) {
+      LOG_ENTRY(("surface::Copy Constructor {\n"));
+      accel = obj.accel;
+      desc = obj.desc;
+      id = accel->alloc_id();
       backing = obj.backing;
-      producer = obj.producer;
+      consistencyDB = IdentifierDB_Alloc(accel->get_max_ref_objects());
+      LOG_EXIT(("} surface::Copy Constructor\n"));
    }
 
    /**
     * Accessors.
     */
+   const std::shared_ptr<accelerator> &get_accel() const { return accel; }
+
+   VMAccelId &get_id() { return id; }
+
    VMAccelSurfaceDesc &get_desc() { return desc; }
 
    std::shared_ptr<char> &get_backing() { return backing; }
@@ -353,11 +540,15 @@ public:
     */
    template <class E>
    int upload(VMAccelSurfaceRegion imgRegion, ref_object<E> &in) {
+#if DEBUG_SURFACE_CONSISTENCY
+      Log("%s: surface id=%d\n", __FUNCTION__, id);
+#endif
       if (desc.format == VMACCEL_FORMAT_R8_TYPELESS && imgRegion.coord.x == 0 &&
           imgRegion.coord.y == 0 && imgRegion.coord.z == 0 &&
           imgRegion.size.x * sizeof(E) == desc.width &&
           imgRegion.size.y == desc.height && imgRegion.size.z == desc.depth) {
          memcpy(backing.get(), in.get_ptr(), MIN(desc.width, in.get_size()));
+         set_consistency_range(0, accel->get_max_ref_objects(), false);
          return VMACCEL_SUCCESS;
       }
       return VMACCEL_FAIL;
@@ -375,6 +566,9 @@ public:
     */
    template <class E>
    int download(VMAccelSurfaceRegion imgRegion, ref_object<E> &out) {
+#if DEBUG_SURFACE_CONSISTENCY
+      Log("%s: surface id=%d\n", __FUNCTION__, id);
+#endif
       if (desc.format == VMACCEL_FORMAT_R8_TYPELESS && imgRegion.coord.x == 0 &&
           imgRegion.coord.y == 0 && imgRegion.coord.z == 0 &&
           imgRegion.size.x * sizeof(E) == desc.width &&
@@ -386,61 +580,136 @@ public:
    }
 
    /**
-    * set_producer
+    * is_consistent
     *
-    * Updates the producer op for this surface.
+    * Gets the consistency state for an Accelerator ID.
     */
-   void set_producer(ref_object<class operation> &op) {
-      /*
-       * Depending on the data consistency contract, a swap of the operation
-       * may decrement the operation to zero and signal an end of the scope
-       * for the variable. At the end of the scope, the application will wait
-       * for the operation to complete and update all output bindings with
-       * the latest content.
-       */
-      producer = op;
+   bool is_consistent(VMAccelId id) {
+      return IdentifierDB_ActiveId(consistencyDB, id);
    }
 
+   /**
+    * log_consistency
+    */
+   void log_consistency() {
+      char str[256];
+      snprintf(str, sizeof(str), "surface[%d].consistency", id);
+      IdentifierDB_Log(consistencyDB, str);
+   }
+
+   /**
+    * set_consistency
+    *
+    * Sets the consistency state for an Accelerator ID.
+    */
+   void set_consistency(VMAccelId id, bool state) {
+      if (state) {
+         IdentifierDB_AcquireId(consistencyDB, id);
+      } else {
+         IdentifierDB_ReleaseId(consistencyDB, id);
+      }
+   }
+
+   /**
+    * set_consistency_range
+    *
+    * Sets the consistency state for a range of Accelerator ID(s).
+    */
+   void set_consistency_range(int start, int end, bool state) {
+      if (state) {
+         IdentifierDB_AcquireIdRange(consistencyDB, start, end);
+      } else {
+         IdentifierDB_ReleaseIdRange(consistencyDB, start, end);
+      }
+   }
+
+   void destroy();
+
 private:
+   /*
+    * Acclerator de-reference.
+    */
+   std::shared_ptr<accelerator> accel;
+
+   /*
+    * Accelerator Identifier Database ID.
+    */
+   VMAccelId id;
+
+   /*
+    * Surface descriptor structure.
+    */
    VMAccelSurfaceDesc desc;
+
+   /*
+    * Backing memory for the surface.
+    */
    std::shared_ptr<char> backing;
-   ref_object<class operation> producer;
+
+   /*
+    * Consistency database, for tracking if an object's consistency with
+    * regards to this context.
+    */
+   IdentifierDB *consistencyDB;
 };
 
 /**
- * VMAccel context object class.
+ * Accelerator surface encapsulating class.
  *
- * Context Objects represent the persistent state for a given group of
- * operations. As long as the Context Object is live, the Accelerator state
- * associated with the context instance is retained. By defining a context's
- * lifetime, through the variable scope for a Context Object, disjoint
- * workloads can be coalesced to optimal placement based upon an
- * application's usage.
+ * This class is used to encapsulate vmaccel::surface, to unify the management
+ * of adding a surface object to the vmaccel::accelerator. A reference object
+ * must be added to vmaccel::accelerator for dereference by active contexts
+ * during context destruction.
  */
-class context : public object {
+
+class accelerator_surface {
 
 public:
    /**
     * Default constructor.
     */
-   context() : object() {}
+   accelerator_surface() {}
 
-   context(const std::shared_ptr<accelerator> &a, VMAccelResourceType t)
-      : object() {
-      accel = a;
-      type = t;
+   /**
+    * Constructor.
+    *
+    * @param a Accelerator class used to instantiate the compute operation.
+    * @param megaFlops The estimated mega-flops needed for the workload.
+    * @param selectionMask The selection mask for the accelerators requested.
+    * @param requiredCaps The required capabilites for this compute context.
+    */
+   accelerator_surface(const std::shared_ptr<accelerator> &a,
+                       VMAccelSurfaceDesc d) {
+      std::shared_ptr<surface> surfPtr;
+      surfPtr = std::shared_ptr<surface>(new surface(a, d));
+      surf = ref_object<surface>(surfPtr, sizeof(vmaccel::surface), 0);
+      /*
+       * Add the surface to the accelerator tracking list for context
+       * destruction to dereference.
+       */
+      a->add_surface(surf->get_id(), surf);
    }
 
    /**
-    * Accessor functions.
+    * Destructor.
     */
-   const std::shared_ptr<accelerator> &get_accel() const { return accel; }
+   ~accelerator_surface() {
+      /*
+       * Remove the surface from the tracking list.
+       */
+      surf->get_accel()->remove_surface(surf->get_id());
+   }
 
-   const VMAccelResourceType get_type() const { return type; }
+   /**
+    * Accessors.
+    */
+   vmaccel::surface *operator->() { return surf.get().get(); }
 
-protected:
-   std::shared_ptr<accelerator> accel;
-   VMAccelResourceType type;
+   operator ref_object<vmaccel::surface> &() { return surf; }
+
+private:
+
+   ref_object<vmaccel::surface> surf;
 };
 
 /**
@@ -486,12 +755,26 @@ public:
    ref_object<surface> &get_surf() { return surf; }
 
 private:
+   /*
+    * Accelerator resource type for this binding.
+    */
    VMAccelResourceType accel;
+
+   /*
+    * Bind flags for this binding.
+    */
    VMAccelSurfaceBindFlags flags;
+
+   /*
+    * Usage flags for this binding.
+    */
    VMAccelSurfaceUsage usage;
+
+   /*
+    * Surface Object referenced by this binding.
+    */
    ref_object<surface> surf;
 };
-
 
 /**
  * VMAccel operation object class.
@@ -649,136 +932,94 @@ private:
    std::vector<unsigned int> localSizes;
 };
 
+
 /**
- * VMAccel Accelerator interface class.
+ * VMAccel context object class.
+ *
+ * Context Objects represent the persistent state for a given group of
+ * operations. As long as the Context Object is live, the Accelerator state
+ * associated with the context instance is retained. By defining a context's
+ * lifetime, through the variable scope for a Context Object, disjoint
+ * workloads can be coalesced to optimal placement based upon an
+ * application's usage.
  */
-class accelerator {
+class context : public object {
 
 public:
    /**
-    * Constructor.
-    *
-    * Opens a connection to the Accelerator Management server.
-    *
-    * @param addr Specifies the address of the Accelerator Managment server,
-    *             in VMAccelAddress format.
+    * Default constructor.
     */
-   accelerator(const address &mgr, int maxSurfaces = VMACCEL_MAX_SURFACES) {
-      char host[256];
-      if (VMAccelAddressOpaqueAddrToString(mgr.get_accel_addr(), host,
-                                           sizeof(host))) {
-         Log("%s: Connecting to Accelerator manager %s\n", __FUNCTION__, host);
-         mgrClnt = clnt_create(host, VMACCELMGR, VMACCELMGR_VERSION, "udp");
-         if (mgrClnt == NULL) {
-            Warning("Failed to create VMAccelMgr client.");
-         }
-         Log("%s: mgrClient = %p\n", __FUNCTION__, mgrClnt);
-      }
-      surfaceIds = IdentifierDB_Alloc(maxSurfaces);
-      if (surfaceIds == NULL) {
-         clnt_destroy(mgrClnt);
-         throw exception(VMACCEL_FAIL,
-                         "Failed to create context identifier database.");
-      }
+   context() : object() {}
+
+   context(const std::shared_ptr<accelerator> &a, VMAccelResourceType t,
+           unsigned int maxRefObjects)
+      : object() {
+      accel = a;
+      type = t;
+      residencyDB = IdentifierDB_Alloc(maxRefObjects);
    }
 
    /**
-    * Destructor.
-    *
-    * Closes the connection to the Accelerator Management server.
+    * Default destructor.
     */
-   ~accelerator() {
-      if (surfaceIds != NULL) {
-         IdentifierDB_Free(surfaceIds);
-         surfaceIds = NULL;
-      }
-
-      if (mgrClnt != NULL) {
-         clnt_destroy(mgrClnt);
-         mgrClnt = NULL;
-      }
+   ~context() {
+      IdentifierDB_Free(residencyDB);
+      residencyDB = NULL;
    }
 
    /**
-    * get_manager
-    *
-    * @return A pointer to the manager client.
+    * Accessor functions.
     */
-   CLIENT *get_manager() { return mgrClnt; }
+   const std::shared_ptr<accelerator> &get_accel() const { return accel; }
+
+   const VMAccelResourceType get_type() const { return type; }
 
    /**
-    * alloc_surface
+    * is_resident
     *
-    * Allocates a surface given surface descriptor.
-    *
-    * @return A valid accelerator id for this process if available,
-    *         INVALID otherwise.
+    * Gets the residency state for an Accelerator ID.
     */
-   VMAccelId alloc_surface(VMAccelSurfaceDesc desc) {
-      VMAccelId ret = VMACCEL_INVALID_ID;
-      if (IdentifierDB_AllocId(surfaceIds, &ret)) {
-         try {
-            std::shared_ptr<surface> surf(new surface(desc));
-            surfaces[ret] = ref_object<surface>(surf, 0, 0);
-         } catch (exception e) {
-            IdentifierDB_ReleaseId(surfaceIds, ret);
-            throw e;
-         }
+   bool is_resident(VMAccelId id) {
+      return IdentifierDB_ActiveId(residencyDB, id);
+   }
+
+   /**
+    * set_residency
+    *
+    * Sets the residency state for an Accelerator ID.
+    */
+   void set_residency(VMAccelId id, bool state) {
+      if (state) {
+         IdentifierDB_AcquireId(residencyDB, id);
+      } else {
+         IdentifierDB_ReleaseId(residencyDB, id);
       }
    }
 
    /**
     * destroy_surface
     *
-    * Destroy a surface for a given surface identifier.
+    * Destroys a surface within this context.
     */
-   void destroy_surface(VMAccelId id) {
-      auto it = surfaces.find(id);
-      if (it != surfaces.end()) {
-         surfaces.erase(it);
-         IdentifierDB_ReleaseId(surfaceIds, id);
-      }
-   }
+   virtual void destroy_surface(VMAccelId id) { assert(0); };
 
-   /**
-    * surface_upload
-    *
-    * Uploads contents of "in" to a given image region within a surface.
-    *
-    * @return VMAccelStatusCodeEnum value.
+protected:
+   /*
+    * Acclerator de-reference.
     */
-   template <class E>
-   int surface_upload(VMAccelId id, VMAccelSurfaceRegion imgRegion,
-                      ref_object<E> &in) {
-      auto it = surfaces.find(id);
-      if (it == surfaces.end()) {
-         return VMACCEL_FAIL;
-      }
-      return it->second->upload<E>(in);
-   }
+   std::shared_ptr<accelerator> accel;
 
-   /**
-    * surface_download
-    *
-    * Downloads from a given image region within a surface to the memory
-    * referenced by "out".
-    *
-    * @return VMAccelStatusCodeEnum value.
+   /*
+    * Type of accelerator context.
     */
-   template <class E>
-   int surface_download(VMAccelId id, VMAccelSurfaceRegion imgRegion,
-                        ref_object<E> &out) {
-      auto it = surfaces.find(id);
-      if (it == surfaces.end()) {
-         return VMACCEL_FAIL;
-      }
-      return it->second->download<E>(out);
-   }
+   VMAccelResourceType type;
 
-private:
-   CLIENT *mgrClnt;
-   IdentifierDB *surfaceIds;
-   std::map<VMAccelId, ref_object<surface>> surfaces;
+   /*
+    * Residency database, for tracking if an object's lifetime is active
+    * for this context. Assumes all allocated objects are in this process'
+    * vmaccel::accelerator ID space.
+    */
+   IdentifierDB *residencyDB;
 };
 };
 

@@ -31,10 +31,35 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdbool.h>
 
+#define DEBUG_OBJECT_LIFETIME 0
+#define DEBUG_TEMPLATE_TYPES 0
+#define DEBUG_COMPUTE_OPERATION 0
+#define DEBUG_ASYNC_COMPUTE 0
+#define DEBUG_PERSISTENT_SURFACES 0
+#define DEBUG_SURFACE_CONSISTENCY 0
+#define DEBUG_FORCE_SURFACE_CONSISTENCY 0
+
+#if DEBUG_ASYNC_COMPUTE || DEBUG_OBJECT_LIFETIME
+#define LOG_ENTRY(_ARGS) Log _ARGS
+#define LOG_EXIT(_ARGS) Log _ARGS
+#else
+#define LOG_ENTRY(_ARGS)
+#define LOG_EXIT(_ARGS)
+#endif
+
+#ifndef MIN
+#define MIN(_A, _B) (_A < _B) ? _A : _B
+#endif
+
+#ifndef MAX
+#define MAX(_A, _B) (_A > _B) ? _A : _B
+#endif
+
 int BitMask_FindFirstZero(unsigned int bitMask);
 int BitMask_FindFirstOne(unsigned int bitMask);
 
 typedef struct IdentifierDB {
+   unsigned int size;
    unsigned int numWords;
    unsigned int free;
    unsigned int *bits;
@@ -45,11 +70,18 @@ extern "C" {
 #endif
 
 extern IdentifierDB *IdentifierDB_Alloc(unsigned int size);
+extern unsigned int IdentifierDB_Count(IdentifierDB *db);
+extern unsigned int IdentifierDB_Size(IdentifierDB *db);
 extern void IdentifierDB_Free(IdentifierDB *db);
 extern bool IdentifierDB_AcquireId(IdentifierDB *db, unsigned int id);
+extern bool IdentifierDB_AcquireIdRange(IdentifierDB *db, unsigned int start,
+                                        unsigned int end);
 extern bool IdentifierDB_ActiveId(IdentifierDB *db, unsigned int id);
 extern bool IdentifierDB_AllocId(IdentifierDB *db, unsigned int *id);
 extern void IdentifierDB_ReleaseId(IdentifierDB *db, unsigned int id);
+extern bool IdentifierDB_ReleaseIdRange(IdentifierDB *db, unsigned int start,
+                                        unsigned int end);
+extern void IdentifierDB_Log(IdentifierDB *db, const char *prefix);
 
 #ifdef __cplusplus
 }

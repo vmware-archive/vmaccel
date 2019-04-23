@@ -34,5 +34,19 @@ namespace vmaccel {
 /**
  * Global operation representing noop.
  */
-vmaccel::ref_object<vmaccel::operation> noop;
+ref_object<operation> noop;
+
+/**
+ * surface::destroy
+ *
+ * Helper function for destruction of a surface.
+ */
+void surface::destroy() {
+   std::map<VMAccelId, ref_object<context>> contexts =
+      accel->get_context_database();
+
+   for (auto it = contexts.begin(); it != contexts.end(); it++) {
+      it->second->destroy_surface(id);
+   }
+}
 };
