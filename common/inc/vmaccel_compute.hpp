@@ -449,8 +449,9 @@ bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx,
 
 #if DEBUG_COMPUTE_OPERATION
    Log("%s: argIndex=%u, type=ref_object<surface>, id=%d, contextId=%d, "
-       "queueId=%d\n", __FUNCTION__, argIndex, arg->get_id(),
-       clctx->get_contextId(), clctx->get_queueId());
+       "queueId=%d\n",
+       __FUNCTION__, argIndex, arg->get_id(), clctx->get_contextId(),
+       clctx->get_queueId());
 #endif
 
    kernelArgs[argIndex].surf.id = VMACCEL_INVALID_ID;
@@ -482,9 +483,9 @@ bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx,
    arg->log_consistency();
 #endif
 
-   /*
-    * Detect if there are any updates from the application for this surface.
-    */
+/*
+ * Detect if there are any updates from the application for this surface.
+ */
 #if !DEBUG_FORCE_SURFACE_CONSISTENCY
    if (arg->is_consistent(clctx->get_contextId())) {
       kernelArgs[argIndex].index = argIndex;

@@ -452,8 +452,8 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
    memset(&result, 0, sizeof(result));
 
    if (IdentifierDB_ActiveId(contextIds, cid)) {
-      Warning("%s: ERROR: Context ID %d already active...\n",
-              __FUNCTION__, cid);
+      Warning("%s: ERROR: Context ID %d already active...\n", __FUNCTION__,
+              cid);
       result.status = VMACCEL_RESOURCE_UNAVAILABLE;
       return (&result);
    }
@@ -606,38 +606,38 @@ VMAccelStatus *vmwopencl_contextdestroy_1(VMCLContextId *argp) {
    if (IdentifierDB_Count(contextIds) == 0) {
       if (IdentifierDB_Count(surfaceIds) != 0) {
          Warning("%s: Semantic error: Missing destructor call, %d surfaces "
-                 "still active...\n", __FUNCTION__,
-                 IdentifierDB_Count(surfaceIds));
+                 "still active...\n",
+                 __FUNCTION__, IdentifierDB_Count(surfaceIds));
       }
 
       if (IdentifierDB_Count(queueIds) != 0) {
          Warning("%s: Semantic error: Missing destructor call, %d queues "
-                 "still active...\n", __FUNCTION__,
-                 IdentifierDB_Count(queueIds));
+                 "still active...\n",
+                 __FUNCTION__, IdentifierDB_Count(queueIds));
       }
 
       if (IdentifierDB_Count(fenceIds) != 0) {
          Warning("%s: Semantic error: Missing destructor call, %d fences "
-                 "still active...\n", __FUNCTION__,
-                 IdentifierDB_Count(fenceIds));
+                 "still active...\n",
+                 __FUNCTION__, IdentifierDB_Count(fenceIds));
       }
 
       if (IdentifierDB_Count(eventIds) != 0) {
          Warning("%s: Semantic error: Missing destructor call, %d events "
-                 "still active...\n", __FUNCTION__,
-                 IdentifierDB_Count(eventIds));
+                 "still active...\n",
+                 __FUNCTION__, IdentifierDB_Count(eventIds));
       }
 
       if (IdentifierDB_Count(samplerIds) != 0) {
          Warning("%s: Semantic error: Missing destructor call, %d samplers "
-                 "still active...\n", __FUNCTION__,
-                 IdentifierDB_Count(samplerIds));
+                 "still active...\n",
+                 __FUNCTION__, IdentifierDB_Count(samplerIds));
       }
 
       if (IdentifierDB_Count(kernelIds) != 0) {
          Warning("%s: Semantic error: Missing destructor call, %d kernels "
-                 "still active...\n", __FUNCTION__,
-                 IdentifierDB_Count(kernelIds));
+                 "still active...\n",
+                 __FUNCTION__, IdentifierDB_Count(kernelIds));
       }
    }
 
@@ -656,8 +656,8 @@ vmwopencl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp) {
    memset(&result, 0, sizeof(result));
 
    if (IdentifierDB_ActiveId(surfaceIds, sid)) {
-      Warning("%s: ERROR: Surface ID %d already active...\n",
-              __FUNCTION__, sid);
+      Warning("%s: ERROR: Surface ID %d already active...\n", __FUNCTION__,
+              sid);
       result.status = VMACCEL_RESOURCE_UNAVAILABLE;
       return (&result);
    }
@@ -756,8 +756,7 @@ VMAccelQueueStatus *vmwopencl_queuealloc_1(VMCLQueueAllocateDesc *argp) {
    memset(&result, 0, sizeof(result));
 
    if (IdentifierDB_ActiveId(queueIds, qid)) {
-      Warning("%s: ERROR: Queue ID %d already active...\n",
-              __FUNCTION__, qid);
+      Warning("%s: ERROR: Queue ID %d already active...\n", __FUNCTION__, qid);
       result.status = VMACCEL_RESOURCE_UNAVAILABLE;
       return (&result);
    }
@@ -1202,8 +1201,7 @@ vmwopencl_kernelalloc_1(VMCLKernelAllocateDesc *argp) {
    Log("Allocating kernel id=%d\n", kid);
 
    if (IdentifierDB_ActiveId(kernelIds, kid)) {
-      Warning("%s: ERROR: Kernel ID %d already active...\n",
-              __FUNCTION__, kid);
+      Warning("%s: ERROR: Kernel ID %d already active...\n", __FUNCTION__, kid);
       result.status = VMACCEL_RESOURCE_UNAVAILABLE;
       return (&result);
    }

@@ -95,14 +95,12 @@ int BitMask_FindFirstOne(unsigned int bitMask) {
 
 IdentifierDB *IdentifierDB_Alloc(unsigned int size) {
    IdentifierDB *db = calloc(1, sizeof(IdentifierDB));
-
    if (db != NULL) {
       db->size = size;
       db->numWords = (size + 31) / 32;
       db->free = size;
       db->bits = calloc(1, db->numWords * sizeof(unsigned int));
    }
-
    return db;
 }
 
@@ -122,11 +120,17 @@ void IdentifierDB_Free(IdentifierDB *db) {
 
 static bool ActiveId(IdentifierDB *db, unsigned int id) {
    assert(db != NULL);
+   if (id >= db->size) {
+      return false;
+   }
    return (db->bits[id / 32] & (1 << (id % 32))) != 0;
 }
 
 bool IdentifierDB_AcquireId(IdentifierDB *db, unsigned int id) {
    assert(db != NULL);
+   if (id >= db->size) {
+      return false;
+   }
    if (ActiveId(db, id)) {
       return false;
    }
@@ -137,14 +141,18 @@ bool IdentifierDB_AcquireId(IdentifierDB *db, unsigned int id) {
 bool IdentifierDB_AcquireIdRange(IdentifierDB *db, unsigned int start,
                                  unsigned int end) {
    assert(db != NULL);
+   if (start >= db->size || end >= db->size) {
+      return false;
+   }
    for (unsigned int i = start / 32; i <= end / 32; i++) {
-      unsigned int numBits = MIN(32, end - start);
-      unsigned int mask = (1 << (numBits - 1)) - 1;
+      unsigned int numBits = MIN(32, end - start + 1);
+      unsigned int mask = (numBits == 32) ? 0xffffffff : ((1 << numBits) - 1)
+                                                            << (start % 32);
       if (db->bits[i] & mask) {
          return false;
       }
       db->bits[i] |= mask;
-      start += numBits;
+      start += 32 - (start % 32);
    }
    return true;
 }
@@ -155,13 +163,10 @@ bool IdentifierDB_ActiveId(IdentifierDB *db, unsigned int id) {
 
 bool IdentifierDB_AllocId(IdentifierDB *db, unsigned int *id) {
    unsigned int i;
-
    assert(db != NULL);
-
    if (db->free == 0) {
       return false;
    }
-
    for (i = 0; i < db->numWords; i++) {
       int ret = BitMask_FindFirstZero(db->bits[i]);
       if (ret != -1) {
@@ -178,6 +183,9 @@ bool IdentifierDB_AllocId(IdentifierDB *db, unsigned int *id) {
 
 void IdentifierDB_ReleaseId(IdentifierDB *db, unsigned int id) {
    assert(db != NULL);
+   if (id >= db->size) {
+      return;
+   }
    if (db->bits[id / 32] & (1 << (id % 32))) {
       db->bits[id / 32] &= ~(1 << (id % 32));
       db->free++;
@@ -190,18 +198,22 @@ void IdentifierDB_ReleaseId(IdentifierDB *db, unsigned int id) {
 bool IdentifierDB_ReleaseIdRange(IdentifierDB *db, unsigned int start,
                                  unsigned int end) {
    assert(db != NULL);
+   if (start >= db->size || end >= db->size) {
+      return false;
+   }
    for (unsigned int i = start / 32; i <= end / 32; i++) {
-      unsigned int numBits = MIN(32, end - start);
-      unsigned int mask = (1 << (numBits - 1)) - 1;
+      unsigned int numBits = MIN(32, end - start + 1);
+      unsigned int mask = (numBits == 32) ? 0xffffffff : ((1 << numBits) - 1)
+                                                            << (start % 32);
       db->bits[i] &= ~mask;
-      start += numBits;
+      start += 32 - (start % 32);
    }
    return true;
 }
 
 void IdentifierDB_Log(IdentifierDB *db, const char *prefix) {
    assert(db != NULL);
-   for (unsigned int i = 0; i <= db->numWords; i++) {
-      Log("%s: bits[%d]=0x%x\n", prefix, i, db->bits[i]);
+   for (unsigned int i = 0; i < db->numWords; i++) {
+      Log("%s: bits[%d]=0x%08x\n", prefix, i, db->bits[i]);
    }
 }

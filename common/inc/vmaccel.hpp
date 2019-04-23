@@ -708,7 +708,6 @@ public:
    operator ref_object<vmaccel::surface> &() { return surf; }
 
 private:
-
    ref_object<vmaccel::surface> surf;
 };
 

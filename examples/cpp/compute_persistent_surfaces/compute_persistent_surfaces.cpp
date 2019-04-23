@@ -147,8 +147,8 @@ int main(int argc, char **argv) {
                         VMACCEL_SURFACE_USAGE_READWRITE, s);
 
       {
-         compute_context c(accel.get(), 1,
-                           VMACCEL_CPU_MASK | VMACCEL_GPU_MASK, 0);
+         compute_context c(accel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
+                           0);
 
          /*
           * Discard contents of the first compute operation and re-upload
@@ -190,8 +190,8 @@ int main(int argc, char **argv) {
       }
 
       {
-         compute_context c(accel.get(), 1,
-                           VMACCEL_CPU_MASK | VMACCEL_GPU_MASK, 0);
+         compute_context c(accel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
+                           0);
 
          /*
           * Discard contents of the first compute operation and re-upload

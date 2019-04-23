@@ -122,5 +122,5 @@ int main(int argc, char **argv) {
 
    Log("%s: Self-test complete...\n", __FUNCTION__);
 
-   return 1;
+   return 0;
 }
