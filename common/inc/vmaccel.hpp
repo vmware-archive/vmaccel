@@ -548,7 +548,7 @@ public:
           imgRegion.size.x * sizeof(E) == desc.width &&
           imgRegion.size.y == desc.height && imgRegion.size.z == desc.depth) {
          memcpy(backing.get(), in.get_ptr(), MIN(desc.width, in.get_size()));
-         set_consistency_range(0, accel->get_max_ref_objects(), false);
+         set_consistency_range(0, accel->get_max_ref_objects()-1, false);
          return VMACCEL_SUCCESS;
       }
       return VMACCEL_FAIL;

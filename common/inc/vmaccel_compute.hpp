@@ -914,14 +914,8 @@ public:
       LOG_ENTRY(("compute_operation::Destructor() prepared=%d, dispatched=%d, "
                  "quiesced=%d {\n",
                  prepared, dispatched, quiesced));
-      if (prepared) {
-         if (!dispatched) {
-            dispatch();
-         }
-         if (dispatched && !quiesced) {
-            quiesce();
-         }
-      }
+      finish();
+
       if (kernelArgs) {
          free(kernelArgs);
       }
@@ -944,6 +938,10 @@ public:
            const std::map<VMCLKernelArchitecture, vmaccel::ref_object<char>> &k,
            const std::string &func, const vmaccel::work_topology &topology,
            B &... args) {
+      if (prepared) {
+         Warning("%s: Operation already prepared...\n", __FUNCTION__);
+         return;
+      }
       std::string tag("COMPUTE");
       vmaccel::operation::prepare<B...>(VMACCEL_COMPUTE_ACCELERATOR, tag,
                                         args...);
@@ -977,6 +975,10 @@ public:
 
       if (!prepared) {
          return VMACCEL_FAIL;
+      }
+
+      if (dispatched) {
+         return VMACCEL_SUCCESS;
       }
 
 #if DEBUG_COMPUTE_OPERATION
@@ -1103,6 +1105,10 @@ public:
    int quiesce() {
       int i;
 
+      if (quiesced) {
+         return VMACCEL_SUCCESS;
+      }
+
       if (!prepared || !dispatched) {
          return VMACCEL_FAIL;
       }
@@ -1125,6 +1131,24 @@ public:
       }
 
       quiesced = true;
+
+      return VMACCEL_SUCCESS;
+   }
+
+   /**
+    * finish
+    *
+    * Finish the operation.
+    */
+   int finish() {
+      if (prepared) {
+         if (!dispatched) {
+            dispatch();
+         }
+         if (dispatched && !quiesced) {
+            quiesce();
+         }
+      }
 
       return VMACCEL_SUCCESS;
    }

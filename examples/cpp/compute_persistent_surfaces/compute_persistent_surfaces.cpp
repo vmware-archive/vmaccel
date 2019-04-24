@@ -231,6 +231,45 @@ int main(int argc, char **argv) {
       for (int i = 0; i < ARRAY_SIZE; i++) {
          Log("%s: 32*i -> a[%d] = %u\n", __FUNCTION__, i, a[i]);
       }
+
+      {
+         compute_context c(accel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
+                           0);
+
+         /*
+          * Discard contents of the first compute operation and re-upload
+          * the previous 8*i contents Version 2.0. The below is forcing
+          * the Operation Object to finish before re-uploading the old
+          * contents. While supplying the previous Operation Object to the
+          * next compute operation will dispatch and quiesce, it is later
+          * than the intended time before the surface upload.
+          *
+          * To avoid complexity of interdependent dispatching from the
+          * surface class, the surface class does not affect the execution
+          * order of pending Operation Objects.
+          */
+         {
+            ref_object<compute_operation> opobj;
+            ref_object<compute_operation> opobj2;
+
+            compute<ref_object<binding>>(c, opobj, VMCL_OPENCL_C_1_0, k,
+                                         "hello_kernel", workTopology, b);
+
+            compute<ref_object<binding>>(c, opobj2, VMCL_OPENCL_C_1_0, k,
+                                         "hello_kernel2", workTopology, b);
+
+            // Force a finish of the operation.
+            opobj->finish();
+
+            if (s->download<int>(rgn, a) != VMACCEL_SUCCESS) {
+               return VMACCEL_FAIL;
+            }
+         }
+      }
+
+      for (int i = 0; i < ARRAY_SIZE; i++) {
+         Log("%s: 64*i -> a[%d] = %u\n", __FUNCTION__, i, a[i]);
+      }
    }
 
    return 1;
