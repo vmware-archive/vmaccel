@@ -548,7 +548,7 @@ public:
           imgRegion.size.x * sizeof(E) == desc.width &&
           imgRegion.size.y == desc.height && imgRegion.size.z == desc.depth) {
          memcpy(backing.get(), in.get_ptr(), MIN(desc.width, in.get_size()));
-         set_consistency_range(0, accel->get_max_ref_objects()-1, false);
+         set_consistency_range(0, accel->get_max_ref_objects() - 1, false);
          return VMACCEL_SUCCESS;
       }
       return VMACCEL_FAIL;
@@ -724,9 +724,9 @@ public:
    /**
     * Constructor.
     */
-   binding(VMAccelResourceType type, VMAccelSurfaceBindFlags bindFlags,
+   binding(VMAccelResourceType typeMask, VMAccelSurfaceBindFlags bindFlags,
            VMAccelSurfaceUsage bindUsage, ref_object<surface> &target) {
-      accel = type;
+      accelMask = typeMask;
       flags = bindFlags;
       usage = bindUsage;
       surf = target;
@@ -757,7 +757,7 @@ private:
    /*
     * Accelerator resource type for this binding.
     */
-   VMAccelResourceType accel;
+   VMAccelResourceType accelMask;
 
    /*
     * Bind flags for this binding.
@@ -808,7 +808,7 @@ public:
     * Default constructor.
     */
    operation() : object() {
-      ctxType = VMACCEL_NONE;
+      ctxTypeMask = VMACCEL_NONE;
       tag = "NOP";
    }
 
@@ -818,8 +818,8 @@ public:
     * Prepares the operation.
     */
    template <class... B>
-   void prepare(VMAccelResourceType type, std::string &t, B &... args) {
-      ctxType = type;
+   void prepare(VMAccelResourceType typeMask, std::string &t, B &... args) {
+      ctxTypeMask = typeMask;
       tag = t;
       prepareArgs<B...>(bindings, args...);
    }
@@ -833,7 +833,7 @@ protected:
    /**
     * Type of context used for the operation.
     */
-   VMAccelResourceType ctxType;
+   VMAccelResourceType ctxTypeMask;
 
    /**
     * Tag for the operation.
@@ -954,7 +954,7 @@ public:
            unsigned int maxRefObjects)
       : object() {
       accel = a;
-      type = t;
+      typeMask = t;
       residencyDB = IdentifierDB_Alloc(maxRefObjects);
    }
 
@@ -971,7 +971,7 @@ public:
     */
    const std::shared_ptr<accelerator> &get_accel() const { return accel; }
 
-   const VMAccelResourceType get_type() const { return type; }
+   const VMAccelResourceType get_typeMask() const { return typeMask; }
 
    /**
     * is_resident
@@ -1011,7 +1011,7 @@ protected:
    /*
     * Type of accelerator context.
     */
-   VMAccelResourceType type;
+   VMAccelResourceType typeMask;
 
    /*
     * Residency database, for tracking if an object's lifetime is active

@@ -288,7 +288,7 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
     * tasks. We achieve this by exporting the capabilities below to
     * maintain a stable system.
     */
-   result.desc.type = VMACCEL_COMPUTE_ACCELERATOR;
+   result.desc.typeMask = VMACCEL_COMPUTE_ACCELERATOR_MASK;
    result.desc.architecture = accelArch;
    result.desc.caps = VMACCEL_SURFACEMAP;
 

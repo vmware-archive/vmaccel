@@ -65,7 +65,7 @@ public:
     */
    clcontext(std::shared_ptr<accelerator> &a, unsigned int megaFlops,
              unsigned int selectionMask, unsigned int requiredCaps)
-      : context(a, VMACCEL_COMPUTE_ACCELERATOR, a->get_max_ref_objects()) {
+      : context(a, VMACCEL_COMPUTE_ACCELERATOR_MASK, a->get_max_ref_objects()) {
       LOG_ENTRY(("clcontext::Constructor(a=%p) {\n", a.get()));
       accelId = VMACCEL_INVALID_ID;
       contextId = VMACCEL_INVALID_ID;
@@ -94,12 +94,12 @@ public:
     * Copy constructor.
     */
    clcontext(const clcontext &obj)
-      : context(obj.get_accel(), obj.get_type(),
+      : context(obj.get_accel(), obj.get_typeMask(),
                 obj.get_accel()->get_max_ref_objects()) {
       LOG_ENTRY(("clcontext::CopyConstructor(obj.clnt=%p, obj.accelId=%d, "
-                 "obj.contextId=%d, obj.queueId=%d, obj.get_type()=%d) {\n",
+                 "obj.contextId=%d, obj.queueId=%d, obj.get_typeMask()=%d) {\n",
                  obj.clnt, obj.accelId, obj.contextId, obj.queueId,
-                 obj.get_type()));
+                 obj.get_typeMask()));
       clnt = obj.clnt;
       accelId = obj.accelId;
       contextId = obj.contextId;
@@ -166,7 +166,7 @@ private:
 
       if (accel->get_manager() != NULL) {
          memset(&vmaccelmgr_alloc_1_arg, 0, sizeof(vmaccelmgr_alloc_1_arg));
-         vmaccelmgr_alloc_1_arg.type = VMACCEL_COMPUTE_ACCELERATOR;
+         vmaccelmgr_alloc_1_arg.typeMask = VMACCEL_COMPUTE_ACCELERATOR_MASK;
          vmaccelmgr_alloc_1_arg.capacity.megaFlops = megaFlops;
          result_1 =
             vmaccelmgr_alloc_1(&vmaccelmgr_alloc_1_arg, accel->get_manager());
@@ -826,7 +826,7 @@ public:
                    ref_object<surface> &s) {
       assert(usage == s->get_desc().usage);
       clbinding = ref_object<binding>(
-         new binding(VMACCEL_COMPUTE_ACCELERATOR, bindFlags, usage, s));
+         new binding(VMACCEL_COMPUTE_ACCELERATOR_MASK, bindFlags, usage, s));
    }
 
    /**
@@ -943,7 +943,7 @@ public:
          return;
       }
       std::string tag("COMPUTE");
-      vmaccel::operation::prepare<B...>(VMACCEL_COMPUTE_ACCELERATOR, tag,
+      vmaccel::operation::prepare<B...>(VMACCEL_COMPUTE_ACCELERATOR_MASK, tag,
                                         args...);
       clctx = c;
       kernelType = type;

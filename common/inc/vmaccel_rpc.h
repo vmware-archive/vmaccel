@@ -90,7 +90,7 @@ struct VMAccelAddress {
       char *addr_val;
    } addr;
    u_int port;
-   VMAccelResourceType resourceType;
+   VMAccelResourceType resourceTypeMask;
 };
 typedef struct VMAccelAddress VMAccelAddress;
 
@@ -125,7 +125,7 @@ typedef struct VMAccelWorkloadDesc VMAccelWorkloadDesc;
 struct VMAccelDesc {
    VMAccelId parentId;
    VMAccelAddress parentAddr;
-   VMAccelResourceType type;
+   VMAccelResourceType typeMask;
    VMAccelArchitectureType architecture;
    VMAccelCaps caps;
    struct {
@@ -145,7 +145,7 @@ typedef struct VMAccelDesc VMAccelDesc;
 struct VMAccelResourceDesc {
    VMAccelId parentId;
    VMAccelAddress parentAddr;
-   VMAccelResourceType type;
+   VMAccelResourceType typeMask;
    VMAccelSelectionMask selectionMask;
    VMAccelCaps caps;
    u_int num;
@@ -162,7 +162,7 @@ typedef struct VMAccelAllocateStatus VMAccelAllocateStatus;
 
 struct VMAccelRegisterDesc {
    VMAccelDesc desc;
-   VMAccelResourceType type;
+   VMAccelResourceType typeMask;
 };
 typedef struct VMAccelRegisterDesc VMAccelRegisterDesc;
 
@@ -174,7 +174,7 @@ typedef struct VMAccelResourceAllocateStatus VMAccelResourceAllocateStatus;
 
 struct VMAccelRegisterAllocationDesc {
    VMAccelAddress parentAddr;
-   VMAccelResourceType type;
+   VMAccelResourceType typeMask;
    u_int num;
    u_int size;
 };

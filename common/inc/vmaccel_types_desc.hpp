@@ -170,7 +170,7 @@ struct VMAccelDescCmp {
 static void Constructor(VMAccelDesc &obj) {
    obj.parentId = VMACCEL_INVALID_ID;
    Constructor(obj.parentAddr);
-   obj.type = 0;
+   obj.typeMask = 0;
    obj.architecture = 0;
    obj.caps = 0;
    obj.formatCaps.formatCaps_len = 0;
@@ -194,7 +194,7 @@ static void DeepCopy(VMAccelDesc &lhs, const VMAccelDesc &rhs) {
    if (&lhs != &rhs) {
       lhs.parentId = rhs.parentId;
       DeepCopy(lhs.parentAddr, rhs.parentAddr);
-      lhs.type = rhs.type;
+      lhs.typeMask = rhs.typeMask;
       lhs.architecture = rhs.architecture;
       lhs.caps = rhs.caps;
       lhs.formatCaps.formatCaps_len = rhs.formatCaps.formatCaps_len;
@@ -223,7 +223,7 @@ static void Move(VMAccelDesc &lhs, VMAccelDesc &rhs) {
    if (&lhs != &rhs) {
       lhs.parentId = rhs.parentId;
       Move(lhs.parentAddr, rhs.parentAddr);
-      lhs.type = rhs.type;
+      lhs.typeMask = rhs.typeMask;
       lhs.architecture = rhs.architecture;
       lhs.caps = rhs.caps;
       lhs.formatCaps.formatCaps_len = rhs.formatCaps.formatCaps_len;
@@ -314,7 +314,7 @@ inline void Log_VMAccelDesc(const char *prefix, const VMAccelDesc *desc) {
 
    Log("%s parentId=%u\n", prefix, desc->parentId);
    Log_VMAccelAddress(prefix, &desc->parentAddr);
-   Log("%s type=%u\n", prefix, desc->type);
+   Log("%s typeMask=%u\n", prefix, desc->typeMask);
    Log("%s architecture=%u\n", prefix, desc->architecture);
    Log("%s caps=0x%x\n", prefix, desc->caps);
 

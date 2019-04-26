@@ -175,7 +175,7 @@ bool_t xdr_VMAccelAddress(XDR *xdrs, VMAccelAddress *objp) {
       return FALSE;
    if (!xdr_u_int(xdrs, &objp->port))
       return FALSE;
-   if (!xdr_VMAccelResourceType(xdrs, &objp->resourceType))
+   if (!xdr_VMAccelResourceType(xdrs, &objp->resourceTypeMask))
       return FALSE;
    return TRUE;
 }
@@ -303,7 +303,7 @@ bool_t xdr_VMAccelDesc(XDR *xdrs, VMAccelDesc *objp) {
          return FALSE;
       if (!xdr_VMAccelAddress(xdrs, &objp->parentAddr))
          return FALSE;
-      if (!xdr_VMAccelResourceType(xdrs, &objp->type))
+      if (!xdr_VMAccelResourceType(xdrs, &objp->typeMask))
          return FALSE;
       if (!xdr_VMAccelArchitectureType(xdrs, &objp->architecture))
          return FALSE;
@@ -344,7 +344,7 @@ bool_t xdr_VMAccelDesc(XDR *xdrs, VMAccelDesc *objp) {
          return FALSE;
       if (!xdr_VMAccelAddress(xdrs, &objp->parentAddr))
          return FALSE;
-      if (!xdr_VMAccelResourceType(xdrs, &objp->type))
+      if (!xdr_VMAccelResourceType(xdrs, &objp->typeMask))
          return FALSE;
       if (!xdr_VMAccelArchitectureType(xdrs, &objp->architecture))
          return FALSE;
@@ -386,7 +386,7 @@ bool_t xdr_VMAccelDesc(XDR *xdrs, VMAccelDesc *objp) {
       return FALSE;
    if (!xdr_VMAccelAddress(xdrs, &objp->parentAddr))
       return FALSE;
-   if (!xdr_VMAccelResourceType(xdrs, &objp->type))
+   if (!xdr_VMAccelResourceType(xdrs, &objp->typeMask))
       return FALSE;
    if (!xdr_VMAccelArchitectureType(xdrs, &objp->architecture))
       return FALSE;
@@ -420,7 +420,7 @@ bool_t xdr_VMAccelResourceDesc(XDR *xdrs, VMAccelResourceDesc *objp) {
       return FALSE;
    if (!xdr_VMAccelAddress(xdrs, &objp->parentAddr))
       return FALSE;
-   if (!xdr_VMAccelResourceType(xdrs, &objp->type))
+   if (!xdr_VMAccelResourceType(xdrs, &objp->typeMask))
       return FALSE;
    if (!xdr_VMAccelSelectionMask(xdrs, &objp->selectionMask))
       return FALSE;
@@ -450,7 +450,7 @@ bool_t xdr_VMAccelRegisterDesc(XDR *xdrs, VMAccelRegisterDesc *objp) {
 
    if (!xdr_VMAccelDesc(xdrs, &objp->desc))
       return FALSE;
-   if (!xdr_VMAccelResourceType(xdrs, &objp->type))
+   if (!xdr_VMAccelResourceType(xdrs, &objp->typeMask))
       return FALSE;
    return TRUE;
 }
@@ -472,7 +472,7 @@ bool_t xdr_VMAccelRegisterAllocationDesc(XDR *xdrs,
 
    if (!xdr_VMAccelAddress(xdrs, &objp->parentAddr))
       return FALSE;
-   if (!xdr_VMAccelResourceType(xdrs, &objp->type))
+   if (!xdr_VMAccelResourceType(xdrs, &objp->typeMask))
       return FALSE;
    if (!xdr_u_int(xdrs, &objp->num))
       return FALSE;

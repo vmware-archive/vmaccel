@@ -76,7 +76,7 @@ static void Log_VMAccelAddress(const char *prefix, const VMAccelAddress *addr) {
       Log("%s addr=n/a\n", prefix);
    }
    Log("%s port=%u\n", prefix, addr->port);
-   Log("%s resourceType=%u\n", prefix, addr->resourceType);
+   Log("%s resourceTypeMask=%u\n", prefix, addr->resourceTypeMask);
 }
 
 #ifdef __cplusplus

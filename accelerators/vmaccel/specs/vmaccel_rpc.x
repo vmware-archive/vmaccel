@@ -193,7 +193,7 @@ struct VMAccelDesc {
    VMAccelId                 parentId;
    VMAccelAddress            parentAddr;
 
-   VMAccelResourceType       type;
+   VMAccelResourceType       typeMask;
    VMAccelArchitectureType   architecture;
    VMAccelCaps               caps;
    VMAccelFormatDesc         formatCaps<>;
@@ -221,7 +221,7 @@ struct VMAccelResourceDesc {
    VMAccelId                 parentId;
    VMAccelAddress            parentAddr;
 
-   VMAccelResourceType       type;
+   VMAccelResourceType       typeMask;
    VMAccelSelectionMask      selectionMask;
    VMAccelCaps               caps;
    unsigned int              num;
@@ -246,7 +246,7 @@ struct VMAccelAllocateStatus {
  */
 struct VMAccelRegisterDesc {
    VMAccelDesc               desc;
-   VMAccelResourceType       type;
+   VMAccelResourceType       typeMask;
 };
 
 /*
@@ -262,7 +262,7 @@ struct VMAccelResourceAllocateStatus {
  */
 struct VMAccelRegisterAllocationDesc {
    VMAccelAddress            parentAddr;
-   VMAccelResourceType       type;
+   VMAccelResourceType       typeMask;
    unsigned int              num;
 
    /*

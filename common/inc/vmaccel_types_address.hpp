@@ -33,7 +33,7 @@ static void Constructor(VMAccelAddress &obj) {
    obj.addr.addr_len = 0;
    obj.addr.addr_val = NULL;
    obj.port = 0;
-   obj.resourceType = 0;
+   obj.resourceTypeMask = 0;
 }
 
 static void Destructor(VMAccelAddress &obj) {
@@ -55,7 +55,7 @@ static void DeepCopy(VMAccelAddress &lhs, const VMAccelAddress &rhs) {
          lhs.addr.addr_val = NULL;
       }
       lhs.port = rhs.port;
-      lhs.resourceType = rhs.resourceType;
+      lhs.resourceTypeMask = rhs.resourceTypeMask;
    }
 }
 
@@ -73,7 +73,7 @@ static void Move(VMAccelAddress &lhs, VMAccelAddress &rhs) {
       free(lhs.addr.addr_val);
       lhs.addr.addr_val = rhs.addr.addr_val;
       lhs.port = rhs.port;
-      lhs.resourceType = rhs.resourceType;
+      lhs.resourceTypeMask = rhs.resourceTypeMask;
       memset(&rhs, 0, sizeof(rhs));
    }
 }
