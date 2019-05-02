@@ -27,6 +27,7 @@ server as possible.
   * Ubuntu 16.04 or newer
     * Developer tools, gcc/g++ (e.g. build-essential g++)
     * OpenCL Libraries and Headers (Intel OpenCL 2.1+ SDK recommended)
+    * FFmpeg (Optional libavcodec-dev libavdevice-dev libavformat-dev libavswscale-dev)
     * python with distutils package (e.g. python-distutils-extra)
     * rpcgen 2.23+
     * rpcbind (for server/client communication)

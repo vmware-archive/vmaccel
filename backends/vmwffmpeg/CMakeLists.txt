@@ -24,20 +24,29 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../external/vtk/CMake")
+cmake_minimum_required(VERSION 3.4.3)
+project(vmwffmpeg)
 
-message("CMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}")
+#
+# Apply settings for the project
+#
+IF (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+   set(CMAKE_INCLUDE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/inc)
+   set(CMAKE_SPECS_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/specs)
+   set(CMAKE_GEN_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/gen)
 
-find_package(FFMPEG COMPONENTS AVCODEC AVDEVICE AVFOMAT AVUTIL REQUIRED)
+   set(CMAKE_BUILD_TYPE Debug)
+   set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
+   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
+ENDIF()
 
-if (FFMPEG_FOUND)
-   message("FFMPEG_INCLUDE_DIR=${FFMPEG_INCLUDE_DIR}")
-   message("FFMPEG_LIBRARIES=${FFMPEG_LIBRARIES}")
-
-   include_directories(${FFMPEG_INCLUDE_DIRS})
-
-   add_subdirectory(vmwffmpeg)
+if (NOT FFMPEG_FOUND)
+   message(FATAL_ERROR "FFMPEG library not found")
 endif()
 
-add_subdirectory(vmwopencl)
+include_directories(../../common/inc)
 
+add_subdirectory(cmake/libvmwffmpeg)

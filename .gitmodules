@@ -17,3 +17,7 @@
 	path = external/spirv-llvm
 	url = https://github.com/KhronosGroup/SPIRV-LLVM.git
 	branch = khronos/spirv-3.6.1
+[submodule "external/vtk"]
+	path = external/vtk
+	url = https://github.com/Kitware/VTK.git
+	branch = release

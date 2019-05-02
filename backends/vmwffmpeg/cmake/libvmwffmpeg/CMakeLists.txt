@@ -24,20 +24,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../external/vtk/CMake")
+set(SOURCES
+   ../../../../common/src/vmaccel_utils.c
+   ../../src/vmwffmpeg_ops.c)
 
-message("CMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}")
-
-find_package(FFMPEG COMPONENTS AVCODEC AVDEVICE AVFOMAT AVUTIL REQUIRED)
-
-if (FFMPEG_FOUND)
-   message("FFMPEG_INCLUDE_DIR=${FFMPEG_INCLUDE_DIR}")
-   message("FFMPEG_LIBRARIES=${FFMPEG_LIBRARIES}")
-
-   include_directories(${FFMPEG_INCLUDE_DIRS})
-
-   add_subdirectory(vmwffmpeg)
-endif()
-
-add_subdirectory(vmwopencl)
-
+add_library(vmwffmpeg ${SOURCES})
+target_link_libraries(vmwffmpeg ${FFMPEG_LIBRARIES})
