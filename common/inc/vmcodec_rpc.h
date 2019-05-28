@@ -52,6 +52,7 @@ struct VMCODECContextAllocateDesc {
    VMAccelId accelId;
    VMCODECContextId clientId;
    VMAccelSelectionMask selectionMask;
+   unsigned int codec;
    VMCODECCaps requiredCaps;
 };
 typedef struct VMCODECContextAllocateDesc VMCODECContextAllocateDesc;

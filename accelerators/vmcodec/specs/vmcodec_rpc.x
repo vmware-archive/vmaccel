@@ -51,9 +51,14 @@ struct VMCODECContextAllocateDesc {
    VMAccelSelectionMask      selectionMask;
 
    /*
+    * CODEC state tracked by this context.
+    */
+   unsigned int              codec;
+
+   /*
     * Required capabilities for context allocation.
     */
-   VMCODECCaps                  requiredCaps;
+   VMCODECCaps               requiredCaps;
 };
 
 /*
