@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016-2019 VMware, Inc.
+# Copyright (c) 2019 VMware, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,6 +24,20 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_subdirectory(vmaccel)
-add_subdirectory(vmcl)
-add_subdirectory(vmcodec)
+set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../../../external/vtk/CMake")
+
+message("CMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}")
+
+find_package(FFMPEG COMPONENTS AVCODEC AVDEVICE AVFOMAT AVUTIL REQUIRED)
+
+set(SERVER_SOURCES
+   ../../src/vmcodec_rpc_server.c
+   ../../src/vmcodec_rpc_xdr.c)
+
+add_library(vmcodec_server ${SERVER_SOURCES})
+
+if (FFMPEG_FOUND)
+   target_link_libraries(vmcodec_server vmwffmpeg vmaccelmgr_client)
+else()
+   target_link_libraries(vmcodec_server vmaccelmgr_client)
+endif()

@@ -24,6 +24,5 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_subdirectory(vmaccel)
-add_subdirectory(vmcl)
-add_subdirectory(vmcodec)
+add_executable(vmcodec_svr ../../src/vmcodec_rpc_svc.c)
+target_link_libraries(vmcodec_svr vmcodec_server vmaccel_server)
