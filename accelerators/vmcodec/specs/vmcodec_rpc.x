@@ -102,11 +102,19 @@ struct VMCODECImageDownloadOp {
 };
 
 /*
+ * CODEC pipeline argument.
+ */
+struct VMCODECArg {
+   VMCODECSurfaceId         sid;
+   VMAccelSurfaceRegion      imgRegion;
+};
+
+/*
  * Decode operation.
  */
 struct VMCODECDecodeOp {
    VMCODECContextId          cid;
-   VMCODECSurfaceId          output<>;
+   VMCODECArg                output<>;
 };
 
 /*
@@ -114,7 +122,7 @@ struct VMCODECDecodeOp {
  */
 struct VMCODECEncodeOp {
    VMCODECContextId          cid;
-   VMCODECSurfaceId          inptut<>;
+   VMCODECArg                inptut<>;
 };
 
 /*

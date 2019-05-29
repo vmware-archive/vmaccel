@@ -59,6 +59,8 @@ bool_t xdr_VMCODECContextAllocateDesc(XDR *xdrs,
       return FALSE;
    if (!xdr_VMAccelSelectionMask(xdrs, &objp->selectionMask))
       return FALSE;
+   if (!xdr_u_int(xdrs, &objp->codec))
+      return FALSE;
    if (!xdr_VMCODECCaps(xdrs, &objp->requiredCaps))
       return FALSE;
    return TRUE;
@@ -120,14 +122,24 @@ bool_t xdr_VMCODECImageDownloadOp(XDR *xdrs, VMCODECImageDownloadOp *objp) {
    return TRUE;
 }
 
+bool_t xdr_VMCODECArg(XDR *xdrs, VMCODECArg *objp) {
+   register int32_t *buf;
+
+   if (!xdr_VMCODECSurfaceId(xdrs, &objp->sid))
+      return FALSE;
+   if (!xdr_VMAccelSurfaceRegion(xdrs, &objp->imgRegion))
+      return FALSE;
+   return TRUE;
+}
+
 bool_t xdr_VMCODECDecodeOp(XDR *xdrs, VMCODECDecodeOp *objp) {
    register int32_t *buf;
 
    if (!xdr_VMCODECContextId(xdrs, &objp->cid))
       return FALSE;
    if (!xdr_array(xdrs, (char **)&objp->output.output_val,
-                  (u_int *)&objp->output.output_len, ~0,
-                  sizeof(VMCODECSurfaceId), (xdrproc_t)xdr_VMCODECSurfaceId))
+                  (u_int *)&objp->output.output_len, ~0, sizeof(VMCODECArg),
+                  (xdrproc_t)xdr_VMCODECArg))
       return FALSE;
    return TRUE;
 }
@@ -138,8 +150,8 @@ bool_t xdr_VMCODECEncodeOp(XDR *xdrs, VMCODECEncodeOp *objp) {
    if (!xdr_VMCODECContextId(xdrs, &objp->cid))
       return FALSE;
    if (!xdr_array(xdrs, (char **)&objp->inptut.inptut_val,
-                  (u_int *)&objp->inptut.inptut_len, ~0,
-                  sizeof(VMCODECSurfaceId), (xdrproc_t)xdr_VMCODECSurfaceId))
+                  (u_int *)&objp->inptut.inptut_len, ~0, sizeof(VMCODECArg),
+                  (xdrproc_t)xdr_VMCODECArg))
       return FALSE;
    return TRUE;
 }

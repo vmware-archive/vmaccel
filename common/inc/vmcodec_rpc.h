@@ -52,7 +52,7 @@ struct VMCODECContextAllocateDesc {
    VMAccelId accelId;
    VMCODECContextId clientId;
    VMAccelSelectionMask selectionMask;
-   unsigned int codec;
+   u_int codec;
    VMCODECCaps requiredCaps;
 };
 typedef struct VMCODECContextAllocateDesc VMCODECContextAllocateDesc;
@@ -89,11 +89,17 @@ struct VMCODECImageDownloadOp {
 };
 typedef struct VMCODECImageDownloadOp VMCODECImageDownloadOp;
 
+struct VMCODECArg {
+   VMCODECSurfaceId sid;
+   VMAccelSurfaceRegion imgRegion;
+};
+typedef struct VMCODECArg VMCODECArg;
+
 struct VMCODECDecodeOp {
    VMCODECContextId cid;
    struct {
       u_int output_len;
-      VMCODECSurfaceId *output_val;
+      VMCODECArg *output_val;
    } output;
 };
 typedef struct VMCODECDecodeOp VMCODECDecodeOp;
@@ -102,7 +108,7 @@ struct VMCODECEncodeOp {
    VMCODECContextId cid;
    struct {
       u_int inptut_len;
-      VMCODECSurfaceId *inptut_val;
+      VMCODECArg *inptut_val;
    } inptut;
 };
 typedef struct VMCODECEncodeOp VMCODECEncodeOp;
@@ -202,6 +208,7 @@ extern bool_t xdr_VMCODECSurfaceAllocateDesc(XDR *,
                                              VMCODECSurfaceAllocateDesc *);
 extern bool_t xdr_VMCODECImageUploadOp(XDR *, VMCODECImageUploadOp *);
 extern bool_t xdr_VMCODECImageDownloadOp(XDR *, VMCODECImageDownloadOp *);
+extern bool_t xdr_VMCODECArg(XDR *, VMCODECArg *);
 extern bool_t xdr_VMCODECDecodeOp(XDR *, VMCODECDecodeOp *);
 extern bool_t xdr_VMCODECEncodeOp(XDR *, VMCODECEncodeOp *);
 extern bool_t
@@ -217,6 +224,7 @@ extern bool_t xdr_VMCODECSurfaceId();
 extern bool_t xdr_VMCODECSurfaceAllocateDesc();
 extern bool_t xdr_VMCODECImageUploadOp();
 extern bool_t xdr_VMCODECImageDownloadOp();
+extern bool_t xdr_VMCODECArg();
 extern bool_t xdr_VMCODECDecodeOp();
 extern bool_t xdr_VMCODECEncodeOp();
 extern bool_t xdr_VMCODECContextAllocateReturnStatus();
