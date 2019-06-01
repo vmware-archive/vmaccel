@@ -43,128 +43,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <syslog.h>
 
 #include "vmaccel_types_address.h"
+#include "vmaccel_mgr_utils.h"
 #include "log_level.h"
 
 #ifndef SIG_PF
 #define SIG_PF void (*)(int)
 #endif
-
-typedef struct VMAccelMgrClient {
-   CLIENT *clnt;
-   char *host;
-   VMAccelId accelId;
-} VMAccelMgrClient;
-
-static VMAccelMgrClient vmaccelmgr_register(char *host, char *iface,
-                                            VMAccelDesc *accelDesc) {
-   VMAccelMgrClient mgrClient = {NULL, NULL, -1};
-   struct ifaddrs *netifs = NULL, *netif;
-   char localHost[NI_MAXHOST];
-   bool netifFound = false;
-
-   Log("Connecting to management host %s\n", host);
-
-   if (getifaddrs(&netifs) == -1) {
-      Warning("Unable to get network address\n");
-      return mgrClient;
-   }
-
-   netif = netifs;
-   while (netif != NULL) {
-      int family, ret;
-
-      if (netif->ifa_addr == NULL) {
-         netif = netif->ifa_next;
-         continue;
-      }
-
-      ret = getnameinfo(netif->ifa_addr, sizeof(struct sockaddr_in), localHost,
-                        NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
-
-      if (ret != 0) {
-         Warning("getnameinfo() failed: %s\n", gai_strerror(ret));
-         netif = netif->ifa_next;
-         continue;
-      }
-
-      if (netif->ifa_addr->sa_family == AF_INET) {
-         Log("  Interface: <%s>\n", netif->ifa_name);
-         Log("    Address: <%s>\n", localHost);
-
-         /*
-          * Match network interface
-          */
-         if (iface != NULL) {
-            if (strcmp(netif->ifa_name, iface) == 0) {
-               Log("Selecting interface <%s>\n", netif->ifa_name);
-               netifFound = true;
-               break;
-            }
-         }
-      }
-
-      netif = netif->ifa_next;
-   }
-
-   /*
-    * Register with the management server.
-    */
-   if (netifFound) {
-      VMAccelAllocateReturnStatus *result_2;
-      VMAccelRegisterDesc vmaccelmgr_register_1_arg;
-      char localAddr[VMACCEL_MAX_LOCATION_SIZE];
-
-      memset(&vmaccelmgr_register_1_arg, 0, sizeof(vmaccelmgr_register_1_arg));
-
-      mgrClient.clnt = clnt_create(host, VMACCELMGR, VMACCELMGR_VERSION, "udp");
-      if (mgrClient.clnt == NULL) {
-         clnt_pcreateerror(host);
-         exit(1);
-      }
-
-      vmaccelmgr_register_1_arg.desc = *accelDesc;
-      VMAccelAddressStringToOpaqueAddr(localHost, localAddr, sizeof(localAddr));
-      vmaccelmgr_register_1_arg.desc.parentAddr.addr.addr_val = &localAddr[0];
-      vmaccelmgr_register_1_arg.desc.parentAddr.addr.addr_len =
-         sizeof(localAddr);
-
-      result_2 =
-         vmaccelmgr_register_1(&vmaccelmgr_register_1_arg, mgrClient.clnt);
-      if ((result_2 == (VMAccelAllocateReturnStatus *)NULL) ||
-          (result_2->VMAccelAllocateReturnStatus_u.ret == NULL)) {
-         clnt_perror(mgrClient.clnt, "call failed");
-         clnt_destroy(mgrClient.clnt);
-         mgrClient.clnt = NULL;
-      } else {
-         mgrClient.accelId = result_2->VMAccelAllocateReturnStatus_u.ret->id;
-      }
-   }
-
-   freeifaddrs(netifs);
-
-   return mgrClient;
-}
-
-static void vmaccelmgr_unregister(VMAccelMgrClient *mgrClient) {
-   VMAccelReturnStatus *result_3;
-   VMAccelId vmaccelmgr_unregister_1_arg;
-
-   /* TODO: Populate the Accelerator Global ID */
-   vmaccelmgr_unregister_1_arg = mgrClient->accelId;
-
-   result_3 =
-      vmaccelmgr_unregister_1(&vmaccelmgr_unregister_1_arg, mgrClient->clnt);
-
-   if (result_3 == (VMAccelReturnStatus *)NULL) {
-      clnt_perror(mgrClient->clnt, "call failed");
-   }
-
-   clnt_destroy(mgrClient->clnt);
-   mgrClient->clnt = NULL;
-
-   free(mgrClient->host);
-   mgrClient->host = NULL;
-}
 
 static void vmcl_1(struct svc_req *rqstp, register SVCXPRT *transp) {
    union {

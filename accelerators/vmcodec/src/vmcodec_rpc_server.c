@@ -32,7 +32,36 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * as a guideline for developing your own functions.
  */
 
+#include "vmcodec_ops.h"
 #include "vmcodec_rpc.h"
+#include "vmwffmpeg.h"
+#include <assert.h>
+#include <string.h>
+
+#include "log_level.h"
+
+static VMCODECOps *ffmpeg = &vmwffmpegOps;
+
+VMAccelAllocateStatus *vmcodec_poweron_svc(VMCODECOps *ops) {
+   VMAccelAllocateStatus *ret = NULL;
+   /*
+    * Loop through all the Accelerator architectures until one powers on.
+    */
+   assert(VMACCEL_SELECT_MAX > 0);
+   for (int i = 0; i < VMACCEL_SELECT_MAX; i++) {
+      ret = ffmpeg->poweron(NULL, i, 0);
+      if (ret->status == VMACCEL_SUCCESS) {
+         return ret;
+      }
+   }
+   Warning("%s: Unable to power on any VMCODEC capable backends.\n",
+           __FUNCTION__);
+   return ret;
+}
+
+VMAccelStatus *vmcodec_poweroff_svc() {
+   return ffmpeg->poweroff();
+}
 
 VMCODECContextAllocateReturnStatus *
 vmcodec_contextalloc_1_svc(VMCODECContextAllocateDesc *argp,
@@ -42,6 +71,8 @@ vmcodec_contextalloc_1_svc(VMCODECContextAllocateDesc *argp,
    /*
     * insert server code here
     */
+   result.VMCODECContextAllocateReturnStatus_u.ret =
+      ffmpeg->contextalloc_1(argp);
 
    return &result;
 }
@@ -53,6 +84,7 @@ VMAccelReturnStatus *vmcodec_contextdestroy_1_svc(VMCODECContextId *argp,
    /*
     * insert server code here
     */
+   result.VMAccelReturnStatus_u.ret = ffmpeg->contextdestroy_1(argp);
 
    return &result;
 }
@@ -65,6 +97,8 @@ vmcodec_surfacealloc_1_svc(VMCODECSurfaceAllocateDesc *argp,
    /*
     * insert server code here
     */
+   result.VMAccelSurfaceAllocateReturnStatus_u.ret =
+      ffmpeg->surfacealloc_1(argp);
 
    return &result;
 }
@@ -76,6 +110,7 @@ VMAccelReturnStatus *vmcodec_surfacedestroy_1_svc(VMCODECSurfaceId *argp,
    /*
     * insert server code here
     */
+   result.VMAccelReturnStatus_u.ret = ffmpeg->surfacedestroy_1(argp);
 
    return &result;
 }
@@ -87,6 +122,7 @@ VMAccelReturnStatus *vmcodec_imageupload_1_svc(VMCODECImageUploadOp *argp,
    /*
     * insert server code here
     */
+   result.VMAccelReturnStatus_u.ret = ffmpeg->imageupload_1(argp);
 
    return &result;
 }
@@ -99,6 +135,7 @@ vmcodec_imagedownload_1_svc(VMCODECImageDownloadOp *argp,
    /*
     * insert server code here
     */
+   result.VMAccelDownloadReturnStatus_u.ret = ffmpeg->imagedownload_1(argp);
 
    return &result;
 }
@@ -110,6 +147,7 @@ VMAccelReturnStatus *vmcodec_decode_1_svc(VMCODECDecodeOp *argp,
    /*
     * insert server code here
     */
+   result.VMAccelReturnStatus_u.ret = ffmpeg->decode_1(argp);
 
    return &result;
 }
@@ -121,6 +159,7 @@ VMAccelReturnStatus *vmcodec_encode_1_svc(VMCODECEncodeOp *argp,
    /*
     * insert server code here
     */
+   result.VMAccelReturnStatus_u.ret = ffmpeg->encode_1(argp);
 
    return &result;
 }

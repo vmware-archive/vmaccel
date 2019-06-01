@@ -28,3 +28,124 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
 #include <string.h>
+
+#include "vmwffmpeg.h"
+#include "vmaccel_utils.h"
+
+#include "log_level.h"
+
+VMAccelStatus *vmwffmpeg_poweroff();
+
+VMAccelAllocateStatus *vmwffmpeg_poweron(VMCODECOps *ops,
+                                         unsigned int accelArch,
+                                         unsigned int accelIndex) {
+   static VMAccelAllocateStatus result;
+
+   memset(&result, 0, sizeof(result));
+
+   Log("Powering on vmwffmpeg backend...\n");
+
+   result.status = VMACCEL_FAIL;
+
+   return (&result);
+}
+
+VMAccelStatus *vmwffmpeg_poweroff() {
+   static VMAccelStatus result;
+
+   memset(&result, 0, sizeof(result));
+
+   return (&result);
+}
+
+VMCODECContextAllocateStatus *
+vmwffmpeg_contextalloc_1(VMCODECContextAllocateDesc *argp) {
+   static VMCODECContextAllocateStatus result;
+
+   memset(&result, 0, sizeof(result));
+
+   result.status = VMACCEL_RESOURCE_UNAVAILABLE;
+
+   return (&result);
+}
+
+VMAccelStatus *vmwffmpeg_contextdestroy_1(VMCODECContextId *argp) {
+   static VMAccelStatus result;
+
+   memset(&result, 0, sizeof(result));
+
+   result.status = VMACCEL_FAIL;
+
+   return (&result);
+}
+
+VMAccelSurfaceAllocateStatus *
+vmwffmpeg_surfacealloc_1(VMCODECSurfaceAllocateDesc *argp) {
+   static VMAccelSurfaceAllocateStatus result;
+
+   memset(&result, 0, sizeof(result));
+
+   result.status = VMACCEL_RESOURCE_UNAVAILABLE;
+
+   return (&result);
+}
+
+VMAccelStatus *vmwffmpeg_surfacedestroy_1(VMCODECSurfaceId *argp) {
+   static VMAccelStatus result;
+
+   memset(&result, 0, sizeof(result));
+
+   result.status = VMACCEL_FAIL;
+
+   return (&result);
+}
+
+VMAccelStatus *vmwffmpeg_imageupload_1(VMCODECImageUploadOp *argp) {
+   static VMAccelStatus result;
+
+   memset(&result, 0, sizeof(result));
+
+   result.status = VMACCEL_FAIL;
+
+   return (&result);
+}
+
+VMAccelDownloadStatus *vmwffmpeg_imagedownload_1(VMCODECImageDownloadOp *argp) {
+   static VMAccelDownloadStatus result;
+
+   memset(&result, 0, sizeof(result));
+
+   result.status = VMACCEL_FAIL;
+
+   return (&result);
+}
+
+VMAccelStatus *vmwffmpeg_decode_1(VMCODECDecodeOp *argp) {
+   static VMAccelStatus result;
+
+   memset(&result, 0, sizeof(result));
+
+   result.status = VMACCEL_FAIL;
+
+   return (&result);
+}
+
+VMAccelStatus *vmwffmpeg_encode_1(VMCODECEncodeOp *argp) {
+   static VMAccelStatus result;
+
+   memset(&result, 0, sizeof(result));
+
+   result.status = VMACCEL_FAIL;
+
+   return (&result);
+}
+
+/*
+ * Setup the backend op dispatch
+ */
+VMCODECOps vmwffmpegOps = {
+   vmwffmpeg_poweron, vmwffmpeg_poweroff, NULL, NULL, vmwffmpeg_contextalloc_1,
+   vmwffmpeg_contextdestroy_1, vmwffmpeg_surfacealloc_1,
+   vmwffmpeg_surfacedestroy_1, vmwffmpeg_imageupload_1,
+   vmwffmpeg_imagedownload_1, vmwffmpeg_decode_1, vmwffmpeg_encode_1,
+};

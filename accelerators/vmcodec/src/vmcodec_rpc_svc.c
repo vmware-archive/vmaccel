@@ -31,7 +31,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * It was generated using rpcgen.
  */
 
+#include "vmaccel_mgr.h"
+#include "vmcodec_ops.h"
 #include "vmcodec_rpc.h"
+#include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <rpc/pmap_clnt.h>
@@ -39,7 +43,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <ifaddrs.h>
+#include <netdb.h>
 #include <syslog.h>
+
+#include "vmaccel_types_address.h"
+#include "vmaccel_mgr_utils.h"
+#include "log_level.h"
 
 #ifndef SIG_PF
 #define SIG_PF void (*)(int)
@@ -141,6 +151,8 @@ static void vmcodec_1(struct svc_req *rqstp, register SVCXPRT *transp) {
 
 int main(int argc, char **argv) {
    register SVCXPRT *transp;
+   VMAccelAllocateStatus *allocStatus;
+   VMAccelMgrClient mgrClient = {NULL, NULL, -1};
 
    pmap_unset(VMCODEC, VMCODEC_VERSION);
    openlog("vmcodec_rpc", LOG_PID, LOG_DAEMON);
@@ -169,8 +181,37 @@ int main(int argc, char **argv) {
       exit(1);
    }
 
+   allocStatus = vmcodec_poweron_svc(NULL);
+
+   if ((allocStatus == NULL) || (allocStatus->status != VMACCEL_SUCCESS)) {
+      Warning("Failed to power on VMCODEC...\n");
+      exit(1);
+   }
+
+   /*
+    * Managment host specified.
+    */
+   if (argc >= 3) {
+      char *iface = argv[1];
+      char *host = argv[2];
+
+      mgrClient = vmaccelmgr_register(host, iface, &allocStatus->desc);
+
+      if (mgrClient.clnt == NULL) {
+         Warning("Unable to register with management server...\n");
+         vmcodec_poweroff_svc();
+         exit(1);
+      }
+   }
+
    svc_run();
    syslog(LOG_ERR, "%s", "svc_run returned");
+
+   if (mgrClient.clnt != NULL) {
+      vmaccelmgr_unregister(&mgrClient);
+   }
+
+   vmcodec_poweroff_svc();
    exit(1);
    /* NOTREACHED */
 }
