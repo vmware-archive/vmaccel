@@ -877,7 +877,6 @@ private:
    std::map<unsigned int, ref_object<char>> kernels;
 };
 
-
 /**
  * VMAccel compute_operation object class.
  *

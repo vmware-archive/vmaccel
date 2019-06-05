@@ -59,6 +59,17 @@ struct VMCODECContextAllocateDesc {
     * Required capabilities for context allocation.
     */
    VMCODECCaps               requiredCaps;
+
+   /*
+    * Workload description for the codec.
+    */
+   VMAccelWorkloadDesc       decodeThroughput;
+   VMAccelWorkloadDesc       encodeThroughput;
+
+   /*
+    * Resolution for the codec.
+    */
+   VMAccelCoordinate3DUINT   frameSizePixels;
 };
 
 /*

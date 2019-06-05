@@ -63,6 +63,12 @@ bool_t xdr_VMCODECContextAllocateDesc(XDR *xdrs,
       return FALSE;
    if (!xdr_VMCODECCaps(xdrs, &objp->requiredCaps))
       return FALSE;
+   if (!xdr_VMAccelWorkloadDesc(xdrs, &objp->decodeThroughput))
+      return FALSE;
+   if (!xdr_VMAccelWorkloadDesc(xdrs, &objp->encodeThroughput))
+      return FALSE;
+   if (!xdr_VMAccelCoordinate3DUINT(xdrs, &objp->frameSizePixels))
+      return FALSE;
    return TRUE;
 }
 

@@ -54,6 +54,9 @@ struct VMCODECContextAllocateDesc {
    VMAccelSelectionMask selectionMask;
    u_int codec;
    VMCODECCaps requiredCaps;
+   VMAccelWorkloadDesc decodeThroughput;
+   VMAccelWorkloadDesc encodeThroughput;
+   VMAccelCoordinate3DUINT frameSizePixels;
 };
 typedef struct VMCODECContextAllocateDesc VMCODECContextAllocateDesc;
 
