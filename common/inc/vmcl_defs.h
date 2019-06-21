@@ -26,8 +26,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ******************************************************************************/
 
-#ifndef _VMCL_H_
-#define _VMCL_H_ 1
+#ifndef _VMCL_DEFS_H_
+#define _VMCL_DEFS_H_ 1
 
 #include "vmaccel_defs.h"
 
@@ -94,4 +94,4 @@ enum VMCLModifierType {
 #define VMCL_MODIFIER_MASK ((1 << VMCL_MODIFIER_MAX) - 1)
 typedef unsigned int VMCLModifierFlags;
 
-#endif /* _VMCL_H_ */
+#endif /* _VMCL_DEFS_H_ */

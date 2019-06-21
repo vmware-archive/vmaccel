@@ -52,10 +52,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace vmaccel {
 
+
 /**
  * VMCLContext structure.
  *
- * Bare minimum information for transferring surface contents.
+ * Bare minimum information for transferring surface contents and interfacing
+ * with VMCL.
  */
 class clcontext : public context {
 
@@ -65,7 +67,8 @@ public:
     */
    clcontext(std::shared_ptr<accelerator> &a, unsigned int megaFlops,
              unsigned int selectionMask, unsigned int requiredCaps)
-      : context(a, VMACCEL_COMPUTE_ACCELERATOR_MASK, a->get_max_ref_objects()) {
+      : vmaccel::context(a, VMACCEL_COMPUTE_ACCELERATOR_MASK,
+                         a->get_max_ref_objects()) {
       LOG_ENTRY(("clcontext::Constructor(a=%p) {\n", a.get()));
       accelId = VMACCEL_INVALID_ID;
       contextId = VMACCEL_INVALID_ID;
@@ -87,17 +90,18 @@ public:
    ~clcontext() {
       LOG_ENTRY(("clcontext::Destructor {\n"));
       destroy();
-      LOG_EXIT(("} clontext::Destructor\n"));
+      LOG_EXIT(("} clcontext::Destructor\n"));
    }
 
    /**
     * Copy constructor.
     */
    clcontext(const clcontext &obj)
-      : context(obj.get_accel(), obj.get_typeMask(),
-                obj.get_accel()->get_max_ref_objects()) {
-      LOG_ENTRY(("clcontext::CopyConstructor(obj.clnt=%p, obj.accelId=%d, "
-                 "obj.contextId=%d, obj.queueId=%d, obj.get_typeMask()=%d) {\n",
+      : vmaccel::context(obj.get_accel(), obj.get_typeMask(),
+                         obj.get_accel()->get_max_ref_objects()) {
+      LOG_ENTRY(("clcontext::CopyConstructor(obj.clnt=%p, "
+                 "obj.accelId=%d, obj.contextId=%d, obj.queueId=%d, "
+                 "obj.get_typeMask()=%d) {\n",
                  obj.clnt, obj.accelId, obj.contextId, obj.queueId,
                  obj.get_typeMask()));
       clnt = obj.clnt;
@@ -308,6 +312,8 @@ private:
 };
 
 typedef unsigned int VMCLKernelArchitecture;
+
+namespace compute {
 
 /**
  * prepareComputeArgs
@@ -801,19 +807,19 @@ bool quiesceComputeSurfaceArgs(ref_object<clcontext> &clctx,
 }
 
 /**
- * VMAccel compute_binding encapsulating class.
+ * VMAccel compute binding encapsulating class.
  *
  * This class is used to encapsulate the binding object for the compute
  * accelerator.
  */
 
-class compute_binding {
+class binding {
 
 public:
    /**
     * Default constructor.
     */
-   compute_binding() {}
+   binding() {}
 
    /**
     * Constructor.
@@ -822,11 +828,10 @@ public:
     * @param usage Usage flags for the object.
     * @param s Surface object for the binding.
     */
-   compute_binding(unsigned int bindFlags, unsigned int usage,
-                   ref_object<surface> &s) {
+   binding(unsigned int bindFlags, unsigned int usage, ref_object<surface> &s) {
       assert(usage == s->get_desc().usage);
-      clbinding = ref_object<binding>(
-         new binding(VMACCEL_COMPUTE_ACCELERATOR_MASK, bindFlags, usage, s));
+      clbinding = ref_object<vmaccel::binding>(new vmaccel::binding(
+         VMACCEL_COMPUTE_ACCELERATOR_MASK, bindFlags, usage, s));
    }
 
    /**
@@ -841,19 +846,19 @@ private:
 };
 
 /**
- * VMAccel compute_kernel encapsulating class.
+ * VMAccel compute kernel encapsulating class.
  *
  * This class is used to encapsulate the kernel object for the compute
  * accelerator.
  */
 
-class compute_kernel {
+class kernel {
 
 public:
    /**
     * Default constructor.
     */
-   compute_kernel() {}
+   kernel() {}
 
    /**
     * Constructor.
@@ -861,7 +866,7 @@ public:
     * @param type Type of kernel handed to the accelerator.
     * @param kernelSource Source byte array for the kernel.
     */
-   compute_kernel(unsigned int type, const char *kernelSource) {
+   kernel(unsigned int type, const char *kernelSource) {
       char *kernelStr = new char[strlen(kernelSource) + 1];
       strcpy(kernelStr, kernelSource);
       kernels[VMCL_IR_NATIVE] = ref_object<char>(
@@ -889,28 +894,28 @@ private:
  * alive for the lifetime of the Operation Object, thus avoiding faults due to
  * freed objects that are in-flight.
  */
-class compute_operation : private operation {
+class operation : private vmaccel::operation {
 
 public:
    /**
     * Default constructor.
     */
-   compute_operation() : operation() {
-      LOG_ENTRY(("compute_operation::Constructor() {\n"));
+   operation() : vmaccel::operation() {
+      LOG_ENTRY(("compute::operation::Constructor() {\n"));
       prepared = false;
       dispatched = false;
       quiesced = false;
 
       kernelArgs = NULL;
       surfaceIds = NULL;
-      LOG_EXIT(("} compute_operation::Constructor\n"));
+      LOG_EXIT(("} compute::operation::Constructor\n"));
    }
 
    /**
     * Destructor.
     */
-   ~compute_operation() {
-      LOG_ENTRY(("compute_operation::Destructor() prepared=%d, dispatched=%d, "
+   ~operation() {
+      LOG_ENTRY(("compute::operation::Destructor() prepared=%d, dispatched=%d, "
                  "quiesced=%d {\n",
                  prepared, dispatched, quiesced));
       finish();
@@ -922,7 +927,7 @@ public:
          free(surfaceIds);
       }
       LOG_EXIT(("} prepared=%d, dispatched=%d, quiesced=%d "
-                "compute_operation::Destructor\n",
+                "compute::operation::Destructor\n",
                 prepared, dispatched, quiesced));
    }
 
@@ -1175,13 +1180,13 @@ private:
  * during surface destruction.
  */
 
-class compute_context {
+class context {
 
 public:
    /**
     * Default constructor.
     */
-   compute_context() {}
+   context() {}
 
    /**
     * Constructor.
@@ -1191,9 +1196,8 @@ public:
     * @param selectionMask The selection mask for the accelerators requested.
     * @param requiredCaps The required capabilites for this compute context.
     */
-   compute_context(std::shared_ptr<vmaccel::accelerator> &a,
-                   unsigned int megaFlops, unsigned int selectionMask,
-                   unsigned int requiredCaps) {
+   context(std::shared_ptr<vmaccel::accelerator> &a, unsigned int megaFlops,
+           unsigned int selectionMask, unsigned int requiredCaps) {
       std::shared_ptr<vmaccel::clcontext> clctxPtr;
       clctxPtr = std::shared_ptr<clcontext>(
          new clcontext(a, megaFlops, selectionMask, requiredCaps));
@@ -1202,8 +1206,8 @@ public:
        * accelerator class is required for a surface to destroy its remote
        * object upon class destruction.
        */
-      std::shared_ptr<context> ctxPtr =
-         std::static_pointer_cast<context, clcontext>(clctxPtr);
+      std::shared_ptr<vmaccel::context> ctxPtr =
+         std::static_pointer_cast<vmaccel::context, clcontext>(clctxPtr);
       ref_object<vmaccel::context> cb(ctxPtr, sizeof(vmaccel::clcontext), 0);
       /*
        * Track the context so vmaccel::surface::destroy can dereference and
@@ -1217,7 +1221,7 @@ public:
    /**
     * Destructor.
     */
-   ~compute_context() {
+   ~context() {
       /*
        * Remove the tracked context.
        */
@@ -1262,13 +1266,13 @@ private:
  */
 
 template <class... ARGTYPES>
-int compute(
+int execute(
    std::shared_ptr<vmaccel::accelerator> &accel,
    const VMCLKernelLanguageType kernelType,
    const std::map<VMCLKernelArchitecture, vmaccel::ref_object<char>> &kernel,
    const std::string &kernelFunction,
    const vmaccel::work_topology &computeTopology, ARGTYPES... args) {
-   compute_context c;
+   compute::context c;
    VMCLKernelAllocateReturnStatus *result_1;
    VMCLKernelAllocateDesc vmcl_kernelalloc_1_arg;
    VMAccelReturnStatus *result_2;
@@ -1287,7 +1291,7 @@ int compute(
     * Query an accelerator manager for the Compute Resource.
     */
    try {
-      c = compute_context(accel, 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK, 0);
+      c = compute::context(accel, 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK, 0);
    } catch (const exception &) {
       Warning("%s: Unable to instantiate VMCL\n", __FUNCTION__);
       return VMACCEL_FAIL;
@@ -1437,16 +1441,16 @@ int compute(
  */
 
 template <class... ARGTYPES>
-int compute(
-   compute_context &clctx, ref_object<compute_operation> &opobj,
+int dispatch(
+   compute::context &clctx, ref_object<compute::operation> &opobj,
    const VMCLKernelLanguageType kernelType,
    const std::map<VMCLKernelArchitecture, vmaccel::ref_object<char>> &kernel,
    const std::string &kernelFunction,
    const vmaccel::work_topology &computeTopology, ARGTYPES... args) {
-   std::shared_ptr<compute_operation> op(new compute_operation());
+   std::shared_ptr<compute::operation> op(new compute::operation());
 
-   op->prepare<ref_object<binding>>(clctx, kernelType, kernel, kernelFunction,
-                                    computeTopology, args...);
+   op->prepare<ref_object<vmaccel::binding>>(
+      clctx, kernelType, kernel, kernelFunction, computeTopology, args...);
 
    if (opobj.get().get() != NULL) {
 #if DEBUG_COMPUTE_OPERATION
@@ -1456,10 +1460,11 @@ int compute(
       opobj->quiesce();
    }
 
-   opobj = ref_object<compute_operation>(op, sizeof(compute_operation), 0);
+   opobj = ref_object<compute::operation>(op, sizeof(compute::operation), 0);
 
    return VMACCEL_SUCCESS;
 }
+};
 };
 
 #endif /* defined _VMACCEL_COMPUTE_HPP_ */

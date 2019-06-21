@@ -57,12 +57,12 @@ int main(int argc, char **argv) {
    /*
     * Query an accelerator manager for the Compute Resource.
     */
-   compute_context c(accel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK, 0);
+   compute::context c(accel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK, 0);
 
    /*
     * Initialize the Compute Kernel.
     */
-   compute_kernel k(VMCL_IR_NATIVE, helloKernel);
+   compute::kernel k(VMCL_IR_NATIVE, helloKernel);
 
    /*
     * Setup the working set.
@@ -95,18 +95,18 @@ int main(int argc, char **argv) {
       return VMACCEL_FAIL;
    }
 
-   compute_binding b(VMACCEL_BIND_UNORDERED_ACCESS_FLAG,
-                     VMACCEL_SURFACE_USAGE_READWRITE, s);
+   compute::binding b(VMACCEL_BIND_UNORDERED_ACCESS_FLAG,
+                      VMACCEL_SURFACE_USAGE_READWRITE, s);
 
    /*
     * Create a scope for the Operation Object that forces quiescing before
     * the surface download.
     */
    {
-      ref_object<compute_operation> opobj;
+      ref_object<compute::operation> opobj;
 
-      compute<ref_object<binding>>(c, opobj, VMCL_OPENCL_C_1_0, k,
-                                   "hello_kernel", workTopology, b);
+      compute::dispatch<ref_object<binding>>(c, opobj, VMCL_OPENCL_C_1_0, k,
+                                             "hello_kernel", workTopology, b);
    }
 
    if (s->download<int>(rgn, a) != VMACCEL_SUCCESS) {
