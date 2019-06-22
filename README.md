@@ -207,6 +207,25 @@ The above keeps an allocation alive within the context of an operation's time
 within a queue, e.g. queue extent. C++ provides a construct in std::shared_ptr,
 which a client *MUST* use with vmaccel::ref_object to retain an allocation.
 
+#### API Design Methodology
+
+The design of each accelerator API follows a functional programming approach.
+Each function mutates a variable or state in the system. By isolating the
+functions in the API, each function can be made stateless with input and
+the output consisting of the associated state. Some APIs follow a state
+accessor model (e.g. OpenGL), and therefore maintain a context which contains
+the internal state of the API. Functional programming was preferred not only
+to drive the project towards a stateless architecture, but the benefits of
+such architecture. Some benefits of a stateless architecture are as follows:
+
+1. Greater parallelism due to disjoint functions/variable state in the API.
+2. Each state modification can represent a generation of data. This is
+   important for AI, where a previous model may generate a better prediction
+   than a modified one. Keeping a history allows for consensus from rolling
+   back and reevaluating possible outcomes.
+
+An event-driven model is used for data consistency of dependent functions.
+
 #### RPC Memory
 
 RPC Memory can be considered a transient storage. One can enqueue multiple

@@ -24,7 +24,17 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_subdirectory(async_compute)
-add_subdirectory(basic_compute)
-add_subdirectory(compute_persistent_surfaces)
-add_subdirectory(basic_ml)
+set(CMAKE_CXX_STANDARD 11)
+
+set(SOURCES
+    basic_ml.cpp)
+
+set(GLOBAL_INC ../../../common/inc)
+
+include_directories(${GLOBAL_INC})
+
+add_executable(basic_ml ${SOURCES})
+target_link_libraries(basic_ml vmaccel)
+set_target_properties(basic_ml
+   PROPERTIES
+   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_EXAMPLES_OUTPUT_DIRECTORY}")
