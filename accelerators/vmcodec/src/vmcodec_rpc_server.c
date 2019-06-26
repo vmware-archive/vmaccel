@@ -40,7 +40,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "log_level.h"
 
+#if VMW_FFMPEG
 static VMCODECOps *ffmpeg = &vmwffmpegOps;
+#else
+static VMCODECOps *ffmpeg = NULL;
+#endif
 
 VMAccelAllocateStatus *vmcodec_poweron_svc(VMCODECOps *ops) {
    VMAccelAllocateStatus *ret = NULL;

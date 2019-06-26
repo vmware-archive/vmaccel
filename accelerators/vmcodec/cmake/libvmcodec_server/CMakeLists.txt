@@ -30,6 +30,10 @@ message("CMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}")
 
 find_package(FFMPEG COMPONENTS AVCODEC AVDEVICE AVFOMAT AVUTIL REQUIRED)
 
+if (FFMPEG_FOUND)
+   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DVMW_FFMPEG=1")
+endif()
+
 set(SERVER_SOURCES
    ../../src/vmcodec_rpc_server.c
    ../../src/vmcodec_rpc_xdr.c)
