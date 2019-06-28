@@ -24,8 +24,26 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_subdirectory(async_compute)
-add_subdirectory(basic_compute)
-add_subdirectory(basic_compute_nolib)
-add_subdirectory(compute_persistent_surfaces)
-add_subdirectory(basic_ml)
+set(SOURCES
+    ../../../common/src/vmaccel_utils.c
+    ../../../frontends/vmaccel/src/vmaccel.c
+    ../../../frontends/vmaccel/src/vmaccel.cpp
+    ../../../accelerators/vmaccel/src/vmaccel_rpc_clnt.c
+    ../../../accelerators/vmaccel/src/vmaccel_rpc_xdr.c
+    ../../../accelerators/vmaccel/src/vmaccel_mgr_clnt.c
+    ../../../accelerators/vmaccel/src/vmaccel_rpc_xdr.c
+    ../../../accelerators/vmcl/src/vmcl_rpc_clnt.c
+    ../../../accelerators/vmcl/src/vmcl_rpc_xdr.c
+    basic_compute.cpp)
+
+set(GLOBAL_INC ../../../common/inc)
+
+include_directories(${GLOBAL_INC})
+
+set(LIBRARIES)
+
+add_executable(basic_compute_nolib ${SOURCES})
+target_link_libraries(basic_compute_nolib ${LIBRARIES})
+set_target_properties(basic_compute_nolib
+   PROPERTIES
+   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_EXAMPLES_OUTPUT_DIRECTORY}")
