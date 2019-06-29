@@ -27,11 +27,9 @@
 set(SOURCES
     ../../../common/src/vmaccel_utils.c
     ../../../frontends/vmaccel/src/vmaccel.c
-    ../../../frontends/vmaccel/src/vmaccel.cpp
     ../../../accelerators/vmaccel/src/vmaccel_rpc_clnt.c
     ../../../accelerators/vmaccel/src/vmaccel_rpc_xdr.c
     ../../../accelerators/vmaccel/src/vmaccel_mgr_clnt.c
-    ../../../accelerators/vmaccel/src/vmaccel_rpc_xdr.c
     ../../../accelerators/vmcl/src/vmcl_rpc_clnt.c
     ../../../accelerators/vmcl/src/vmcl_rpc_xdr.c
     basic_compute.cpp)

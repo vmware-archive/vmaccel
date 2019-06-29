@@ -112,8 +112,8 @@ public:
       addr.addr.addr_val =
          (char *)malloc(VMACCEL_MAX_LOCATION_SIZE * sizeof(char));
       addr.addr.addr_len = VMACCEL_MAX_LOCATION_SIZE;
-      if (!VMAccelAddressStringToOpaqueAddr(host.c_str(), addr.addr.addr_val,
-                                            addr.addr.addr_len)) {
+      if (!VMAccel_AddressStringToOpaqueAddr(host.c_str(), addr.addr.addr_val,
+                                             addr.addr.addr_len)) {
          throw exception(VMACCEL_FAIL, "Failed to convert address");
       }
    }
@@ -307,8 +307,8 @@ public:
    accelerator(const address &mgr,
                int accelMaxRefObjects = VMACCEL_MAX_REF_OBJECTS) {
       char host[256];
-      if (VMAccelAddressOpaqueAddrToString(mgr.get_accel_addr(), host,
-                                           sizeof(host))) {
+      if (VMAccel_AddressOpaqueAddrToString(mgr.get_accel_addr(), host,
+                                            sizeof(host))) {
          Log("%s: Connecting to Accelerator manager %s\n", __FUNCTION__, host);
          mgrClnt = clnt_create(host, VMACCELMGR, VMACCELMGR_VERSION, "udp");
          if (mgrClnt == NULL) {

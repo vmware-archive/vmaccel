@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <string>
 
+#include "vmaccel_rpc.h"
 #include "vmaccel_utils.h"
 
 #include "log_level.h"

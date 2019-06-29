@@ -175,7 +175,7 @@ private:
          result_1 =
             vmaccelmgr_alloc_1(&vmaccelmgr_alloc_1_arg, accel->get_manager());
          if (result_1 != NULL) {
-            if (!VMAccelAddressOpaqueAddrToString(
+            if (!VMAccel_AddressOpaqueAddrToString(
                    &result_1->VMAccelAllocateReturnStatus_u.ret->desc
                        .parentAddr,
                    host, sizeof(host))) {

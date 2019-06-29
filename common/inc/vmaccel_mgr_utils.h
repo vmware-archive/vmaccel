@@ -29,6 +29,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _VMACCEL_MGR_UTILS_H_
 #define _VMACCEL_MGR_UTILS_H_
 
+#include "vmaccel_utils.h"
+
 typedef struct VMAccelMgrClient {
    CLIENT *clnt;
    char *host;
@@ -55,7 +57,7 @@ static VMAccelMgrClient vmaccelmgr_register(char *host, char *iface,
 
    netif = netifs;
    while (netif != NULL) {
-      int family, ret;
+      int ret;
 
       if (netif->ifa_addr == NULL) {
          netif = netif->ifa_next;
@@ -107,7 +109,7 @@ static VMAccelMgrClient vmaccelmgr_register(char *host, char *iface,
       }
 
       vmaccelmgr_register_1_arg.desc = *accelDesc;
-      VMAccelAddressStringToOpaqueAddr(localHost, localAddr, sizeof(localAddr));
+      VMAccel_AddressStringToOpaqueAddr(localHost, localAddr, sizeof(localAddr));
       vmaccelmgr_register_1_arg.desc.parentAddr.addr.addr_val = &localAddr[0];
       vmaccelmgr_register_1_arg.desc.parentAddr.addr.addr_len =
          sizeof(localAddr);

@@ -34,16 +34,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmcodec_rpc.h"
 
 bool_t xdr_VMCODECCaps(XDR *xdrs, VMCODECCaps *objp) {
-   register int32_t *buf;
-
    if (!xdr_u_int(xdrs, objp))
       return FALSE;
    return TRUE;
 }
 
 bool_t xdr_VMCODECContextId(XDR *xdrs, VMCODECContextId *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMAccelId(xdrs, objp))
       return FALSE;
    return TRUE;
@@ -51,8 +47,6 @@ bool_t xdr_VMCODECContextId(XDR *xdrs, VMCODECContextId *objp) {
 
 bool_t xdr_VMCODECContextAllocateDesc(XDR *xdrs,
                                       VMCODECContextAllocateDesc *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMAccelId(xdrs, &objp->accelId))
       return FALSE;
    if (!xdr_VMCODECContextId(xdrs, &objp->clientId))
@@ -74,8 +68,6 @@ bool_t xdr_VMCODECContextAllocateDesc(XDR *xdrs,
 
 bool_t xdr_VMCODECContextAllocateStatus(XDR *xdrs,
                                         VMCODECContextAllocateStatus *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMAccelStatusCode(xdrs, &objp->status))
       return FALSE;
    if (!xdr_VMCODECCaps(xdrs, &objp->caps))
@@ -84,8 +76,6 @@ bool_t xdr_VMCODECContextAllocateStatus(XDR *xdrs,
 }
 
 bool_t xdr_VMCODECSurfaceId(XDR *xdrs, VMCODECSurfaceId *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCODECContextId(xdrs, &objp->cid))
       return FALSE;
    if (!xdr_VMAccelSurfaceId(xdrs, &objp->accel))
@@ -95,8 +85,6 @@ bool_t xdr_VMCODECSurfaceId(XDR *xdrs, VMCODECSurfaceId *objp) {
 
 bool_t xdr_VMCODECSurfaceAllocateDesc(XDR *xdrs,
                                       VMCODECSurfaceAllocateDesc *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMAccelSurfaceId(xdrs, &objp->client))
       return FALSE;
    if (!xdr_VMAccelSurfaceDesc(xdrs, &objp->desc))
@@ -105,8 +93,6 @@ bool_t xdr_VMCODECSurfaceAllocateDesc(XDR *xdrs,
 }
 
 bool_t xdr_VMCODECImageUploadOp(XDR *xdrs, VMCODECImageUploadOp *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCODECSurfaceId(xdrs, &objp->img))
       return FALSE;
    if (!xdr_VMAccelImageTransferOp(xdrs, &objp->op))
@@ -117,8 +103,6 @@ bool_t xdr_VMCODECImageUploadOp(XDR *xdrs, VMCODECImageUploadOp *objp) {
 }
 
 bool_t xdr_VMCODECImageDownloadOp(XDR *xdrs, VMCODECImageDownloadOp *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCODECSurfaceId(xdrs, &objp->img))
       return FALSE;
    if (!xdr_VMAccelImageTransferOp(xdrs, &objp->op))
@@ -129,8 +113,6 @@ bool_t xdr_VMCODECImageDownloadOp(XDR *xdrs, VMCODECImageDownloadOp *objp) {
 }
 
 bool_t xdr_VMCODECArg(XDR *xdrs, VMCODECArg *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCODECSurfaceId(xdrs, &objp->sid))
       return FALSE;
    if (!xdr_VMAccelSurfaceRegion(xdrs, &objp->imgRegion))
@@ -139,8 +121,6 @@ bool_t xdr_VMCODECArg(XDR *xdrs, VMCODECArg *objp) {
 }
 
 bool_t xdr_VMCODECDecodeOp(XDR *xdrs, VMCODECDecodeOp *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCODECContextId(xdrs, &objp->cid))
       return FALSE;
    if (!xdr_array(xdrs, (char **)&objp->output.output_val,
@@ -151,8 +131,6 @@ bool_t xdr_VMCODECDecodeOp(XDR *xdrs, VMCODECDecodeOp *objp) {
 }
 
 bool_t xdr_VMCODECEncodeOp(XDR *xdrs, VMCODECEncodeOp *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCODECContextId(xdrs, &objp->cid))
       return FALSE;
    if (!xdr_array(xdrs, (char **)&objp->inptut.inptut_val,
@@ -164,8 +142,6 @@ bool_t xdr_VMCODECEncodeOp(XDR *xdrs, VMCODECEncodeOp *objp) {
 
 bool_t xdr_VMCODECContextAllocateReturnStatus(
    XDR *xdrs, VMCODECContextAllocateReturnStatus *objp) {
-   register int32_t *buf;
-
    if (!xdr_int(xdrs, &objp->errno))
       return FALSE;
    switch (objp->errno) {

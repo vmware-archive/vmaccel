@@ -32,7 +32,6 @@ void vmaccel_1(char *host) {
    CLIENT *clnt;
    VMAccelResourceAllocateReturnStatus *result_1;
    VMAccelResourceDesc vmaccel_resourcealloc_1_arg;
-   VMAccelRegisterAllocationDesc vmaccel_resourceregister_1_arg;
    VMAccelReturnStatus *result_2;
    VMAccelId vmaccel_resourcerelease_1_arg;
    VMAccelComputeReturnStatus *result_3;

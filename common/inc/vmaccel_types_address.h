@@ -39,35 +39,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #endif
 
-static bool VMAccelAddressOpaqueAddrToString(const VMAccelAddress *addr,
-                                             char *out, int len) {
-   // Enough to hold three digits per byte
-   if (len < 4 * addr->addr.addr_len) {
-      return false;
-   }
-   if (addr->addr.addr_len == 4) {
-      // IPV4
-      struct in_addr inetaddr;
-      inetaddr.s_addr = *((in_addr_t *)addr->addr.addr_val);
-      strcpy(out, inet_ntoa(inetaddr));
-      return true;
-   }
-   memset(out, 0, len);
-   return false;
-}
-
-static bool VMAccelAddressStringToOpaqueAddr(const char *addr, char *out,
-                                             int len) {
-   if (len == 4) {
-      // IPV4
-      assert(sizeof(in_addr_t) == 4);
-      *((in_addr_t *)out) = inet_addr(addr);
-      return true;
-   }
-   return false;
-}
-
-static void Log_VMAccelAddress(const char *prefix, const VMAccelAddress *addr) {
+#if DEBUG_ACCEL_ADDRESS
+inline void Log_VMAccelAddress(const char *prefix, const VMAccelAddress *addr) {
    char str[256];
 
    if (VMAccelAddressOpaqueAddrToString(addr, str, sizeof(str))) {
@@ -78,6 +51,7 @@ static void Log_VMAccelAddress(const char *prefix, const VMAccelAddress *addr) {
    Log("%s port=%u\n", prefix, addr->port);
    Log("%s resourceTypeMask=%u\n", prefix, addr->resourceTypeMask);
 }
+#endif
 
 #ifdef __cplusplus
 }

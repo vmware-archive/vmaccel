@@ -28,6 +28,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
 #include <stdlib.h>
+#include "vmaccel_rpc.h"
+#include "vmaccel_types_address.h"
 #include "vmaccel_utils.h"
 #include "log_level.h"
 
@@ -216,4 +218,32 @@ void IdentifierDB_Log(IdentifierDB *db, const char *prefix) {
    for (unsigned int i = 0; i < db->numWords; i++) {
       Log("%s: bits[%d]=0x%08x\n", prefix, i, db->bits[i]);
    }
+}
+
+bool VMAccel_AddressOpaqueAddrToString(const VMAccelAddress *addr,
+                                       char *out, int len) {
+   // Enough to hold three digits per byte
+   if (len < 4 * addr->addr.addr_len) {
+      return false;
+   }
+   if (addr->addr.addr_len == 4) {
+      // IPV4
+      struct in_addr inetaddr;
+      inetaddr.s_addr = *((in_addr_t *)addr->addr.addr_val);
+      strcpy(out, inet_ntoa(inetaddr));
+      return true;
+   }
+   memset(out, 0, len);
+   return false;
+}
+
+bool VMAccel_AddressStringToOpaqueAddr(const char *addr, char *out,
+                                       int len) {
+   if (len == 4) {
+      // IPV4
+      assert(sizeof(in_addr_t) == 4);
+      *((in_addr_t *)out) = inet_addr(addr);
+      return true;
+   }
+   return false;
 }

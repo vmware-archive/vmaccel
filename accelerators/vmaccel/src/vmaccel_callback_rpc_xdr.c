@@ -29,8 +29,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmaccel_callback_rpc.h"
 
 bool_t xdr_VMAccelCallbackOp(XDR *xdrs, VMAccelCallbackOp *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMAccelId(xdrs, &objp->queueId))
       return FALSE;
    if (!xdr_VMAccelId(xdrs, &objp->eventId))

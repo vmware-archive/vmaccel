@@ -130,8 +130,6 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
    char prefix[64];
    char capPrefix[128];
    cl_device_id deviceId;
-   int majorVersion;
-   int minorVersion;
    int i, j;
    bool platformFound = false;
 
@@ -444,7 +442,6 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
    cl_int errNum;
    char platformName[128] = {'\0'};
    char platformVersion[128] = {'\0'};
-   char platformExtensions[128] = {'\0'};
    int majorVersion;
    int minorVersion;
    int i = 0, j = 0;
@@ -474,9 +471,6 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
       // Next, create an OpenCL context on the platform.  Attempt to
       // create a GPU-based context, and if that fails, try to create
       // a CPU-based context.
-      cl_context_properties contextProperties[] = {
-         CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[i], 0};
-
       errNum =
          clGetPlatformInfo(platforms[i], CL_PLATFORM_VERSION,
                            sizeof(platformVersion), platformVersion, &sizeRet);
@@ -906,7 +900,6 @@ VMAccelFenceStatus *vmwopencl_fencedestroy_1(VMCLFenceId *argp) {
 
 VMAccelStatus *vmwopencl_queueflush_1(VMCLQueueId *argp) {
    static VMAccelStatus result;
-   unsigned int cid = (unsigned int)argp->cid;
    unsigned int qid = (unsigned int)argp->id;
    cl_int errNum;
 
@@ -950,9 +943,7 @@ VMAccelStatus *vmwopencl_imageupload_1(VMCLImageUploadOp *argp) {
    unsigned int cid = (unsigned int)argp->queue.cid;
    unsigned int qid = (unsigned int)argp->queue.id;
    unsigned int sid = (unsigned int)argp->img.accel.id;
-   cl_context context = contexts[cid].context;
    cl_command_queue queue = queues[qid].queue;
-   cl_map_flags flags = 0;
    cl_int errNum;
 
    memset(&result, 0, sizeof(result));
@@ -981,10 +972,8 @@ VMAccelDownloadStatus *vmwopencl_imagedownload_1(VMCLImageDownloadOp *argp) {
    unsigned int cid = (unsigned int)argp->queue.cid;
    unsigned int qid = (unsigned int)argp->queue.id;
    unsigned int sid = (unsigned int)argp->img.accel.id;
-   cl_context context = contexts[cid].context;
    cl_command_queue queue = queues[qid].queue;
    void *ptr;
-   cl_map_flags flags = 0;
    cl_int errNum;
 
    memset(&result, 0, sizeof(result));
@@ -1021,10 +1010,8 @@ VMAccelDownloadStatus *vmwopencl_imagedownload_1(VMCLImageDownloadOp *argp) {
 
 VMAccelSurfaceMapStatus *vmwopencl_surfacemap_1(VMCLSurfaceMapOp *argp) {
    static VMAccelSurfaceMapStatus result;
-   unsigned int cid = (unsigned int)argp->queue.cid;
    unsigned int qid = (unsigned int)argp->queue.id;
    unsigned int sid = (unsigned int)argp->op.surf.id;
-   cl_context context = contexts[cid].context;
    cl_command_queue queue = queues[qid].queue;
    void *ptr;
    cl_map_flags flags = 0;
@@ -1072,10 +1059,8 @@ VMAccelSurfaceMapStatus *vmwopencl_surfacemap_1(VMCLSurfaceMapOp *argp) {
 
 VMAccelStatus *vmwopencl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp) {
    static VMAccelStatus result;
-   unsigned int cid = (unsigned int)argp->queue.cid;
    unsigned int qid = (unsigned int)argp->queue.id;
    unsigned int sid = (unsigned int)argp->op.surf.id;
-   cl_context context = contexts[cid].context;
    cl_command_queue queue = queues[qid].queue;
    void *ptr;
    cl_int errNum;
@@ -1096,7 +1081,7 @@ VMAccelStatus *vmwopencl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp) {
    argp->op.ptr.ptr_val = NULL;
    argp->op.ptr.ptr_len = 0;
 
-   errNum = clEnqueueUnmapMemObject(queues[qid].queue, surfaces[sid].mem, ptr,
+   errNum = clEnqueueUnmapMemObject(queue, surfaces[sid].mem, ptr,
                                     0, NULL, NULL);
 
    mappings[sid].ptr = NULL;
@@ -1110,11 +1095,9 @@ VMAccelStatus *vmwopencl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp) {
 
 VMAccelStatus *vmwopencl_surfacecopy_1(VMCLSurfaceCopyOp *argp) {
    static VMAccelStatus result;
-   unsigned int cid = (unsigned int)argp->queue.cid;
    unsigned int qid = (unsigned int)argp->queue.id;
    unsigned int dstSid = (unsigned int)argp->dst.accel.id;
    unsigned int srcSid = (unsigned int)argp->src.accel.id;
-   cl_context context = contexts[cid].context;
    cl_command_queue queue = queues[qid].queue;
    cl_int errNum;
 
@@ -1338,10 +1321,8 @@ VMAccelStatus *vmwopencl_kerneldestroy_1(VMCLKernelId *argp) {
 
 VMAccelStatus *vmwopencl_dispatch_1(VMCLDispatchOp *argp) {
    static VMAccelStatus result;
-   unsigned int cid = (unsigned int)argp->queue.cid;
    unsigned int qid = (unsigned int)argp->queue.id;
    unsigned int kid = (unsigned int)argp->kernel.id;
-   cl_context context = contexts[cid].context;
    cl_command_queue queue = queues[qid].queue;
    cl_kernel kernel = kernels[kid].kernel;
    cl_int errNum;

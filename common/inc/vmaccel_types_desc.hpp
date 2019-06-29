@@ -315,7 +315,10 @@ inline void Log_VMAccelDesc(const char *prefix, const VMAccelDesc *desc) {
    Log("%s parentId=%u\n", prefix, desc->parentId);
 
    snprintf(str, sizeof(str), "%s parentAddr:", prefix);
+
+#if DEBUG_VMACCEL_ADDRESS
    Log_VMAccelAddress(str, &desc->parentAddr);
+#endif
 
    Log("%s typeMask=%u\n", prefix, desc->typeMask);
    Log("%s architecture=%u\n", prefix, desc->architecture);

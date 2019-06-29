@@ -34,32 +34,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmcl_rpc.h"
 
 bool_t xdr_VMCLCaps(XDR *xdrs, VMCLCaps *objp) {
-   register int32_t *buf;
-
    if (!xdr_u_int(xdrs, objp))
       return FALSE;
    return TRUE;
 }
 
 bool_t xdr_VMCLKernelLanguage(XDR *xdrs, VMCLKernelLanguage *objp) {
-   register int32_t *buf;
-
    if (!xdr_u_int(xdrs, objp))
       return FALSE;
    return TRUE;
 }
 
 bool_t xdr_VMCLContextId(XDR *xdrs, VMCLContextId *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMAccelId(xdrs, objp))
       return FALSE;
    return TRUE;
 }
 
 bool_t xdr_VMCLContextAllocateDesc(XDR *xdrs, VMCLContextAllocateDesc *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMAccelId(xdrs, &objp->accelId))
       return FALSE;
    if (!xdr_VMCLContextId(xdrs, &objp->clientId))
@@ -73,8 +65,6 @@ bool_t xdr_VMCLContextAllocateDesc(XDR *xdrs, VMCLContextAllocateDesc *objp) {
 
 bool_t xdr_VMCLContextAllocateStatus(XDR *xdrs,
                                      VMCLContextAllocateStatus *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMAccelStatusCode(xdrs, &objp->status))
       return FALSE;
    if (!xdr_VMCLCaps(xdrs, &objp->caps))
@@ -83,8 +73,6 @@ bool_t xdr_VMCLContextAllocateStatus(XDR *xdrs,
 }
 
 bool_t xdr_VMCLSurfaceId(XDR *xdrs, VMCLSurfaceId *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLContextId(xdrs, &objp->cid))
       return FALSE;
    if (!xdr_VMAccelSurfaceId(xdrs, &objp->accel))
@@ -93,8 +81,6 @@ bool_t xdr_VMCLSurfaceId(XDR *xdrs, VMCLSurfaceId *objp) {
 }
 
 bool_t xdr_VMCLSurfaceAllocateDesc(XDR *xdrs, VMCLSurfaceAllocateDesc *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLSurfaceId(xdrs, &objp->client))
       return FALSE;
    if (!xdr_VMAccelSurfaceDesc(xdrs, &objp->desc))
@@ -103,8 +89,6 @@ bool_t xdr_VMCLSurfaceAllocateDesc(XDR *xdrs, VMCLSurfaceAllocateDesc *objp) {
 }
 
 bool_t xdr_VMCLSharedHandle(XDR *xdrs, VMCLSharedHandle *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLContextId(xdrs, &objp->cid))
       return FALSE;
    if (!xdr_VMAccelSurfaceId(xdrs, &objp->surf))
@@ -113,8 +97,6 @@ bool_t xdr_VMCLSharedHandle(XDR *xdrs, VMCLSharedHandle *objp) {
 }
 
 bool_t xdr_VMCLQueueId(XDR *xdrs, VMCLQueueId *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLContextId(xdrs, &objp->cid))
       return FALSE;
    if (!xdr_VMAccelId(xdrs, &objp->id))
@@ -123,8 +105,6 @@ bool_t xdr_VMCLQueueId(XDR *xdrs, VMCLQueueId *objp) {
 }
 
 bool_t xdr_VMCLQueueAllocateDesc(XDR *xdrs, VMCLQueueAllocateDesc *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLQueueId(xdrs, &objp->client))
       return FALSE;
    if (!xdr_VMAccelQueueDesc(xdrs, &objp->desc))
@@ -133,8 +113,6 @@ bool_t xdr_VMCLQueueAllocateDesc(XDR *xdrs, VMCLQueueAllocateDesc *objp) {
 }
 
 bool_t xdr_VMCLEventId(XDR *xdrs, VMCLEventId *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLContextId(xdrs, &objp->cid))
       return FALSE;
    if (!xdr_VMAccelId(xdrs, &objp->id))
@@ -143,8 +121,6 @@ bool_t xdr_VMCLEventId(XDR *xdrs, VMCLEventId *objp) {
 }
 
 bool_t xdr_VMCLEventAllocateDesc(XDR *xdrs, VMCLEventAllocateDesc *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLEventId(xdrs, &objp->client))
       return FALSE;
    if (!xdr_VMAccelEventDesc(xdrs, &objp->desc))
@@ -153,8 +129,6 @@ bool_t xdr_VMCLEventAllocateDesc(XDR *xdrs, VMCLEventAllocateDesc *objp) {
 }
 
 bool_t xdr_VMCLFenceId(XDR *xdrs, VMCLFenceId *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLContextId(xdrs, &objp->cid))
       return FALSE;
    if (!xdr_VMAccelId(xdrs, &objp->id))
@@ -163,8 +137,6 @@ bool_t xdr_VMCLFenceId(XDR *xdrs, VMCLFenceId *objp) {
 }
 
 bool_t xdr_VMCLFenceAllocateDesc(XDR *xdrs, VMCLFenceAllocateDesc *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLFenceId(xdrs, &objp->client))
       return FALSE;
    if (!xdr_VMAccelFenceDesc(xdrs, &objp->desc))
@@ -173,16 +145,12 @@ bool_t xdr_VMCLFenceAllocateDesc(XDR *xdrs, VMCLFenceAllocateDesc *objp) {
 }
 
 bool_t xdr_VMCLQueueFlushOp(XDR *xdrs, VMCLQueueFlushOp *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLQueueId(xdrs, &objp->queue))
       return FALSE;
    return TRUE;
 }
 
 bool_t xdr_VMCLEventInsertOp(XDR *xdrs, VMCLEventInsertOp *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLQueueId(xdrs, &objp->queue))
       return FALSE;
    if (!xdr_VMAccelId(xdrs, &objp->id))
@@ -191,8 +159,6 @@ bool_t xdr_VMCLEventInsertOp(XDR *xdrs, VMCLEventInsertOp *objp) {
 }
 
 bool_t xdr_VMCLFenceInsertOp(XDR *xdrs, VMCLFenceInsertOp *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLQueueId(xdrs, &objp->queue))
       return FALSE;
    if (!xdr_VMAccelId(xdrs, &objp->id))
@@ -201,8 +167,6 @@ bool_t xdr_VMCLFenceInsertOp(XDR *xdrs, VMCLFenceInsertOp *objp) {
 }
 
 bool_t xdr_VMCLSurfaceCopyOp(XDR *xdrs, VMCLSurfaceCopyOp *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLQueueId(xdrs, &objp->queue))
       return FALSE;
    if (!xdr_VMCLSurfaceId(xdrs, &objp->dst))
@@ -215,8 +179,6 @@ bool_t xdr_VMCLSurfaceCopyOp(XDR *xdrs, VMCLSurfaceCopyOp *objp) {
 }
 
 bool_t xdr_VMCLImageFillOp(XDR *xdrs, VMCLImageFillOp *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLQueueId(xdrs, &objp->queue))
       return FALSE;
    if (!xdr_VMCLSurfaceId(xdrs, &objp->img))
@@ -227,8 +189,6 @@ bool_t xdr_VMCLImageFillOp(XDR *xdrs, VMCLImageFillOp *objp) {
 }
 
 bool_t xdr_VMCLImageUploadOp(XDR *xdrs, VMCLImageUploadOp *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLQueueId(xdrs, &objp->queue))
       return FALSE;
    if (!xdr_VMCLSurfaceId(xdrs, &objp->img))
@@ -241,8 +201,6 @@ bool_t xdr_VMCLImageUploadOp(XDR *xdrs, VMCLImageUploadOp *objp) {
 }
 
 bool_t xdr_VMCLImageDownloadOp(XDR *xdrs, VMCLImageDownloadOp *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLQueueId(xdrs, &objp->queue))
       return FALSE;
    if (!xdr_VMCLSurfaceId(xdrs, &objp->img))
@@ -255,8 +213,6 @@ bool_t xdr_VMCLImageDownloadOp(XDR *xdrs, VMCLImageDownloadOp *objp) {
 }
 
 bool_t xdr_VMCLSurfaceMapOp(XDR *xdrs, VMCLSurfaceMapOp *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLQueueId(xdrs, &objp->queue))
       return FALSE;
    if (!xdr_VMAccelSurfaceMapOp(xdrs, &objp->op))
@@ -265,8 +221,6 @@ bool_t xdr_VMCLSurfaceMapOp(XDR *xdrs, VMCLSurfaceMapOp *objp) {
 }
 
 bool_t xdr_VMCLSurfaceUnmapOp(XDR *xdrs, VMCLSurfaceUnmapOp *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLQueueId(xdrs, &objp->queue))
       return FALSE;
    if (!xdr_VMAccelSurfaceUnmapOp(xdrs, &objp->op))
@@ -275,8 +229,6 @@ bool_t xdr_VMCLSurfaceUnmapOp(XDR *xdrs, VMCLSurfaceUnmapOp *objp) {
 }
 
 bool_t xdr_VMCLSamplerId(XDR *xdrs, VMCLSamplerId *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLContextId(xdrs, &objp->cid))
       return FALSE;
    if (!xdr_VMAccelId(xdrs, &objp->id))
@@ -286,24 +238,18 @@ bool_t xdr_VMCLSamplerId(XDR *xdrs, VMCLSamplerId *objp) {
 
 bool_t xdr_VMCLSamplerAddressingMode(XDR *xdrs,
                                      VMCLSamplerAddressingMode *objp) {
-   register int32_t *buf;
-
    if (!xdr_enum(xdrs, (enum_t *)objp))
       return FALSE;
    return TRUE;
 }
 
 bool_t xdr_VMCLSamplerFilterMode(XDR *xdrs, VMCLSamplerFilterMode *objp) {
-   register int32_t *buf;
-
    if (!xdr_enum(xdrs, (enum_t *)objp))
       return FALSE;
    return TRUE;
 }
 
 bool_t xdr_VMCLSamplerDesc(XDR *xdrs, VMCLSamplerDesc *objp) {
-   register int32_t *buf;
-
    if (!xdr_bool(xdrs, &objp->normalizedCoords))
       return FALSE;
    if (!xdr_VMCLSamplerAddressingMode(xdrs, &objp->addressMode))
@@ -314,8 +260,6 @@ bool_t xdr_VMCLSamplerDesc(XDR *xdrs, VMCLSamplerDesc *objp) {
 }
 
 bool_t xdr_VMCLSamplerAllocateDesc(XDR *xdrs, VMCLSamplerAllocateDesc *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLSamplerId(xdrs, &objp->client))
       return FALSE;
    if (!xdr_VMCLSamplerDesc(xdrs, &objp->desc))
@@ -325,16 +269,12 @@ bool_t xdr_VMCLSamplerAllocateDesc(XDR *xdrs, VMCLSamplerAllocateDesc *objp) {
 
 bool_t xdr_VMCLSamplerAllocateStatus(XDR *xdrs,
                                      VMCLSamplerAllocateStatus *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMAccelStatusCode(xdrs, &objp->status))
       return FALSE;
    return TRUE;
 }
 
 bool_t xdr_VMCLKernelId(XDR *xdrs, VMCLKernelId *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLContextId(xdrs, &objp->cid))
       return FALSE;
    if (!xdr_VMAccelId(xdrs, &objp->id))
@@ -343,8 +283,6 @@ bool_t xdr_VMCLKernelId(XDR *xdrs, VMCLKernelId *objp) {
 }
 
 bool_t xdr_VMCLKernelAllocateDesc(XDR *xdrs, VMCLKernelAllocateDesc *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLKernelId(xdrs, &objp->client))
       return FALSE;
    if (!xdr_VMCLKernelLanguage(xdrs, &objp->language))
@@ -359,32 +297,24 @@ bool_t xdr_VMCLKernelAllocateDesc(XDR *xdrs, VMCLKernelAllocateDesc *objp) {
 }
 
 bool_t xdr_VMCLKernelAllocateStatus(XDR *xdrs, VMCLKernelAllocateStatus *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMAccelStatusCode(xdrs, &objp->status))
       return FALSE;
    return TRUE;
 }
 
 bool_t xdr_VMCLKernelSemanticType(XDR *xdrs, VMCLKernelSemanticType *objp) {
-   register int32_t *buf;
-
    if (!xdr_enum(xdrs, (enum_t *)objp))
       return FALSE;
    return TRUE;
 }
 
 bool_t xdr_VMCLKernelArgType(XDR *xdrs, VMCLKernelArgType *objp) {
-   register int32_t *buf;
-
    if (!xdr_enum(xdrs, (enum_t *)objp))
       return FALSE;
    return TRUE;
 }
 
 bool_t xdr_VMCLKernelArgDesc(XDR *xdrs, VMCLKernelArgDesc *objp) {
-   register int32_t *buf;
-
    if (!xdr_u_int(xdrs, &objp->index))
       return FALSE;
    if (!xdr_VMCLKernelArgType(xdrs, &objp->type))
@@ -399,8 +329,6 @@ bool_t xdr_VMCLKernelArgDesc(XDR *xdrs, VMCLKernelArgDesc *objp) {
 }
 
 bool_t xdr_VMCLDispatchOp(XDR *xdrs, VMCLDispatchOp *objp) {
-   register int32_t *buf;
-
    if (!xdr_VMCLQueueId(xdrs, &objp->queue))
       return FALSE;
    if (!xdr_VMCLKernelId(xdrs, &objp->kernel))
@@ -433,8 +361,6 @@ bool_t xdr_VMCLDispatchOp(XDR *xdrs, VMCLDispatchOp *objp) {
 bool_t
 xdr_VMCLContextAllocateReturnStatus(XDR *xdrs,
                                     VMCLContextAllocateReturnStatus *objp) {
-   register int32_t *buf;
-
    if (!xdr_int(xdrs, &objp->errno))
       return FALSE;
    switch (objp->errno) {
@@ -454,8 +380,6 @@ xdr_VMCLContextAllocateReturnStatus(XDR *xdrs,
 bool_t
 xdr_VMCLSamplerAllocateReturnStatus(XDR *xdrs,
                                     VMCLSamplerAllocateReturnStatus *objp) {
-   register int32_t *buf;
-
    if (!xdr_int(xdrs, &objp->errno))
       return FALSE;
    switch (objp->errno) {
@@ -475,8 +399,6 @@ xdr_VMCLSamplerAllocateReturnStatus(XDR *xdrs,
 bool_t
 xdr_VMCLKernelAllocateReturnStatus(XDR *xdrs,
                                    VMCLKernelAllocateReturnStatus *objp) {
-   register int32_t *buf;
-
    if (!xdr_int(xdrs, &objp->errno))
       return FALSE;
    switch (objp->errno) {

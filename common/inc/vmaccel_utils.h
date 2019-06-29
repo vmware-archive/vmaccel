@@ -83,6 +83,11 @@ extern bool IdentifierDB_ReleaseIdRange(IdentifierDB *db, unsigned int start,
                                         unsigned int end);
 extern void IdentifierDB_Log(IdentifierDB *db, const char *prefix);
 
+extern bool VMAccel_AddressOpaqueAddrToString(const VMAccelAddress *addr,
+                                              char *out, int len);
+extern bool VMAccel_AddressStringToOpaqueAddr(const char *addr, char *out,
+                                              int len);
+
 #ifdef __cplusplus
 }
 #endif
