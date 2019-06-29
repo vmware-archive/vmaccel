@@ -116,17 +116,18 @@ static void Constructor(VMAccelWorkloadDesc &obj) {
 
 inline void Log_VMAccelWorkloadDesc(const char *prefix,
                                     const VMAccelWorkloadDesc *desc) {
-   Log("%s megaFlops=%u\n", prefix, desc->megaFlops);
-   Log("%s megaOps=%u\n", prefix, desc->megaOps);
-   Log("%s llcSizeKB=%u\n", prefix, desc->llcSizeKB);
-   Log("%s llcBandwidthMBSec=%u\n", prefix, desc->llcBandwidthMBSec);
-   Log("%s localMemSizeKB=%u\n", prefix, desc->localMemSizeKB);
-   Log("%s localMemBandwidthMBSec=%u\n", prefix, desc->localMemBandwidthMBSec);
-   Log("%s nonLocalMemSizeKB=%u\n", prefix, desc->nonLocalMemSizeKB);
-   Log("%s nonLocalMemBandwidthMBSec=%u\n", prefix,
-       desc->nonLocalMemBandwidthMBSec);
-   Log("%s interconnectBandwidthMBSec=%u\n", prefix,
-       desc->interconnectBandwidthMBSec);
+   VMACCEL_LOG("%s megaFlops=%u\n", prefix, desc->megaFlops);
+   VMACCEL_LOG("%s megaOps=%u\n", prefix, desc->megaOps);
+   VMACCEL_LOG("%s llcSizeKB=%u\n", prefix, desc->llcSizeKB);
+   VMACCEL_LOG("%s llcBandwidthMBSec=%u\n", prefix, desc->llcBandwidthMBSec);
+   VMACCEL_LOG("%s localMemSizeKB=%u\n", prefix, desc->localMemSizeKB);
+   VMACCEL_LOG("%s localMemBandwidthMBSec=%u\n", prefix,
+               desc->localMemBandwidthMBSec);
+   VMACCEL_LOG("%s nonLocalMemSizeKB=%u\n", prefix, desc->nonLocalMemSizeKB);
+   VMACCEL_LOG("%s nonLocalMemBandwidthMBSec=%u\n", prefix,
+               desc->nonLocalMemBandwidthMBSec);
+   VMACCEL_LOG("%s interconnectBandwidthMBSec=%u\n", prefix,
+               desc->interconnectBandwidthMBSec);
 }
 
 inline bool operator<(const VMAccelDesc &lhs, const VMAccelDesc &rhs) {
@@ -312,7 +313,7 @@ FreeObj(std::multiset<VMAccelObject<VMAccelDesc>, VMAccelDescCmp> &pool,
 inline void Log_VMAccelDesc(const char *prefix, const VMAccelDesc *desc) {
    char str[256];
 
-   Log("%s parentId=%u\n", prefix, desc->parentId);
+   VMACCEL_LOG("%s parentId=%u\n", prefix, desc->parentId);
 
    snprintf(str, sizeof(str), "%s parentAddr:", prefix);
 
@@ -320,19 +321,19 @@ inline void Log_VMAccelDesc(const char *prefix, const VMAccelDesc *desc) {
    Log_VMAccelAddress(str, &desc->parentAddr);
 #endif
 
-   Log("%s typeMask=%u\n", prefix, desc->typeMask);
-   Log("%s architecture=%u\n", prefix, desc->architecture);
-   Log("%s caps=0x%x\n", prefix, desc->caps);
+   VMACCEL_LOG("%s typeMask=%u\n", prefix, desc->typeMask);
+   VMACCEL_LOG("%s architecture=%u\n", prefix, desc->architecture);
+   VMACCEL_LOG("%s caps=0x%x\n", prefix, desc->caps);
 
    snprintf(str, sizeof(str), "%s capacity:", prefix);
    Log_VMAccelWorkloadDesc(str, &desc->capacity);
 
-   Log("%s maxContexts=%u\n", prefix, desc->maxContexts);
-   Log("%s maxQueues=%u\n", prefix, desc->maxQueues);
-   Log("%s maxEvents=%u\n", prefix, desc->maxEvents);
-   Log("%s maxFences=%u\n", prefix, desc->maxFences);
-   Log("%s maxSurfaces=%u\n", prefix, desc->maxSurfaces);
-   Log("%s maxMappings=%u\n", prefix, desc->maxMappings);
+   VMACCEL_LOG("%s maxContexts=%u\n", prefix, desc->maxContexts);
+   VMACCEL_LOG("%s maxQueues=%u\n", prefix, desc->maxQueues);
+   VMACCEL_LOG("%s maxEvents=%u\n", prefix, desc->maxEvents);
+   VMACCEL_LOG("%s maxFences=%u\n", prefix, desc->maxFences);
+   VMACCEL_LOG("%s maxSurfaces=%u\n", prefix, desc->maxSurfaces);
+   VMACCEL_LOG("%s maxMappings=%u\n", prefix, desc->maxMappings);
 }
 
 #endif /* defined _VMACCEL_TYPES_DESC_HPP_ */

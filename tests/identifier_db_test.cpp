@@ -42,7 +42,7 @@ using namespace std;
 int main(int argc, char **argv) {
    IdentifierDB *db;
 
-   Log("%s: Running self-test of Identifier DB...\n", __FUNCTION__);
+   VMACCEL_LOG("%s: Running self-test of Identifier DB...\n", __FUNCTION__);
 
    // Allocate 3 dwords worth of data.
    db = IdentifierDB_Alloc(78);
@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
 
    IdentifierDB_Free(db);
 
-   Log("%s: Self-test complete...\n", __FUNCTION__);
+   VMACCEL_LOG("%s: Self-test complete...\n", __FUNCTION__);
 
    return 0;
 }

@@ -309,12 +309,13 @@ public:
       char host[256];
       if (VMAccel_AddressOpaqueAddrToString(mgr.get_accel_addr(), host,
                                             sizeof(host))) {
-         Log("%s: Connecting to Accelerator manager %s\n", __FUNCTION__, host);
+         VMACCEL_LOG("%s: Connecting to Accelerator manager %s\n", __FUNCTION__,
+                     host);
          mgrClnt = clnt_create(host, VMACCELMGR, VMACCELMGR_VERSION, "udp");
          if (mgrClnt == NULL) {
-            Warning("Failed to create VMAccelMgr client.");
+            VMACCEL_WARNING("Failed to create VMAccelMgr client.");
          }
-         Log("%s: mgrClient = %p\n", __FUNCTION__, mgrClnt);
+         VMACCEL_LOG("%s: mgrClient = %p\n", __FUNCTION__, mgrClnt);
       }
       refObjectDB = IdentifierDB_Alloc(accelMaxRefObjects);
       if (refObjectDB == NULL) {
@@ -388,8 +389,8 @@ public:
       }
 #if DEBUG_OBJECT_LIFETIME
       else {
-         Warning("%s: Context %d not tracked by accelerator\n", __FUNCTION__,
-                 id);
+         VMACCEL_WARNING("%s: Context %d not tracked by accelerator\n",
+                         __FUNCTION__, id);
       }
 #endif
    }
@@ -418,8 +419,8 @@ public:
       }
 #if DEBUG_OBJECT_LIFETIME
       else {
-         Warning("%s: Surface %d not tracked by accelerator.\n", __FUNCTION__,
-                 id);
+         VMACCEL_WARNING("%s: Surface %d not tracked by accelerator.\n",
+                         __FUNCTION__, id);
       }
 #endif
    }
@@ -541,7 +542,7 @@ public:
    template <class E>
    int upload(VMAccelSurfaceRegion imgRegion, ref_object<E> &in) {
 #if DEBUG_SURFACE_CONSISTENCY
-      Log("%s: surface id=%d\n", __FUNCTION__, id);
+      VMACCEL_LOG("%s: surface id=%d\n", __FUNCTION__, id);
 #endif
       if (desc.format == VMACCEL_FORMAT_R8_TYPELESS && imgRegion.coord.x == 0 &&
           imgRegion.coord.y == 0 && imgRegion.coord.z == 0 &&
@@ -567,7 +568,7 @@ public:
    template <class E>
    int download(VMAccelSurfaceRegion imgRegion, ref_object<E> &out) {
 #if DEBUG_SURFACE_CONSISTENCY
-      Log("%s: surface id=%d\n", __FUNCTION__, id);
+      VMACCEL_LOG("%s: surface id=%d\n", __FUNCTION__, id);
 #endif
       if (desc.format == VMACCEL_FORMAT_R8_TYPELESS && imgRegion.coord.x == 0 &&
           imgRegion.coord.y == 0 && imgRegion.coord.z == 0 &&

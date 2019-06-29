@@ -312,7 +312,7 @@ int main(int argc, char **argv) {
    allocStatus = vmcl_poweron_svc(NULL);
 
    if ((allocStatus == NULL) || (allocStatus->status != VMACCEL_SUCCESS)) {
-      Warning("Failed to power on VMCL...\n");
+      VMACCEL_WARNING("Failed to power on VMCL...\n");
       exit(1);
    }
 
@@ -326,7 +326,7 @@ int main(int argc, char **argv) {
       mgrClient = vmaccelmgr_register(host, iface, &allocStatus->desc);
 
       if (mgrClient.clnt == NULL) {
-         Warning("Unable to register with management server...\n");
+         VMACCEL_WARNING("Unable to register with management server...\n");
          vmcl_poweroff_svc();
          exit(1);
       }

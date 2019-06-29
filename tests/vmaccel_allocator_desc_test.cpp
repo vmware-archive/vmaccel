@@ -47,7 +47,8 @@ int main(int argc, char **argv) {
 
    descMgr = new VMAccelAllocator<VMAccelDesc, VMAccelDescCmp>(2048);
 
-   Log("%s: Running self-test of allocator for VMAccelDesc...\n", __FUNCTION__);
+   VMACCEL_LOG("%s: Running self-test of allocator for VMAccelDesc...\n",
+               __FUNCTION__);
 
    memset(&desc, 0, sizeof(desc));
    memset(&val, 0, sizeof(val));
@@ -71,8 +72,8 @@ int main(int argc, char **argv) {
    desc.capacity.megaOps = 0;
    alloc[0] = *descMgr->Alloc(parent.id, &desc, val);
    assert(alloc[0].status == VMACCEL_SUCCESS);
-   Log("%s: descMgr.Alloc(%d, ...) -> %d\n", __FUNCTION__,
-       desc.capacity.megaFlops, val.capacity.megaFlops);
+   VMACCEL_LOG("%s: descMgr.Alloc(%d, ...) -> %d\n", __FUNCTION__,
+               desc.capacity.megaFlops, val.capacity.megaFlops);
 
    // Try to unregister the resource with pending consumers.
    assert(descMgr->Unregister(parent.id)->status == VMACCEL_FAIL);
@@ -85,8 +86,8 @@ int main(int argc, char **argv) {
    desc.capacity.megaFlops = 16384;
    alloc[1] = *descMgr->Alloc(parent.id, &desc, val);
    assert(alloc[1].status == VMACCEL_SUCCESS);
-   Log("%s: descMgr.Alloc(%d, ...) -> %d\n", __FUNCTION__,
-       desc.capacity.megaFlops, val.capacity.megaFlops);
+   VMACCEL_LOG("%s: descMgr.Alloc(%d, ...) -> %d\n", __FUNCTION__,
+               desc.capacity.megaFlops, val.capacity.megaFlops);
 
    // Allocate another quarter of the resource.
    assert(descMgr->Alloc(parent.id, &desc, val)->status ==
@@ -130,7 +131,7 @@ int main(int argc, char **argv) {
    assert(descMgr->Unregister(parent.id)->status == VMACCEL_SUCCESS);
    delete descMgr;
 
-   Log("%s: Self-test complete...\n", __FUNCTION__);
+   VMACCEL_LOG("%s: Self-test complete...\n", __FUNCTION__);
 
    return 0;
 }

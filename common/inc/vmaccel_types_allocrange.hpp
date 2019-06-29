@@ -191,8 +191,8 @@ FreeObj(std::multiset<VMAccelObject<AllocRange>, AllocRangeCmp> &pool,
 }
 
 inline void Log_AllocRange(const char *prefix, const AllocRange *range) {
-   Log("%s size=%zu\n", prefix, range->size);
-   Log("%s begin=%zu, end=%zu\n", prefix, range->begin, range->end);
+   VMACCEL_LOG("%s size=%zu\n", prefix, range->size);
+   VMACCEL_LOG("%s begin=%zu, end=%zu\n", prefix, range->begin, range->end);
 }
 
 #endif /* defined _VMACCEL_TYPES_ALLOCRANGE_HPP_ */

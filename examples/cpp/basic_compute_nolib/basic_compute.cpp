@@ -78,10 +78,10 @@ int main(int argc, char **argv) {
    int ret = compute::execute<ref_object<int>>(
       accel.get(), VMCL_OPENCL_C_1_0, k, "hello_kernel", workTopology, a);
 
-   Log("%s: compute ret = %d\n", __FUNCTION__, ret);
+   VMACCEL_LOG("%s: compute ret = %d\n", __FUNCTION__, ret);
 
    for (int i = 0; i < ARRAY_SIZE; i++) {
-      Log("%s: a[%d] = %u\n", __FUNCTION__, i, a[i]);
+      VMACCEL_LOG("%s: a[%d] = %u\n", __FUNCTION__, i, a[i]);
    }
 
    return 1;

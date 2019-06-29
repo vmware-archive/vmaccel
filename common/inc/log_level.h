@@ -31,8 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdio.h>
 
-#define Log(_FORMAT, ...) printf(_FORMAT, ##__VA_ARGS__)
+#define VMACCEL_LOG(_FORMAT, ...) printf(_FORMAT, ##__VA_ARGS__)
 
-#define Warning(_FORMAT, ...) printf(_FORMAT, ##__VA_ARGS__)
+#define VMACCEL_WARNING(_FORMAT, ...) printf(_FORMAT, ##__VA_ARGS__)
 
 #endif /* _LOG_LEVEL_H_ */

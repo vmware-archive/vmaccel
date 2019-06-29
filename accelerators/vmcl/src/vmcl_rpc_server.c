@@ -48,7 +48,8 @@ VMAccelAllocateStatus *vmcl_poweron_svc(VMCLOps *ops) {
          return ret;
       }
    }
-   Warning("%s: Unable to power on any VMCL capable backends.\n", __FUNCTION__);
+   VMACCEL_WARNING("%s: Unable to power on any VMCL capable backends.\n",
+                   __FUNCTION__);
    return ret;
 }
 

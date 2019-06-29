@@ -33,19 +33,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmwopencl_utils.h"
 
 void Log_cl_bool(char *prefix, cl_bool val) {
-   Log("%s: %s\n", prefix, val ? "TRUE" : "FALSE");
+   VMACCEL_LOG("%s: %s\n", prefix, val ? "TRUE" : "FALSE");
 }
 
 void Log_cl_uint(char *prefix, cl_uint val) {
-   Log("%s: 0x%x (%u)\n", prefix, val, val);
+   VMACCEL_LOG("%s: 0x%x (%u)\n", prefix, val, val);
 }
 
 void Log_cl_ulong(char *prefix, cl_ulong val) {
-   Log("%s: 0x%lx (%lu)\n", prefix, val, val);
+   VMACCEL_LOG("%s: 0x%lx (%lu)\n", prefix, val, val);
 }
 
 void Log_size_t(char *prefix, size_t val) {
-   Log("%s: 0x%zx (%zu)\n", prefix, val, val);
+   VMACCEL_LOG("%s: 0x%zx (%zu)\n", prefix, val, val);
 }
 
 void Log_cl_device_type(char *prefix, cl_device_type val) {
@@ -53,18 +53,18 @@ void Log_cl_device_type(char *prefix, cl_device_type val) {
                             "CL_DEVICE_TYPE_GPU", "CL_DEVICE_TYPE_ACCELERATOR",
                             "CL_DEVICE_TYPE_ALL"};
    if (val < sizeof(typeStr) / sizeof(const char *)) {
-      Log("%s: %s\n", prefix, typeStr[val]);
+      VMACCEL_LOG("%s: %s\n", prefix, typeStr[val]);
    } else {
-      Log("%s: Unknown cl_device_type\n", prefix);
+      VMACCEL_LOG("%s: Unknown cl_device_type\n", prefix);
    }
 }
 
 void Log_cl_device_local_mem_type(char *prefix, cl_device_local_mem_type val) {
    const char *typeStr[] = {"CL_GLOBAL", "CL_LOCAL"};
    if (val < sizeof(typeStr) / sizeof(const char *)) {
-      Log("%s: %s\n", prefix, typeStr[val]);
+      VMACCEL_LOG("%s: %s\n", prefix, typeStr[val]);
    } else {
-      Log("%s: Unknown cl_device_local_mem_type\n", prefix);
+      VMACCEL_LOG("%s: Unknown cl_device_local_mem_type\n", prefix);
    }
 }
 
@@ -72,9 +72,9 @@ void Log_cl_device_exec_capabilities(char *prefix,
                                      cl_device_exec_capabilities val) {
    const char *typeStr[] = {"CL_EXEC_KERNEL", "CL_EXEC_NATIVE_KERNEL"};
    if (val < sizeof(typeStr) / sizeof(const char *)) {
-      Log("%s: %s\n", prefix, typeStr[val]);
+      VMACCEL_LOG("%s: %s\n", prefix, typeStr[val]);
    } else {
-      Log("%s: Unknown cl_device_exec_capabilities\n", prefix);
+      VMACCEL_LOG("%s: Unknown cl_device_exec_capabilities\n", prefix);
    }
 }
 
@@ -83,14 +83,14 @@ void Log_cl_device_fp_config(char *prefix, cl_device_fp_config val) {
                             "CL_FP_ROUND_TO_INF", "CL_FP_ROUND_TO_NEAREST",
                             "CL_FP_ROUND_TO_ZERO"};
    if (val < sizeof(typeStr) / sizeof(const char *)) {
-      Log("%s: %s\n", prefix, typeStr[val]);
+      VMACCEL_LOG("%s: %s\n", prefix, typeStr[val]);
    } else {
-      Log("%s: Unknown cl_device_fp_config\n", prefix);
+      VMACCEL_LOG("%s: Unknown cl_device_fp_config\n", prefix);
    }
 }
 
 void Log_cl_device_id(char *prefix, cl_device_id val) {
-   Log("%s: %p\n", prefix, val);
+   VMACCEL_LOG("%s: %p\n", prefix, val);
 }
 
 #if CL_VERSION_2_0
@@ -98,9 +98,9 @@ void Log_cl_device_svm_capabilities(char *prefix,
                                     cl_device_svm_capabilities val) {
    const char *typeStr[] = {"CL_EXEC_KERNEL", "CL_EXEC_NATIVE_KERNEL"};
    if (val < sizeof(typeStr) / sizeof(const char *)) {
-      Log("%s: %s\n", prefix, typeStr[val]);
+      VMACCEL_LOG("%s: %s\n", prefix, typeStr[val]);
    } else {
-      Log("%s: Unknown cl_device_svm_capabilities\n", prefix);
+      VMACCEL_LOG("%s: Unknown cl_device_svm_capabilities\n", prefix);
    }
 }
 #endif
@@ -110,8 +110,8 @@ void Log_cl_command_queue_properties(char *prefix,
    const char *typeStr[] = {"CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE",
                             "CL_QUEUE_PROFILING_ENABLE"};
    if (val < sizeof(typeStr) / sizeof(const char *)) {
-      Log("%s: %s\n", prefix, typeStr[val]);
+      VMACCEL_LOG("%s: %s\n", prefix, typeStr[val]);
    } else {
-      Log("%s: Unknown cl_command_queue_properties\n", prefix);
+      VMACCEL_LOG("%s: Unknown cl_command_queue_properties\n", prefix);
    }
 }

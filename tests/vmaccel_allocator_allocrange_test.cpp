@@ -47,7 +47,8 @@ int main(int argc, char **argv) {
 
    rangeMgr = new VMAccelAllocator<AllocRange, AllocRangeCmp>(2048);
 
-   Log("%s: Running self-test of allocator for AllocRange...\n", __FUNCTION__);
+   VMACCEL_LOG("%s: Running self-test of allocator for AllocRange...\n",
+               __FUNCTION__);
 
    memset(&range, 0, sizeof(range));
    memset(&val, 0, sizeof(val));
@@ -65,8 +66,8 @@ int main(int argc, char **argv) {
    range.end = 123456789;
    alloc[0] = *rangeMgr->Alloc(parent.id, &range, val);
    assert(alloc[0].status == VMACCEL_SUCCESS);
-   Log("%s: rangeMgr.Alloc(%zu, ...) -> [%zu ... %zu]\n", __FUNCTION__,
-       range.size, val.begin, val.end);
+   VMACCEL_LOG("%s: rangeMgr.Alloc(%zu, ...) -> [%zu ... %zu]\n", __FUNCTION__,
+               range.size, val.begin, val.end);
 
    // Try to unregister the resource with pending consumers.
    assert(rangeMgr->Unregister(parent.id)->status == VMACCEL_FAIL);
@@ -79,8 +80,8 @@ int main(int argc, char **argv) {
    range.size = 16384;
    alloc[1] = *rangeMgr->Alloc(parent.id, &range, val);
    assert(alloc[1].status == VMACCEL_SUCCESS);
-   Log("%s: rangeMgr.Alloc(%zu, ...) -> [%zu ... %zu]\n", __FUNCTION__,
-       range.size, val.begin, val.end);
+   VMACCEL_LOG("%s: rangeMgr.Alloc(%zu, ...) -> [%zu ... %zu]\n", __FUNCTION__,
+               range.size, val.begin, val.end);
 
    // Allocate another quarter of the resource.
    assert(rangeMgr->Alloc(parent.id, &range, val)->status ==
@@ -94,8 +95,8 @@ int main(int argc, char **argv) {
    alloc[1] = *rangeMgr->Alloc(parent.id, &range, val);
    assert(alloc[1].status == VMACCEL_SUCCESS);
 
-   Log("%s: rangeMgr.Alloc(%zu, ...) -> [%zu ... %zu]\n", __FUNCTION__,
-       range.size, val.begin, val.end);
+   VMACCEL_LOG("%s: rangeMgr.Alloc(%zu, ...) -> [%zu ... %zu]\n", __FUNCTION__,
+               range.size, val.begin, val.end);
 
    // Free all active resources.
    assert(rangeMgr->Free(alloc[1].id));
@@ -120,7 +121,7 @@ int main(int argc, char **argv) {
    assert(rangeMgr->Unregister(parent.id)->status == VMACCEL_SUCCESS);
    delete rangeMgr;
 
-   Log("%s: Self-test complete...\n", __FUNCTION__);
+   VMACCEL_LOG("%s: Self-test complete...\n", __FUNCTION__);
 
    return 0;
 }

@@ -135,18 +135,18 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
 
    memset(&result, 0, sizeof(result));
 
-   Log("Powering on vmwopencl backend...\n");
+   VMACCEL_LOG("Powering on vmwopencl backend...\n");
 
    errNum = clGetPlatformIDs(sizeof(platforms) / sizeof(platforms[0]),
                              &platforms[0], &numPlatforms);
 
    if (errNum != CL_SUCCESS) {
-      Warning("Failed to query platforms\n");
+      VMACCEL_WARNING("Failed to query platforms\n");
       result.status = VMACCEL_FAIL;
       return (&result);
    }
 
-   Log("Number of platforms: %d\n", numPlatforms);
+   VMACCEL_LOG("Number of platforms: %d\n", numPlatforms);
 
    for (i = 0; i < numPlatforms; i++) {
       errNum = clGetDeviceIDs(platforms[i], clDeviceTypes[accelArch], 1,
@@ -161,45 +161,45 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
                            sizeof(platformVersion), platformVersion, &sizeRet);
 
       if (errNum != CL_SUCCESS) {
-         Warning("Failed to query platform version\n");
+         VMACCEL_WARNING("Failed to query platform version\n");
          result.status = VMACCEL_FAIL;
          return (&result);
       }
 
-      Log("Version: %s\n", platformVersion);
+      VMACCEL_LOG("Version: %s\n", platformVersion);
 
       errNum = clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME,
                                  sizeof(platformName), platformName, &sizeRet);
 
       if (errNum != CL_SUCCESS) {
-         Warning("Failed to query platform name\n");
+         VMACCEL_WARNING("Failed to query platform name\n");
          result.status = VMACCEL_FAIL;
          return (&result);
       }
 
-      Log("Platform: %s\n", platformName);
+      VMACCEL_LOG("Platform: %s\n", platformName);
 
       errNum =
          clGetPlatformInfo(platforms[i], CL_PLATFORM_VENDOR,
                            sizeof(platformVendor), platformVendor, &sizeRet);
 
       if (errNum != CL_SUCCESS) {
-         Warning("Failed to query platform vendor\n");
+         VMACCEL_WARNING("Failed to query platform vendor\n");
          result.status = VMACCEL_FAIL;
          return (&result);
       }
 
-      Log("Vendor: %s\n", platformVendor);
+      VMACCEL_LOG("Vendor: %s\n", platformVendor);
 
       errNum = clGetPlatformInfo(platforms[i], CL_PLATFORM_EXTENSIONS,
                                  sizeof(platformExtensions), platformExtensions,
                                  &sizeRet);
 
       if (errNum != CL_SUCCESS) {
-         Warning("Failed to query platform extensions\n");
+         VMACCEL_WARNING("Failed to query platform extensions\n");
       }
 
-      Log("Extensions: %s\n", platformExtensions);
+      VMACCEL_LOG("Extensions: %s\n", platformExtensions);
 
       caps[accelArch].deviceId = deviceId;
 
@@ -207,13 +207,13 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
                                deviceName, &sizeRet);
 
       if (errNum != CL_SUCCESS) {
-         Warning("Unable to query CL_DEVICE_NAME\n");
+         VMACCEL_WARNING("Unable to query CL_DEVICE_NAME\n");
          continue;
       }
 
       snprintf(prefix, sizeof(prefix), "Device[%p]", deviceId);
 
-      Log("%s: DEVICE_NAME = %s\n", prefix, deviceName);
+      VMACCEL_LOG("%s: DEVICE_NAME = %s\n", prefix, deviceName);
 
 #define CAP(__TYPE, __NAME)                                                    \
    do {                                                                        \
@@ -221,7 +221,7 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
       errNum = clGetDeviceInfo(deviceId, CL_##__NAME, sizeof(__TYPE), &val,    \
                                &sizeRet);                                      \
       if (errNum != CL_SUCCESS) {                                              \
-         Warning("Unable to query %s\n", "CL_" #__NAME);                       \
+         VMACCEL_WARNING("Unable to query %s\n", "CL_" #__NAME);               \
       } else {                                                                 \
          snprintf(capPrefix, sizeof(capPrefix), "%s: %s", prefix, #__NAME);    \
          Log_##__TYPE(capPrefix, val);                                         \
@@ -240,7 +240,7 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
          caps[accelArch].DEVICE_MAX_WORK_ITEM_SIZES, &sizeRet);
 
       if (errNum != CL_SUCCESS) {
-         Warning("Unable to query CL_DEVICE_MAX_WORK_ITEM_SIZES\n");
+         VMACCEL_WARNING("Unable to query CL_DEVICE_MAX_WORK_ITEM_SIZES\n");
          continue;
       } else {
          for (j = 0; j < caps[accelArch].DEVICE_MAX_WORK_ITEM_DIMENSIONS; j++) {
@@ -266,7 +266,7 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
    if ((strstr(platformVersion, "OpenCL 1.2") == NULL) &&
        (strstr(platformVersion, "OpenCL 2.0") == NULL) &&
        (strstr(platformVersion, "OpenCL 2.") == NULL)) {
-      Warning("Unknown version detected: %s\n", platformVersion);
+      VMACCEL_WARNING("Unknown version detected: %s\n", platformVersion);
    }
 
    /*
@@ -375,7 +375,7 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
        (fences == NULL) || (fenceIds == NULL) || (events == NULL) ||
        (eventIds == NULL) || (samplers == NULL) || (samplerIds == NULL) ||
        (kernels == NULL) || (kernelIds == NULL) || (mappings == NULL)) {
-      Warning("Unable to allocate object database...\n");
+      VMACCEL_WARNING("Unable to allocate object database...\n");
       result.status = VMACCEL_FAIL;
       vmwopencl_poweroff();
    } else {
@@ -449,8 +449,8 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
    memset(&result, 0, sizeof(result));
 
    if (IdentifierDB_ActiveId(contextIds, cid)) {
-      Warning("%s: ERROR: Context ID %d already active...\n", __FUNCTION__,
-              cid);
+      VMACCEL_WARNING("%s: ERROR: Context ID %d already active...\n",
+                      __FUNCTION__, cid);
       result.status = VMACCEL_RESOURCE_UNAVAILABLE;
       return (&result);
    }
@@ -462,7 +462,7 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
                              &platforms[0], &numPlatforms);
 
    if (errNum != CL_SUCCESS || numPlatforms <= 0) {
-      Warning("Failed to find any OpenCL platforms.\n");
+      VMACCEL_WARNING("Failed to find any OpenCL platforms.\n");
       result.status = VMACCEL_RESOURCE_UNAVAILABLE;
       return (&result);
    }
@@ -476,7 +476,7 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
                            sizeof(platformVersion), platformVersion, &sizeRet);
 
       if (errNum != CL_SUCCESS) {
-         Warning("Failed to query platform version\n");
+         VMACCEL_WARNING("Failed to query platform version\n");
          continue;
       }
 
@@ -490,14 +490,14 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
          majorVersion = 2;
          minorVersion = 1;
       } else {
-         Warning("Unknown version detected: %s\n", platformVersion);
+         VMACCEL_WARNING("Unknown version detected: %s\n", platformVersion);
          continue;
       }
 
       // SPIR-V 1.0 requires OpenCL 2.1
       if ((argp->requiredCaps & VMCL_SPIRV_1_0_CAP) &&
           ((majorVersion < 2) || (minorVersion < 1))) {
-         Warning("SPIRV 1.0 requires OpenCL 2.1+\n");
+         VMACCEL_WARNING("SPIRV 1.0 requires OpenCL 2.1+\n");
          continue;
       } else {
          result.caps |= VMCL_SPIRV_1_0_CAP;
@@ -507,7 +507,7 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
       if (((argp->requiredCaps & VMCL_SPIRV_1_1_CAP) ||
            (argp->requiredCaps & VMCL_SPIRV_1_2_CAP)) &&
           ((majorVersion < 2) || (minorVersion < 2))) {
-         Warning("SPIRV 1.1/1.2 requires OpenCL 2.2+\n");
+         VMACCEL_WARNING("SPIRV 1.1/1.2 requires OpenCL 2.2+\n");
          continue;
       } else {
          result.caps |= VMCL_SPIRV_1_1_CAP | VMCL_SPIRV_1_2_CAP;
@@ -517,12 +517,12 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
                                  sizeof(platformName), platformName, &sizeRet);
 
       if (errNum != CL_SUCCESS) {
-         Warning("Failed to query platform name\n");
+         VMACCEL_WARNING("Failed to query platform name\n");
          continue;
       }
 
-      Log("Using Platform: %s\n", platformName);
-      Log("  Version: %s\n", platformVersion);
+      VMACCEL_LOG("Using Platform: %s\n", platformName);
+      VMACCEL_LOG("  Version: %s\n", platformVersion);
 
       for (j = 0; j < VMACCEL_SELECT_MAX; j++) {
          char deviceName[128];
@@ -542,16 +542,16 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
                                   deviceName, &sizeRet);
 
          if (errNum != CL_SUCCESS) {
-            Warning("Failed to query device name\n");
+            VMACCEL_WARNING("Failed to query device name\n");
             continue;
          }
 
-         Log("Device Allocated: %s\n", deviceName);
+         VMACCEL_LOG("Device Allocated: %s\n", deviceName);
 
          context = clCreateContext(0, 1, &deviceId, NULL, NULL, &errNum);
 
          if (errNum != CL_SUCCESS) {
-            Warning("Unable to create context, errNum=%d\n", errNum);
+            VMACCEL_WARNING("Unable to create context, errNum=%d\n", errNum);
          } else if (context != NULL) {
             break;
          }
@@ -563,7 +563,7 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
    }
 
    if ((context == NULL) || (errNum != CL_SUCCESS)) {
-      Warning("Failed to create an OpenCL context.\n");
+      VMACCEL_WARNING("Failed to create an OpenCL context.\n");
       result.status = VMACCEL_RESOURCE_UNAVAILABLE;
       return (&result);
    }
@@ -592,46 +592,53 @@ VMAccelStatus *vmwopencl_contextdestroy_1(VMCLContextId *argp) {
       clReleaseContext(contexts[cid].context);
       contexts[cid].context = NULL;
    } else {
-      Warning("%s: Destroying id %d, already destroyed\n", __FUNCTION__, cid);
+      VMACCEL_WARNING("%s: Destroying id %d, already destroyed\n", __FUNCTION__,
+                      cid);
    }
 
    IdentifierDB_ReleaseId(contextIds, cid);
 
    if (IdentifierDB_Count(contextIds) == 0) {
       if (IdentifierDB_Count(surfaceIds) != 0) {
-         Warning("%s: Semantic error: Missing destructor call, %d surfaces "
-                 "still active...\n",
-                 __FUNCTION__, IdentifierDB_Count(surfaceIds));
+         VMACCEL_WARNING(
+            "%s: Semantic error: Missing destructor call, %d surfaces "
+            "still active...\n",
+            __FUNCTION__, IdentifierDB_Count(surfaceIds));
       }
 
       if (IdentifierDB_Count(queueIds) != 0) {
-         Warning("%s: Semantic error: Missing destructor call, %d queues "
-                 "still active...\n",
-                 __FUNCTION__, IdentifierDB_Count(queueIds));
+         VMACCEL_WARNING(
+            "%s: Semantic error: Missing destructor call, %d queues "
+            "still active...\n",
+            __FUNCTION__, IdentifierDB_Count(queueIds));
       }
 
       if (IdentifierDB_Count(fenceIds) != 0) {
-         Warning("%s: Semantic error: Missing destructor call, %d fences "
-                 "still active...\n",
-                 __FUNCTION__, IdentifierDB_Count(fenceIds));
+         VMACCEL_WARNING(
+            "%s: Semantic error: Missing destructor call, %d fences "
+            "still active...\n",
+            __FUNCTION__, IdentifierDB_Count(fenceIds));
       }
 
       if (IdentifierDB_Count(eventIds) != 0) {
-         Warning("%s: Semantic error: Missing destructor call, %d events "
-                 "still active...\n",
-                 __FUNCTION__, IdentifierDB_Count(eventIds));
+         VMACCEL_WARNING(
+            "%s: Semantic error: Missing destructor call, %d events "
+            "still active...\n",
+            __FUNCTION__, IdentifierDB_Count(eventIds));
       }
 
       if (IdentifierDB_Count(samplerIds) != 0) {
-         Warning("%s: Semantic error: Missing destructor call, %d samplers "
-                 "still active...\n",
-                 __FUNCTION__, IdentifierDB_Count(samplerIds));
+         VMACCEL_WARNING(
+            "%s: Semantic error: Missing destructor call, %d samplers "
+            "still active...\n",
+            __FUNCTION__, IdentifierDB_Count(samplerIds));
       }
 
       if (IdentifierDB_Count(kernelIds) != 0) {
-         Warning("%s: Semantic error: Missing destructor call, %d kernels "
-                 "still active...\n",
-                 __FUNCTION__, IdentifierDB_Count(kernelIds));
+         VMACCEL_WARNING(
+            "%s: Semantic error: Missing destructor call, %d kernels "
+            "still active...\n",
+            __FUNCTION__, IdentifierDB_Count(kernelIds));
       }
    }
 
@@ -650,8 +657,8 @@ vmwopencl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp) {
    memset(&result, 0, sizeof(result));
 
    if (IdentifierDB_ActiveId(surfaceIds, sid)) {
-      Warning("%s: ERROR: Surface ID %d already active...\n", __FUNCTION__,
-              sid);
+      VMACCEL_WARNING("%s: ERROR: Surface ID %d already active...\n",
+                      __FUNCTION__, sid);
       result.status = VMACCEL_RESOURCE_UNAVAILABLE;
       return (&result);
    }
@@ -750,7 +757,8 @@ VMAccelQueueStatus *vmwopencl_queuealloc_1(VMCLQueueAllocateDesc *argp) {
    memset(&result, 0, sizeof(result));
 
    if (IdentifierDB_ActiveId(queueIds, qid)) {
-      Warning("%s: ERROR: Queue ID %d already active...\n", __FUNCTION__, qid);
+      VMACCEL_WARNING("%s: ERROR: Queue ID %d already active...\n",
+                      __FUNCTION__, qid);
       result.status = VMACCEL_RESOURCE_UNAVAILABLE;
       return (&result);
    }
@@ -760,13 +768,14 @@ VMAccelQueueStatus *vmwopencl_queuealloc_1(VMCLQueueAllocateDesc *argp) {
       clGetContextInfo(context, CL_CONTEXT_DEVICES, 0, NULL, &deviceBufferSize);
 
    if (errNum != CL_SUCCESS) {
-      Warning("Failed call to clGetContextInfo(...,GL_CONTEXT_DEVICES,...)");
+      VMACCEL_WARNING(
+         "Failed call to clGetContextInfo(...,GL_CONTEXT_DEVICES,...)");
       result.status = VMACCEL_FAIL;
       return (&result);
    }
 
    if (deviceBufferSize <= 0) {
-      Warning("No devices available.");
+      VMACCEL_WARNING("No devices available.");
       result.status = VMACCEL_FAIL;
       return (&result);
    }
@@ -790,7 +799,7 @@ VMAccelQueueStatus *vmwopencl_queuealloc_1(VMCLQueueAllocateDesc *argp) {
    commandQueue = clCreateCommandQueue(context, devices[0], 0, NULL);
 
    if (commandQueue == NULL) {
-      Warning("Failed to create commandQueue for device 0");
+      VMACCEL_WARNING("Failed to create commandQueue for device 0");
       free(devices);
       result.status = VMACCEL_FAIL;
       return (&result);
@@ -1081,8 +1090,8 @@ VMAccelStatus *vmwopencl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp) {
    argp->op.ptr.ptr_val = NULL;
    argp->op.ptr.ptr_len = 0;
 
-   errNum = clEnqueueUnmapMemObject(queue, surfaces[sid].mem, ptr,
-                                    0, NULL, NULL);
+   errNum =
+      clEnqueueUnmapMemObject(queue, surfaces[sid].mem, ptr, 0, NULL, NULL);
 
    mappings[sid].ptr = NULL;
 
@@ -1181,10 +1190,11 @@ vmwopencl_kernelalloc_1(VMCLKernelAllocateDesc *argp) {
 
    memset(&result, 0, sizeof(result));
 
-   Log("Allocating kernel id=%d\n", kid);
+   VMACCEL_LOG("Allocating kernel id=%d\n", kid);
 
    if (IdentifierDB_ActiveId(kernelIds, kid)) {
-      Warning("%s: ERROR: Kernel ID %d already active...\n", __FUNCTION__, kid);
+      VMACCEL_WARNING("%s: ERROR: Kernel ID %d already active...\n",
+                      __FUNCTION__, kid);
       result.status = VMACCEL_RESOURCE_UNAVAILABLE;
       return (&result);
    }
@@ -1198,7 +1208,7 @@ vmwopencl_kernelalloc_1(VMCLKernelAllocateDesc *argp) {
            (argp->language == VMCL_OPENCL_C_2_0))
 #endif
           ) {
-      Log("Creating OpenCL C program\n");
+      VMACCEL_LOG("Creating OpenCL C program\n");
 
       program = clCreateProgramWithSource(
          context, 1, (const char **)&argp->source.source_val, &sourceLength,
@@ -1207,7 +1217,7 @@ vmwopencl_kernelalloc_1(VMCLKernelAllocateDesc *argp) {
    } else if ((contexts[cid].majorVersion >= 2) &&
               (contexts[cid].minorVersion >= 2) &&
               (argp->language == VMCL_OPENCL_CPP_1_0)) {
-      Log("Creating OpenCL CPP program\n");
+      VMACCEL_LOG("Creating OpenCL CPP program\n");
 
       program = clCreateProgramWithSource(
          context, 1, (const char **)&argp->source.source_val, &sourceLength,
@@ -1216,7 +1226,7 @@ vmwopencl_kernelalloc_1(VMCLKernelAllocateDesc *argp) {
               (contexts[cid].minorVersion >= 2) &&
               ((argp->language == VMCL_SPIRV_1_1) ||
                (argp->language == VMCL_SPIRV_1_2))) {
-      Log("Creating SPIR-V 1.1/1.2 program\n");
+      VMACCEL_LOG("Creating SPIR-V 1.1/1.2 program\n");
 
       program = clCreateProgramWithIL(context, (void *)argp->source.source_val,
                                       argp->source.source_len, &errNum);
@@ -1225,7 +1235,7 @@ vmwopencl_kernelalloc_1(VMCLKernelAllocateDesc *argp) {
    } else if ((contexts[cid].majorVersion >= 2) &&
               (contexts[cid].minorVersion >= 1) &&
               (argp->language == VMCL_SPIRV_1_0)) {
-      Log("Creating SPIR-V 1.0 program\n");
+      VMACCEL_LOG("Creating SPIR-V 1.0 program\n");
 
       FILE *fp;
       fp = fopen("/tmp/server.spirv", "wb");
@@ -1247,26 +1257,26 @@ vmwopencl_kernelalloc_1(VMCLKernelAllocateDesc *argp) {
    }
 
    if ((program == NULL) || (errNum != CL_SUCCESS)) {
-      Warning("Failed to create CL program\n");
+      VMACCEL_WARNING("Failed to create CL program\n");
       result.status = VMACCEL_FAIL;
       return (&result);
    }
 
-   Log("Building program %p\n", program);
+   VMACCEL_LOG("Building program %p\n", program);
 
    errNum = clBuildProgram(program, 1, &deviceId, NULL, NULL, NULL);
 
    if (errNum != CL_SUCCESS) {
       char *buildLog;
 
-      Warning("Error in kernel:\n");
+      VMACCEL_WARNING("Error in kernel:\n");
 
       buildLog = malloc(sizeof(char) * 16384);
 
       if (buildLog) {
          clGetProgramBuildInfo(program, deviceId, CL_PROGRAM_BUILD_LOG, 16384,
                                buildLog, NULL);
-         Warning("%s\n", buildLog);
+         VMACCEL_WARNING("%s\n", buildLog);
          free(buildLog);
       }
 
@@ -1278,7 +1288,7 @@ vmwopencl_kernelalloc_1(VMCLKernelAllocateDesc *argp) {
    // Create OpenCL kernel
    kernel = clCreateKernel(program, argp->kernelName.kernelName_val, NULL);
    if (kernel == NULL) {
-      Warning("Failed to create kernel\n");
+      VMACCEL_WARNING("Failed to create kernel\n");
       clReleaseProgram(program);
       result.status = VMACCEL_FAIL;
       return (&result);

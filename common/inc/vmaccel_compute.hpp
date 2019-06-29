@@ -127,14 +127,14 @@ public:
       vmcl_surfacedestroy_1_arg.accel.id = id;
 
 #if DEBUG_PERSISTENT_SURFACES
-      Log("%s: Destroying surface %d\n", __FUNCTION__, id);
+      VMACCEL_LOG("%s: Destroying surface %d\n", __FUNCTION__, id);
 #endif
 
       result_1 =
          vmcl_surfacedestroy_1(&vmcl_surfacedestroy_1_arg, get_client());
       if (result_1 == NULL) {
-         Warning("%s: Unable to destroy surface %d using context %d\n",
-                 __FUNCTION__, id, get_contextId());
+         VMACCEL_WARNING("%s: Unable to destroy surface %d using context %d\n",
+                         __FUNCTION__, id, get_contextId());
       }
 
       set_residency(id, false);
@@ -180,8 +180,9 @@ private:
                        .parentAddr,
                    host, sizeof(host))) {
                VMAccelId vmaccelmgr_free_1_arg;
-               Warning("%s: Unable to resolve Compute Accelerator host\n",
-                       __FUNCTION__);
+               VMACCEL_WARNING(
+                  "%s: Unable to resolve Compute Accelerator host\n",
+                  __FUNCTION__);
                vmaccelmgr_free_1_arg =
                   result_1->VMAccelAllocateReturnStatus_u.ret->id;
                vmaccelmgr_free_1(&vmaccelmgr_free_1_arg, accel->get_manager());
@@ -189,16 +190,16 @@ private:
             }
             accelId = result_1->VMAccelAllocateReturnStatus_u.ret->id;
          } else {
-            Warning("%s: Unable to connect to Accelerator manager %p, "
-                    "attempting direct connect to VMCL localhost\n",
-                    __FUNCTION__, accel->get_manager());
+            VMACCEL_WARNING("%s: Unable to connect to Accelerator manager %p, "
+                            "attempting direct connect to VMCL localhost\n",
+                            __FUNCTION__, accel->get_manager());
          }
       }
 
       clnt = clnt_create(host, VMCL, VMCL_VERSION, "udp");
       if (clnt == NULL) {
-         Warning("%s: Unable to instantiate VMCL for host = %s\n", __FUNCTION__,
-                 host);
+         VMACCEL_WARNING("%s: Unable to instantiate VMCL for host = %s\n",
+                         __FUNCTION__, host);
          return VMACCEL_FAIL;
       }
 
@@ -213,7 +214,7 @@ private:
 
       result_2 = vmcl_contextalloc_1(&vmcl_contextalloc_1_arg, clnt);
       if (result_2 == NULL) {
-         Warning("%s: Unable to create a VMCL context\n", __FUNCTION__);
+         VMACCEL_WARNING("%s: Unable to create a VMCL context\n", __FUNCTION__);
          accel->release_id(vmcl_contextalloc_1_arg.clientId);
          destroy();
          return VMACCEL_FAIL;
@@ -232,7 +233,7 @@ private:
 
       result_3 = vmcl_queuealloc_1(&vmcl_queuealloc_1_arg, clnt);
       if (result_3 == NULL) {
-         Warning("%s: Unable to create a VMCL queue\n", __FUNCTION__);
+         VMACCEL_WARNING("%s: Unable to create a VMCL queue\n", __FUNCTION__);
          accel->release_id(vmcl_queuealloc_1_arg.client.id);
          destroy();
          return VMACCEL_FAIL;
@@ -276,8 +277,8 @@ private:
          vmcl_queuedestroy_1_arg.id = queueId;
          result_2 = vmcl_queuedestroy_1(&vmcl_queuedestroy_1_arg, clnt);
          if (result_2 == NULL) {
-            Warning("%s: Unable to destroy queue id = %u\n", __FUNCTION__,
-                    vmcl_queuedestroy_1_arg.id);
+            VMACCEL_WARNING("%s: Unable to destroy queue id = %u\n",
+                            __FUNCTION__, vmcl_queuedestroy_1_arg.id);
          }
          queueId = VMACCEL_INVALID_ID;
       }
@@ -286,8 +287,8 @@ private:
          vmcl_contextdestroy_1_arg = contextId;
          result_3 = vmcl_contextdestroy_1(&vmcl_contextdestroy_1_arg, clnt);
          if (result_3 == NULL) {
-            Warning("%s: Unable to destroy context id = %u\n", __FUNCTION__,
-                    vmcl_contextdestroy_1_arg);
+            VMACCEL_WARNING("%s: Unable to destroy context id = %u\n",
+                            __FUNCTION__, vmcl_contextdestroy_1_arg);
          }
          contextId = VMACCEL_INVALID_ID;
       }
@@ -334,7 +335,8 @@ bool prepareComputeArgs(ref_object<clcontext> &clctx,
    VMCLSurfaceUnmapOp vmcl_surfaceunmap_1_arg;
 
 #if DEBUG_TEMPLATE_TYPES
-   Log("%s: argIndex=%u, type=%s\n", __FUNCTION__, argIndex, typeid(T).name());
+   VMACCEL_LOG("%s: argIndex=%u, type=%s\n", __FUNCTION__, argIndex,
+               typeid(T).name());
 #endif
 
    kernelArgs[argIndex].surf.id = VMACCEL_INVALID_ID;
@@ -352,8 +354,8 @@ bool prepareComputeArgs(ref_object<clcontext> &clctx,
    result_1 =
       vmcl_surfacealloc_1(&vmcl_surfacealloc_1_arg, clctx->get_client());
    if (result_1 == NULL) {
-      Warning("%s: Unable to allocate surface %d for context %d\n",
-              __FUNCTION__, argIndex, clctx->get_contextId());
+      VMACCEL_WARNING("%s: Unable to allocate surface %d for context %d\n",
+                      __FUNCTION__, argIndex, clctx->get_contextId());
       return false;
    }
 
@@ -385,8 +387,8 @@ bool prepareComputeArgs(ref_object<clcontext> &clctx,
 #if DEBUG_TEMPLATE_TYPES
       for (int i = 0;
            i < vmcl_surfacemap_1_arg.op.size.x / sizeof(unsigned int); i++) {
-         Log("%s: in_uint32[%d]=%d\n", __FUNCTION__, i,
-             ((unsigned int *)ptr)[i]);
+         VMACCEL_LOG("%s: in_uint32[%d]=%d\n", __FUNCTION__, i,
+                     ((unsigned int *)ptr)[i]);
       }
 #endif
 
@@ -416,9 +418,9 @@ bool prepareComputeArgs(ref_object<clcontext> &clctx,
       return true;
    }
 
-   Warning("%s: Unable to map surface %d for context %d queue %d\n",
-           __FUNCTION__, argIndex, clctx->get_contextId(),
-           clctx->get_queueId());
+   VMACCEL_WARNING("%s: Unable to map surface %d for context %d queue %d\n",
+                   __FUNCTION__, argIndex, clctx->get_contextId(),
+                   clctx->get_queueId());
 
    return false;
 }
@@ -454,10 +456,11 @@ bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx,
    VMCLSurfaceUnmapOp vmcl_surfaceunmap_1_arg;
 
 #if DEBUG_COMPUTE_OPERATION
-   Log("%s: argIndex=%u, type=ref_object<surface>, id=%d, contextId=%d, "
-       "queueId=%d\n",
-       __FUNCTION__, argIndex, arg->get_id(), clctx->get_contextId(),
-       clctx->get_queueId());
+   VMACCEL_LOG(
+      "%s: argIndex=%u, type=ref_object<surface>, id=%d, contextId=%d, "
+      "queueId=%d\n",
+      __FUNCTION__, argIndex, arg->get_id(), clctx->get_contextId(),
+      clctx->get_queueId());
 #endif
 
    kernelArgs[argIndex].surf.id = VMACCEL_INVALID_ID;
@@ -465,7 +468,8 @@ bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx,
 
    if (!clctx->is_resident(arg->get_id())) {
 #if DEBUG_SURFACE_CONSISTENCY
-      Log("%s: surface id=%d not resident\n", __FUNCTION__, arg->get_id());
+      VMACCEL_LOG("%s: surface id=%d not resident\n", __FUNCTION__,
+                  arg->get_id());
 #endif
       memset(&vmcl_surfacealloc_1_arg, 0, sizeof(vmcl_surfacealloc_1_arg));
       vmcl_surfacealloc_1_arg.client.cid = clctx->get_contextId();
@@ -477,8 +481,8 @@ bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx,
       result_1 =
          vmcl_surfacealloc_1(&vmcl_surfacealloc_1_arg, clctx->get_client());
       if (result_1 == NULL) {
-         Warning("%s: Unable to allocate surface %d for context %d.\n",
-                 __FUNCTION__, arg->get_id(), clctx->get_contextId());
+         VMACCEL_WARNING("%s: Unable to allocate surface %d for context %d.\n",
+                         __FUNCTION__, arg->get_id(), clctx->get_contextId());
          return false;
       }
 
@@ -500,7 +504,8 @@ bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx,
       return true;
    }
 #else
-   Log("%s: Forcing update of surface %d\n", __FUNCTION__, arg->get_id());
+   VMACCEL_LOG("%s: Forcing update of surface %d\n", __FUNCTION__,
+               arg->get_id());
 #endif
 
    memset(&vmcl_surfacemap_1_arg, 0, sizeof(vmcl_surfacemap_1_arg));
@@ -530,8 +535,8 @@ bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx,
 #if DEBUG_COMPUTE_OPERATION
       for (int i = 0;
            i < vmcl_surfacemap_1_arg.op.size.x / sizeof(unsigned int); i++) {
-         Log("%s: in_uint32[%d]=%d\n", __FUNCTION__, i,
-             ((unsigned int *)ptr)[i]);
+         VMACCEL_LOG("%s: in_uint32[%d]=%d\n", __FUNCTION__, i,
+                     ((unsigned int *)ptr)[i]);
       }
 #endif
 
@@ -563,9 +568,9 @@ bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx,
       return true;
    }
 
-   Warning("%s: Unable to map surface %d for context %d queue %d\n",
-           __FUNCTION__, arg->get_id(), clctx->get_contextId(),
-           clctx->get_queueId());
+   VMACCEL_WARNING("%s: Unable to map surface %d for context %d queue %d\n",
+                   __FUNCTION__, arg->get_id(), clctx->get_contextId(),
+                   clctx->get_queueId());
 
    return false;
 }
@@ -602,8 +607,8 @@ bool quiesceComputeArgs(ref_object<clcontext> &clctx,
    VMCLSurfaceId vmcl_surfacedestroy_1_arg;
 
 #if DEBUG_TEMPLATE_TYPES
-   Log("%s: argIndex = %u, type = %s\n", __FUNCTION__, argIndex,
-       typeid(T).name());
+   VMACCEL_LOG("%s: argIndex = %u, type = %s\n", __FUNCTION__, argIndex,
+               typeid(T).name());
 #endif
 
    if (kernelArgs[argIndex].surf.id == VMACCEL_INVALID_ID) {
@@ -634,8 +639,8 @@ bool quiesceComputeArgs(ref_object<clcontext> &clctx,
 #if DEBUG_TEMPLATE_TYPES
          for (int i = 0;
               i < vmcl_surfacemap_1_arg.op.size.x / sizeof(unsigned int); i++) {
-            Log("%s: out_uint32[%d]=%d\n", __FUNCTION__, i,
-                ((unsigned int *)ptr)[i]);
+            VMACCEL_LOG("%s: out_uint32[%d]=%d\n", __FUNCTION__, i,
+                        ((unsigned int *)ptr)[i]);
          }
 #endif
 
@@ -701,13 +706,13 @@ bool quiesceComputeSurfaceArgs(ref_object<clcontext> &clctx,
    VMCLSurfaceId vmcl_surfacedestroy_1_arg;
 
 #if DEBUG_COMPUTE_OPERATION
-   Log("%s: argIndex=%u, type=ref_object<surface>, id=%d\n", __FUNCTION__,
-       argIndex, kernelArgs[argIndex].surf.id);
+   VMACCEL_LOG("%s: argIndex=%u, type=ref_object<surface>, id=%d\n",
+               __FUNCTION__, argIndex, kernelArgs[argIndex].surf.id);
 #endif
 
    if (kernelArgs[argIndex].surf.id == VMACCEL_INVALID_ID) {
 #if DEBUG_COMPUTE_OPERATION
-      Warning("%s: Kernel argument to nowhere...\n", __FUNCTION__);
+      VMACCEL_WARNING("%s: Kernel argument to nowhere...\n", __FUNCTION__);
 #endif
       return true;
    }
@@ -743,8 +748,8 @@ bool quiesceComputeSurfaceArgs(ref_object<clcontext> &clctx,
 #if DEBUG_COMPUTE_OPERATION
          for (int i = 0;
               i < vmcl_surfacemap_1_arg.op.size.x / sizeof(unsigned int); i++) {
-            Log("%s: out_uint32[%d]=%d\n", __FUNCTION__, i,
-                ((unsigned int *)ptr)[i]);
+            VMACCEL_LOG("%s: out_uint32[%d]=%d\n", __FUNCTION__, i,
+                        ((unsigned int *)ptr)[i]);
          }
 #endif
 
@@ -767,12 +772,13 @@ bool quiesceComputeSurfaceArgs(ref_object<clcontext> &clctx,
    }
 #if DEBUG_COMPUTE_OPERATION
    else {
-      Log("%s: Skipping readback due to read-only flag.\n", __FUNCTION__);
+      VMACCEL_LOG("%s: Skipping readback due to read-only flag.\n",
+                  __FUNCTION__);
    }
 #endif
 
 #if DEBUG_PERSISTENT_SURFACES
-   Log("%s: Detroying server side persistent surface\n", __FUNCTION__);
+   VMACCEL_LOG("%s: Detroying server side persistent surface\n", __FUNCTION__);
 
    /*
     * Leave surface resident on the server.
@@ -943,7 +949,7 @@ public:
            const std::string &func, const vmaccel::work_topology &topology,
            B &... args) {
       if (prepared) {
-         Warning("%s: Operation already prepared...\n", __FUNCTION__);
+         VMACCEL_WARNING("%s: Operation already prepared...\n", __FUNCTION__);
          return;
       }
       std::string tag("COMPUTE");
@@ -990,16 +996,17 @@ public:
        * Setup Compute Kernel.
        */
       for (auto const &k : kernel) {
-         Log("%s: Kernel Architecture - %u\n", __FUNCTION__, k.first);
-         Log("%s:\n%s\n", __FUNCTION__, (char *)k.second.get_ptr());
+         VMACCEL_LOG("%s: Kernel Architecture - %u\n", __FUNCTION__, k.first);
+         VMACCEL_LOG("%s:\n%s\n", __FUNCTION__, (char *)k.second.get_ptr());
       }
 
       /*
        * Setup Compute Kernel arguments up-front, since the memory for surfaces
        * will be the scarce resource.
        */
-      Log("%s: Function Name = %s\n", __FUNCTION__, kernelFunction.c_str());
-      Log("%s: Number of Arguments = %u\n", __FUNCTION__, numArguments);
+      VMACCEL_LOG("%s: Function Name = %s\n", __FUNCTION__,
+                  kernelFunction.c_str());
+      VMACCEL_LOG("%s: Number of Arguments = %u\n", __FUNCTION__, numArguments);
 #endif
 
       kernelArgs =
@@ -1007,8 +1014,9 @@ public:
       surfaceIds = (unsigned int *)malloc(sizeof(unsigned int) * numArguments);
 
       if (kernelArgs == NULL || surfaceIds == NULL) {
-         Warning("%s: Unable to create a kernel arguments and surface ids\n",
-                 __FUNCTION__);
+         VMACCEL_WARNING(
+            "%s: Unable to create a kernel arguments and surface ids\n",
+            __FUNCTION__);
          return VMACCEL_FAIL;
       }
 
@@ -1022,8 +1030,8 @@ public:
          surfaceIds[i] = VMACCEL_INVALID_ID;
          if (!prepareComputeSurfaceArgs<ref_object<surface>>(
                 clctx, kernelArgs, surfaceIds, i, bindings[i]->get_surf())) {
-            Warning("%s: Unable to prepare compute argument %d\n", __FUNCTION__,
-                    i);
+            VMACCEL_WARNING("%s: Unable to prepare compute argument %d\n",
+                            __FUNCTION__, i);
          }
       }
 
@@ -1079,7 +1087,7 @@ public:
             result_3 =
                vmcl_queueflush_1(&vmcl_queueflush_1_arg, clctx->get_client());
             if (result_3 == NULL) {
-               Warning("%s: Unable to flush queue...\n", __FUNCTION__);
+               VMACCEL_WARNING("%s: Unable to flush queue...\n", __FUNCTION__);
             }
          }
       }
@@ -1092,8 +1100,8 @@ public:
       result_4 =
          vmcl_kerneldestroy_1(&vmcl_kerneldestroy_1_arg, clctx->get_client());
       if (result_4 == NULL) {
-         Warning("%s: Unable to destroy kernel id = %u\n", __FUNCTION__,
-                 vmcl_kerneldestroy_1_arg.id);
+         VMACCEL_WARNING("%s: Unable to destroy kernel id = %u\n", __FUNCTION__,
+                         vmcl_kerneldestroy_1_arg.id);
       }
 
       dispatched = true;
@@ -1118,7 +1126,7 @@ public:
       }
 
       if (clctx.get()->get_client() == NULL) {
-         Warning("%s: Context not initialized...\n", __FUNCTION__);
+         VMACCEL_WARNING("%s: Context not initialized...\n", __FUNCTION__);
          return VMACCEL_RESOURCE_UNAVAILABLE;
       }
 
@@ -1128,8 +1136,8 @@ public:
       for (i = 0; i < bindings.size(); i++) {
          if (!quiesceComputeSurfaceArgs<ref_object<surface>>(
                 clctx, kernelArgs, surfaceIds, i, bindings[i]->get_surf())) {
-            Warning("%s: Unable to prepare compute argument %d\n", __FUNCTION__,
-                    i);
+            VMACCEL_WARNING("%s: Unable to prepare compute argument %d\n",
+                            __FUNCTION__, i);
             return VMACCEL_FAIL;
          }
       }
@@ -1293,7 +1301,7 @@ int execute(
    try {
       c = compute::context(accel, 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK, 0);
    } catch (const exception &) {
-      Warning("%s: Unable to instantiate VMCL\n", __FUNCTION__);
+      VMACCEL_WARNING("%s: Unable to instantiate VMCL\n", __FUNCTION__);
       return VMACCEL_FAIL;
    }
 
@@ -1302,16 +1310,17 @@ int execute(
     * Setup Compute Kernel.
     */
    for (auto const &k : kernel) {
-      Log("%s: Kernel Architecture - %u\n", __FUNCTION__, k.first);
-      Log("%s:\n%s\n", __FUNCTION__, (char *)k.second.get_ptr());
+      VMACCEL_LOG("%s: Kernel Architecture - %u\n", __FUNCTION__, k.first);
+      VMACCEL_LOG("%s:\n%s\n", __FUNCTION__, (char *)k.second.get_ptr());
    }
 
    /*
     * Setup Compute Kernel arguments up-front, since the memory for surfaces
     * will be the scarce resource.
     */
-   Log("%s: Function Name = %s\n", __FUNCTION__, kernelFunction.c_str());
-   Log("%s: Number of Arguments = %u\n", __FUNCTION__, numArguments);
+   VMACCEL_LOG("%s: Function Name = %s\n", __FUNCTION__,
+               kernelFunction.c_str());
+   VMACCEL_LOG("%s: Number of Arguments = %u\n", __FUNCTION__, numArguments);
 #endif
 
    kernelArgs =
@@ -1319,8 +1328,9 @@ int execute(
    surfaceIds = (unsigned int *)malloc(sizeof(unsigned int) * numArguments);
 
    if (kernelArgs == NULL || surfaceIds == NULL) {
-      Warning("%s: Unable to create a kernel arguments and surface ids\n",
-              __FUNCTION__);
+      VMACCEL_WARNING(
+         "%s: Unable to create a kernel arguments and surface ids\n",
+         __FUNCTION__);
       return VMACCEL_FAIL;
    }
 
@@ -1404,8 +1414,8 @@ int execute(
 
    result_4 = vmcl_kerneldestroy_1(&vmcl_kerneldestroy_1_arg, c->get_client());
    if (result_4 == NULL) {
-      Warning("%s: Unable to destroy kernel id = %u\n", __FUNCTION__,
-              vmcl_kerneldestroy_1_arg.id);
+      VMACCEL_WARNING("%s: Unable to destroy kernel id = %u\n", __FUNCTION__,
+                      vmcl_kerneldestroy_1_arg.id);
    }
 
    return VMACCEL_SUCCESS;
@@ -1454,7 +1464,7 @@ int dispatch(
 
    if (opobj.get().get() != NULL) {
 #if DEBUG_COMPUTE_OPERATION
-      Log("%s: dispatching existing\n", __FUNCTION__);
+      VMACCEL_LOG("%s: dispatching existing\n", __FUNCTION__);
 #endif
       opobj->dispatch();
       opobj->quiesce();

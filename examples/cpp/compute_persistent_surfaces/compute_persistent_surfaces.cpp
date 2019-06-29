@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
       }
 
       for (int i = 0; i < ARRAY_SIZE; i++) {
-         Log("%s: 4*i -> a[%d] = %u\n", __FUNCTION__, i, a[i]);
+         VMACCEL_LOG("%s: 4*i -> a[%d] = %u\n", __FUNCTION__, i, a[i]);
       }
    }
 
@@ -187,7 +187,7 @@ int main(int argc, char **argv) {
       }
 
       for (int i = 0; i < ARRAY_SIZE; i++) {
-         Log("%s: 8*i -> a[%d] = %u\n", __FUNCTION__, i, a[i]);
+         VMACCEL_LOG("%s: 8*i -> a[%d] = %u\n", __FUNCTION__, i, a[i]);
       }
 
       {
@@ -231,7 +231,7 @@ int main(int argc, char **argv) {
       }
 
       for (int i = 0; i < ARRAY_SIZE; i++) {
-         Log("%s: 32*i -> a[%d] = %u\n", __FUNCTION__, i, a[i]);
+         VMACCEL_LOG("%s: 32*i -> a[%d] = %u\n", __FUNCTION__, i, a[i]);
       }
 
       {
@@ -271,7 +271,7 @@ int main(int argc, char **argv) {
       }
 
       for (int i = 0; i < ARRAY_SIZE; i++) {
-         Log("%s: 64*i -> a[%d] = %u\n", __FUNCTION__, i, a[i]);
+         VMACCEL_LOG("%s: 64*i -> a[%d] = %u\n", __FUNCTION__, i, a[i]);
       }
    }
 

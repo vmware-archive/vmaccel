@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
 
    intMgr = new VMAccelAllocator<Int, IntCmp>(2048);
 
-   Log("%s: Running self-test of allocator for Int...\n", __FUNCTION__);
+   VMACCEL_LOG("%s: Running self-test of allocator for Int...\n", __FUNCTION__);
 
    // Register the resource.
    desc.x = 65535;
@@ -57,7 +57,8 @@ int main(int argc, char **argv) {
    desc.x = 32768;
    alloc[0] = *intMgr->Alloc(parent.id, &desc, val);
    assert(alloc[0].status == VMACCEL_SUCCESS);
-   Log("%s: intMgr.Alloc(%d, ...) -> %d\n", __FUNCTION__, desc.x, val.x);
+   VMACCEL_LOG("%s: intMgr.Alloc(%d, ...) -> %d\n", __FUNCTION__, desc.x,
+               val.x);
 
    // Try to unregister the resource with pending consumers.
    assert(intMgr->Unregister(parent.id)->status == VMACCEL_FAIL);
@@ -70,7 +71,8 @@ int main(int argc, char **argv) {
    desc.x = 16384;
    alloc[1] = *intMgr->Alloc(parent.id, &desc, val);
    assert(alloc[1].status == VMACCEL_SUCCESS);
-   Log("%s: intMgr.Alloc(%d, ...) -> %d\n", __FUNCTION__, desc.x, val.x);
+   VMACCEL_LOG("%s: intMgr.Alloc(%d, ...) -> %d\n", __FUNCTION__, desc.x,
+               val.x);
 
    // Allocate another quarter of the resource.
    assert(intMgr->Alloc(parent.id, &desc, val)->status ==
@@ -107,7 +109,7 @@ int main(int argc, char **argv) {
    assert(intMgr->Unregister(parent.id)->status == VMACCEL_SUCCESS);
    delete intMgr;
 
-   Log("%s: Self-test complete...\n", __FUNCTION__);
+   VMACCEL_LOG("%s: Self-test complete...\n", __FUNCTION__);
 
    return 0;
 }

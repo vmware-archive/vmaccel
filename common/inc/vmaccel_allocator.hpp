@@ -251,14 +251,14 @@ void VMAccelAllocator<T, C>::CoalesceFreed() {
       a = VMAccelObject<T>(freed.front());
 
       if (!vmaccel_manager_wait_for_fence(a.GetFenceId())) {
-         Warning("Unable to wait for fence %d\n", a.GetFenceId());
+         VMACCEL_WARNING("Unable to wait for fence %d\n", a.GetFenceId());
          continue;
       }
 
       freed.pop();
 
       if (!FreeObj(free, a)) {
-         Warning("Unable to add freed object to free set...\n");
+         VMACCEL_WARNING("Unable to add freed object to free set...\n");
       }
    }
 }
@@ -273,14 +273,14 @@ bool VMAccelAllocator<T, C>::FindFreed(VMAccelObject<T> &req,
       a = freed.front();
 
       if (!vmaccel_manager_wait_for_fence(a.GetFenceId())) {
-         Warning("Unable to wait for fence %d\n", a.GetFenceId());
+         VMACCEL_WARNING("Unable to wait for fence %d\n", a.GetFenceId());
          continue;
       }
 
       freed.pop();
 
       if (a.GetParentId() != req.GetParentId()) {
-         Warning("Unable to add freed object to free set...\n");
+         VMACCEL_WARNING("Unable to add freed object to free set...\n");
          continue;
       }
 
@@ -290,7 +290,7 @@ bool VMAccelAllocator<T, C>::FindFreed(VMAccelObject<T> &req,
          if (Reserve(a.GetObj(), req.GetObj(), div, r)) {
             if (!IsEmpty(r)) {
                if (!FreeObj(free, VMAccelObject<T>(req.GetParentId(), &r))) {
-                  Warning("Unable to add remainder to free set...\n");
+                  VMACCEL_WARNING("Unable to add remainder to free set...\n");
                }
             }
             Destructor(r);
@@ -309,7 +309,8 @@ bool VMAccelAllocator<T, C>::FindFreed(VMAccelObject<T> &req,
                Destructor(div);
                if (!IsEmpty(r)) {
                   if (!FreeObj(free, VMAccelObject<T>(req.GetParentId(), &r))) {
-                     Warning("Unable to add remainder to free set...\n");
+                     VMACCEL_WARNING(
+                        "Unable to add remainder to free set...\n");
                   }
                }
                Destructor(r);
@@ -317,7 +318,7 @@ bool VMAccelAllocator<T, C>::FindFreed(VMAccelObject<T> &req,
             }
          }
       } else {
-         Warning("Unable to add remainder to free set...\n");
+         VMACCEL_WARNING("Unable to add remainder to free set...\n");
          continue;
       }
    }
@@ -332,7 +333,7 @@ VMAccelAllocateStatus *VMAccelAllocator<T, C>::Register(T *a) {
    memset(&result, 0, sizeof(result));
 
    if (!IdentifierDB_AllocId(registeredIds, &result.id)) {
-      Warning("Unable to allocate a registered accelerator ID\n");
+      VMACCEL_WARNING("Unable to allocate a registered accelerator ID\n");
       result.status = VMACCEL_FAIL;
       return &result;
    }
@@ -342,7 +343,7 @@ VMAccelAllocateStatus *VMAccelAllocator<T, C>::Register(T *a) {
    refCount[result.id] = 0;
 
    if (!FreeObj(free, VMAccelObject<T>(result.id, a))) {
-      Warning("Unable to add object to free set...\n");
+      VMACCEL_WARNING("Unable to add object to free set...\n");
       IdentifierDB_ReleaseId(registeredIds, result.id);
       result.status = VMACCEL_FAIL;
    } else {
@@ -396,7 +397,7 @@ VMAccelAllocateStatus *VMAccelAllocator<T, C>::Alloc(VMAccelId parentId, T *a,
    bool found = false;
 
    if (!IdentifierDB_AllocId(externalIds, &externalId)) {
-      Warning("Unable to allocate an external accelerator ID\n");
+      VMACCEL_WARNING("Unable to allocate an external accelerator ID\n");
       result.status = VMACCEL_FAIL;
       return &result;
    }
@@ -410,7 +411,7 @@ VMAccelAllocateStatus *VMAccelAllocator<T, C>::Alloc(VMAccelId parentId, T *a,
          Destructor(div);
          if (!IsEmpty(r)) {
             if (!FreeObj(free, VMAccelObject<T>(req.GetParentId(), &r))) {
-               Warning("Unable to add remainder to free set...\n");
+               VMACCEL_WARNING("Unable to add remainder to free set...\n");
             }
          }
          Destructor(r);
@@ -424,7 +425,7 @@ VMAccelAllocateStatus *VMAccelAllocator<T, C>::Alloc(VMAccelId parentId, T *a,
     * No matching allocation.
     */
    if (!found) {
-      Warning("No matching allocation found...\n");
+      VMACCEL_WARNING("No matching allocation found...\n");
       IdentifierDB_ReleaseId(externalIds, externalId);
       result.status = VMACCEL_RESOURCE_UNAVAILABLE;
       return &result;

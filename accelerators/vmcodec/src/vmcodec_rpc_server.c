@@ -58,8 +58,8 @@ VMAccelAllocateStatus *vmcodec_poweron_svc(VMCODECOps *ops) {
          return ret;
       }
    }
-   Warning("%s: Unable to power on any VMCODEC capable backends.\n",
-           __FUNCTION__);
+   VMACCEL_WARNING("%s: Unable to power on any VMCODEC capable backends.\n",
+                   __FUNCTION__);
    return ret;
 }
 

@@ -216,12 +216,12 @@ bool IdentifierDB_ReleaseIdRange(IdentifierDB *db, unsigned int start,
 void IdentifierDB_Log(IdentifierDB *db, const char *prefix) {
    assert(db != NULL);
    for (unsigned int i = 0; i < db->numWords; i++) {
-      Log("%s: bits[%d]=0x%08x\n", prefix, i, db->bits[i]);
+      VMACCEL_LOG("%s: bits[%d]=0x%08x\n", prefix, i, db->bits[i]);
    }
 }
 
-bool VMAccel_AddressOpaqueAddrToString(const VMAccelAddress *addr,
-                                       char *out, int len) {
+bool VMAccel_AddressOpaqueAddrToString(const VMAccelAddress *addr, char *out,
+                                       int len) {
    // Enough to hold three digits per byte
    if (len < 4 * addr->addr.addr_len) {
       return false;
@@ -237,8 +237,7 @@ bool VMAccel_AddressOpaqueAddrToString(const VMAccelAddress *addr,
    return false;
 }
 
-bool VMAccel_AddressStringToOpaqueAddr(const char *addr, char *out,
-                                       int len) {
+bool VMAccel_AddressStringToOpaqueAddr(const char *addr, char *out, int len) {
    if (len == 4) {
       // IPV4
       assert(sizeof(in_addr_t) == 4);

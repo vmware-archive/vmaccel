@@ -43,7 +43,7 @@ VMAccelAllocateStatus *vmwffmpeg_poweron(VMCODECOps *ops,
 
    memset(&result, 0, sizeof(result));
 
-   Log("Powering on vmwffmpeg backend...\n");
+   VMACCEL_LOG("Powering on vmwffmpeg backend...\n");
 
    result.status = VMACCEL_FAIL;
 

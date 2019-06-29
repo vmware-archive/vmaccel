@@ -48,10 +48,10 @@ static VMAccelMgrClient vmaccelmgr_register(char *host, char *iface,
    char localHost[NI_MAXHOST];
    bool netifFound = false;
 
-   Log("Connecting to management host %s\n", host);
+   VMACCEL_LOG("Connecting to management host %s\n", host);
 
    if (getifaddrs(&netifs) == -1) {
-      Warning("Unable to get network address\n");
+      VMACCEL_WARNING("Unable to get network address\n");
       return mgrClient;
    }
 
@@ -68,21 +68,21 @@ static VMAccelMgrClient vmaccelmgr_register(char *host, char *iface,
                         NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
 
       if (ret != 0) {
-         Warning("getnameinfo() failed: %s\n", gai_strerror(ret));
+         VMACCEL_WARNING("getnameinfo() failed: %s\n", gai_strerror(ret));
          netif = netif->ifa_next;
          continue;
       }
 
       if (netif->ifa_addr->sa_family == AF_INET) {
-         Log("  Interface: <%s>\n", netif->ifa_name);
-         Log("    Address: <%s>\n", localHost);
+         VMACCEL_LOG("  Interface: <%s>\n", netif->ifa_name);
+         VMACCEL_LOG("    Address: <%s>\n", localHost);
 
          /*
           * Match network interface
           */
          if (iface != NULL) {
             if (strcmp(netif->ifa_name, iface) == 0) {
-               Log("Selecting interface <%s>\n", netif->ifa_name);
+               VMACCEL_LOG("Selecting interface <%s>\n", netif->ifa_name);
                netifFound = true;
                break;
             }
@@ -109,7 +109,8 @@ static VMAccelMgrClient vmaccelmgr_register(char *host, char *iface,
       }
 
       vmaccelmgr_register_1_arg.desc = *accelDesc;
-      VMAccel_AddressStringToOpaqueAddr(localHost, localAddr, sizeof(localAddr));
+      VMAccel_AddressStringToOpaqueAddr(localHost, localAddr,
+                                        sizeof(localAddr));
       vmaccelmgr_register_1_arg.desc.parentAddr.addr.addr_val = &localAddr[0];
       vmaccelmgr_register_1_arg.desc.parentAddr.addr.addr_len =
          sizeof(localAddr);

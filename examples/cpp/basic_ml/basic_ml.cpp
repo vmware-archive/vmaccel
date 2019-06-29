@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
    }
 
    for (int i = 0; i < ARRAY_SIZE; i++) {
-      Log("%s: a[%d] = %u\n", __FUNCTION__, i, a[i]);
+      VMACCEL_LOG("%s: a[%d] = %u\n", __FUNCTION__, i, a[i]);
    }
 
    return 1;

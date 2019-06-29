@@ -75,10 +75,9 @@ public:
     */
    binding(unsigned int bindFlags, unsigned int usage, ref_object<surface> &s) {
       assert(usage == s->get_desc().usage);
-      obj = ref_object<vmaccel::binding>(
-         new vmaccel::binding(
-		VMACCEL_AI_ACCELERATOR_MASK | VMACCEL_ML_ACCELERATOR_MASK,
-                bindFlags, usage, s));
+      obj = ref_object<vmaccel::binding>(new vmaccel::binding(
+         VMACCEL_AI_ACCELERATOR_MASK | VMACCEL_ML_ACCELERATOR_MASK, bindFlags,
+         usage, s));
    }
 
    /**
@@ -129,23 +128,20 @@ public:
    /**
     * Stateless functionality for the classifier.
     */
-   virtual int
-   train(ref_object<vmaccel::ai::binding> model,
-         ref_object<vmaccel::ai::binding> parameters,
-         ref_object<vmaccel::ai::binding> input,
-         classifier &result);
-   virtual int
-   test(ref_object<vmaccel::ai::binding> reference,
-        ref_object<vmaccel::ai::binding> parameters,
-        ref_object<vmaccel::ai::binding> input,
-        ref_object<vmaccel::ai::binding> accuracy,
-        ref_object<vmaccel::ai::binding> variance);
-   virtual int
-   validate(ref_object<vmaccel::ai::binding> reference,
-            ref_object<vmaccel::ai::binding> parameters,
-            ref_object<vmaccel::ai::binding> input,
-            ref_object<vmaccel::ai::binding> accuracy,
-            ref_object<vmaccel::ai::binding> variance);
+   virtual int train(ref_object<vmaccel::ai::binding> model,
+                     ref_object<vmaccel::ai::binding> parameters,
+                     ref_object<vmaccel::ai::binding> input,
+                     classifier &result);
+   virtual int test(ref_object<vmaccel::ai::binding> reference,
+                    ref_object<vmaccel::ai::binding> parameters,
+                    ref_object<vmaccel::ai::binding> input,
+                    ref_object<vmaccel::ai::binding> accuracy,
+                    ref_object<vmaccel::ai::binding> variance);
+   virtual int validate(ref_object<vmaccel::ai::binding> reference,
+                        ref_object<vmaccel::ai::binding> parameters,
+                        ref_object<vmaccel::ai::binding> input,
+                        ref_object<vmaccel::ai::binding> accuracy,
+                        ref_object<vmaccel::ai::binding> variance);
    virtual int
    predict(ref_object<vmaccel::ai::binding> model,
            ref_object<vmaccel::ai::binding> parameters,
