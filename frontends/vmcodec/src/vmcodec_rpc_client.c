@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmcodec_rpc.h"
 
 
-void vmcodec_1(char *host) {
+static void vmcodec_1(char *host) {
    CLIENT *clnt;
    VMCODECContextAllocateReturnStatus *result_1;
    VMCODECContextAllocateDesc vmcodec_contextalloc_1_arg;

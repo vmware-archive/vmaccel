@@ -42,7 +42,7 @@ const char *kernelSource = "__kernel void hello_kernel(__global int *a)\n"
 
 unsigned int buffer[16];
 
-void vmcl_1(char *host, char *spirv) {
+static void vmcl_1(char *host, char *spirv) {
    CLIENT *clnt;
    VMCLContextAllocateReturnStatus *result_1;
    VMCLContextAllocateDesc vmcl_contextalloc_1_arg;
@@ -247,7 +247,7 @@ void vmcl_1(char *host, char *spirv) {
    vmcl_kernelalloc_1_arg.client.cid = cid;
    vmcl_kernelalloc_1_arg.client.id = kid;
    vmcl_kernelalloc_1_arg.kernelName.kernelName_len = strlen(kernelName);
-   vmcl_kernelalloc_1_arg.kernelName.kernelName_val = kernelName;
+   vmcl_kernelalloc_1_arg.kernelName.kernelName_val = (void *)kernelName;
 
    if (spirv) {
       FILE *fp;
@@ -281,7 +281,7 @@ void vmcl_1(char *host, char *spirv) {
    } else {
       vmcl_kernelalloc_1_arg.language = VMCL_OPENCL_C_1_0;
       vmcl_kernelalloc_1_arg.source.source_len = strlen(kernelSource);
-      vmcl_kernelalloc_1_arg.source.source_val = kernelSource;
+      vmcl_kernelalloc_1_arg.source.source_val = (void *)kernelSource;
    }
 
    result_26 = vmcl_kernelalloc_1(&vmcl_kernelalloc_1_arg, clnt);
@@ -343,7 +343,7 @@ void vmcl_1(char *host, char *spirv) {
 
    if (result_20->VMAccelSurfaceMapReturnStatus_u.ret->status ==
        VMACCEL_SUCCESS) {
-      unsigned int *ptr =
+      unsigned int *ptr = (unsigned int *)
          result_20->VMAccelSurfaceMapReturnStatus_u.ret->ptr.ptr_val;
 
       assert(result_20->VMAccelSurfaceMapReturnStatus_u.ret->ptr.ptr_len ==
@@ -359,7 +359,7 @@ void vmcl_1(char *host, char *spirv) {
       vmcl_surfaceunmap_1_arg.queue.id = qid;
       vmcl_surfaceunmap_1_arg.op.surf.id = sid;
       vmcl_surfaceunmap_1_arg.op.ptr.ptr_len = vmcl_surfacemap_1_arg.op.size.x;
-      vmcl_surfaceunmap_1_arg.op.ptr.ptr_val = ptr;
+      vmcl_surfaceunmap_1_arg.op.ptr.ptr_val = (void *)ptr;
 
       result_21 = vmcl_surfaceunmap_1(&vmcl_surfaceunmap_1_arg, clnt);
       if (result_21 == NULL) {

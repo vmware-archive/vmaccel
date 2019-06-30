@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "vmaccel_rpc.h"
 
-void vmaccel_1(char *host) {
+static void vmaccel_1(char *host) {
    CLIENT *clnt;
    VMAccelResourceAllocateReturnStatus *result_1;
    VMAccelResourceDesc vmaccel_resourcealloc_1_arg;
@@ -54,7 +54,7 @@ void vmaccel_1(char *host) {
       clnt_perror(clnt, "call failed");
    }
    result_3 = vmaccel_compute_1(&vmaccel_compute_1_arg, clnt);
-   if (result_3 = (VMAccelComputeReturnStatus *)NULL) {
+   if ((result_3 = (VMAccelComputeReturnStatus *)NULL) == NULL) {
       clnt_perror(clnt, "call failed");
    }
 #ifndef DEBUG

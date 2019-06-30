@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "vmaccel_mgr.h"
 
-void vmaccelmgr_1(char *host) {
+static void vmaccelmgr_1(char *host) {
    CLIENT *clnt;
    VMAccelAllocateReturnStatus *result_1;
    VMAccelRegisterDesc vmaccelmgr_register_1_arg;
