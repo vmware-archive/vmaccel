@@ -343,8 +343,9 @@ static void vmcl_1(char *host, char *spirv) {
 
    if (result_20->VMAccelSurfaceMapReturnStatus_u.ret->status ==
        VMACCEL_SUCCESS) {
-      unsigned int *ptr = (unsigned int *)
-         result_20->VMAccelSurfaceMapReturnStatus_u.ret->ptr.ptr_val;
+      unsigned int *ptr =
+         (unsigned int *)
+            result_20->VMAccelSurfaceMapReturnStatus_u.ret->ptr.ptr_val;
 
       assert(result_20->VMAccelSurfaceMapReturnStatus_u.ret->ptr.ptr_len ==
              vmcl_surfacemap_1_arg.op.size.x);
