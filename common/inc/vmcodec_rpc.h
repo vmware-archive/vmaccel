@@ -32,14 +32,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef _VMCODEC_RPC_H_RPCGEN
-#define _VMCODEC_RPC_H_RPCGEN
-
-#include <rpc/rpc.h>
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define _VMCODEC_RPC_H_RPCGEN
+
+#include <rpc/rpc.h>
 
 #include "vmaccel_rpc.h"
 #include "vmcodec_defs.h"
@@ -130,107 +128,99 @@ typedef struct VMCODECContextAllocateReturnStatus
 
 #if defined(__STDC__) || defined(__cplusplus)
 #define VMCODEC_CONTEXTALLOC 1
-extern VMCODECContextAllocateReturnStatus *
+VMCODECContextAllocateReturnStatus *
 vmcodec_contextalloc_1(VMCODECContextAllocateDesc *, CLIENT *);
-extern VMCODECContextAllocateReturnStatus *
+VMCODECContextAllocateReturnStatus *
 vmcodec_contextalloc_1_svc(VMCODECContextAllocateDesc *, struct svc_req *);
 #define VMCODEC_CONTEXTDESTROY 2
-extern VMAccelReturnStatus *vmcodec_contextdestroy_1(VMCODECContextId *,
-                                                     CLIENT *);
-extern VMAccelReturnStatus *vmcodec_contextdestroy_1_svc(VMCODECContextId *,
-                                                         struct svc_req *);
+VMAccelReturnStatus *vmcodec_contextdestroy_1(VMCODECContextId *, CLIENT *);
+VMAccelReturnStatus *vmcodec_contextdestroy_1_svc(VMCODECContextId *,
+                                                  struct svc_req *);
 #define VMCODEC_SURFACEALLOC 3
-extern VMAccelSurfaceAllocateReturnStatus *
+VMAccelSurfaceAllocateReturnStatus *
 vmcodec_surfacealloc_1(VMCODECSurfaceAllocateDesc *, CLIENT *);
-extern VMAccelSurfaceAllocateReturnStatus *
+VMAccelSurfaceAllocateReturnStatus *
 vmcodec_surfacealloc_1_svc(VMCODECSurfaceAllocateDesc *, struct svc_req *);
 #define VMCODEC_SURFACEDESTROY 4
-extern VMAccelReturnStatus *vmcodec_surfacedestroy_1(VMCODECSurfaceId *,
-                                                     CLIENT *);
-extern VMAccelReturnStatus *vmcodec_surfacedestroy_1_svc(VMCODECSurfaceId *,
-                                                         struct svc_req *);
+VMAccelReturnStatus *vmcodec_surfacedestroy_1(VMCODECSurfaceId *, CLIENT *);
+VMAccelReturnStatus *vmcodec_surfacedestroy_1_svc(VMCODECSurfaceId *,
+                                                  struct svc_req *);
 #define VMCODEC_IMAGEUPLOAD 5
-extern VMAccelReturnStatus *vmcodec_imageupload_1(VMCODECImageUploadOp *,
-                                                  CLIENT *);
-extern VMAccelReturnStatus *vmcodec_imageupload_1_svc(VMCODECImageUploadOp *,
-                                                      struct svc_req *);
+VMAccelReturnStatus *vmcodec_imageupload_1(VMCODECImageUploadOp *, CLIENT *);
+VMAccelReturnStatus *vmcodec_imageupload_1_svc(VMCODECImageUploadOp *,
+                                               struct svc_req *);
 #define VMCODEC_IMAGEDOWNLOAD 6
-extern VMAccelDownloadReturnStatus *
-vmcodec_imagedownload_1(VMCODECImageDownloadOp *, CLIENT *);
-extern VMAccelDownloadReturnStatus *
+VMAccelDownloadReturnStatus *vmcodec_imagedownload_1(VMCODECImageDownloadOp *,
+                                                     CLIENT *);
+VMAccelDownloadReturnStatus *
 vmcodec_imagedownload_1_svc(VMCODECImageDownloadOp *, struct svc_req *);
 #define VMCODEC_DECODE 7
-extern VMAccelReturnStatus *vmcodec_decode_1(VMCODECDecodeOp *, CLIENT *);
-extern VMAccelReturnStatus *vmcodec_decode_1_svc(VMCODECDecodeOp *,
-                                                 struct svc_req *);
+VMAccelReturnStatus *vmcodec_decode_1(VMCODECDecodeOp *, CLIENT *);
+VMAccelReturnStatus *vmcodec_decode_1_svc(VMCODECDecodeOp *, struct svc_req *);
 #define VMCODEC_ENCODE 8
-extern VMAccelReturnStatus *vmcodec_encode_1(VMCODECEncodeOp *, CLIENT *);
-extern VMAccelReturnStatus *vmcodec_encode_1_svc(VMCODECEncodeOp *,
-                                                 struct svc_req *);
-extern int vmcodec_1_freeresult(SVCXPRT *, xdrproc_t, caddr_t);
+VMAccelReturnStatus *vmcodec_encode_1(VMCODECEncodeOp *, CLIENT *);
+VMAccelReturnStatus *vmcodec_encode_1_svc(VMCODECEncodeOp *, struct svc_req *);
+int vmcodec_1_freeresult(SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
 #define VMCODEC_CONTEXTALLOC 1
-extern VMCODECContextAllocateReturnStatus *vmcodec_contextalloc_1();
-extern VMCODECContextAllocateReturnStatus *vmcodec_contextalloc_1_svc();
+VMCODECContextAllocateReturnStatus *vmcodec_contextalloc_1();
+VMCODECContextAllocateReturnStatus *vmcodec_contextalloc_1_svc();
 #define VMCODEC_CONTEXTDESTROY 2
-extern VMAccelReturnStatus *vmcodec_contextdestroy_1();
-extern VMAccelReturnStatus *vmcodec_contextdestroy_1_svc();
+VMAccelReturnStatus *vmcodec_contextdestroy_1();
+VMAccelReturnStatus *vmcodec_contextdestroy_1_svc();
 #define VMCODEC_SURFACEALLOC 3
-extern VMAccelSurfaceAllocateReturnStatus *vmcodec_surfacealloc_1();
-extern VMAccelSurfaceAllocateReturnStatus *vmcodec_surfacealloc_1_svc();
+VMAccelSurfaceAllocateReturnStatus *vmcodec_surfacealloc_1();
+VMAccelSurfaceAllocateReturnStatus *vmcodec_surfacealloc_1_svc();
 #define VMCODEC_SURFACEDESTROY 4
-extern VMAccelReturnStatus *vmcodec_surfacedestroy_1();
-extern VMAccelReturnStatus *vmcodec_surfacedestroy_1_svc();
+VMAccelReturnStatus *vmcodec_surfacedestroy_1();
+VMAccelReturnStatus *vmcodec_surfacedestroy_1_svc();
 #define VMCODEC_IMAGEUPLOAD 5
-extern VMAccelReturnStatus *vmcodec_imageupload_1();
-extern VMAccelReturnStatus *vmcodec_imageupload_1_svc();
+VMAccelReturnStatus *vmcodec_imageupload_1();
+VMAccelReturnStatus *vmcodec_imageupload_1_svc();
 #define VMCODEC_IMAGEDOWNLOAD 6
-extern VMAccelDownloadReturnStatus *vmcodec_imagedownload_1();
-extern VMAccelDownloadReturnStatus *vmcodec_imagedownload_1_svc();
+VMAccelDownloadReturnStatus *vmcodec_imagedownload_1();
+VMAccelDownloadReturnStatus *vmcodec_imagedownload_1_svc();
 #define VMCODEC_DECODE 7
-extern VMAccelReturnStatus *vmcodec_decode_1();
-extern VMAccelReturnStatus *vmcodec_decode_1_svc();
+VMAccelReturnStatus *vmcodec_decode_1();
+VMAccelReturnStatus *vmcodec_decode_1_svc();
 #define VMCODEC_ENCODE 8
-extern VMAccelReturnStatus *vmcodec_encode_1();
-extern VMAccelReturnStatus *vmcodec_encode_1_svc();
-extern int vmcodec_1_freeresult();
+VMAccelReturnStatus *vmcodec_encode_1();
+VMAccelReturnStatus *vmcodec_encode_1_svc();
+int vmcodec_1_freeresult();
 #endif /* K&R C */
 
 /* the xdr functions */
 
 #if defined(__STDC__) || defined(__cplusplus)
-extern bool_t xdr_VMCODECCaps(XDR *, VMCODECCaps *);
-extern bool_t xdr_VMCODECContextId(XDR *, VMCODECContextId *);
-extern bool_t xdr_VMCODECContextAllocateDesc(XDR *,
-                                             VMCODECContextAllocateDesc *);
-extern bool_t xdr_VMCODECContextAllocateStatus(XDR *,
-                                               VMCODECContextAllocateStatus *);
-extern bool_t xdr_VMCODECSurfaceId(XDR *, VMCODECSurfaceId *);
-extern bool_t xdr_VMCODECSurfaceAllocateDesc(XDR *,
-                                             VMCODECSurfaceAllocateDesc *);
-extern bool_t xdr_VMCODECImageUploadOp(XDR *, VMCODECImageUploadOp *);
-extern bool_t xdr_VMCODECImageDownloadOp(XDR *, VMCODECImageDownloadOp *);
-extern bool_t xdr_VMCODECArg(XDR *, VMCODECArg *);
-extern bool_t xdr_VMCODECDecodeOp(XDR *, VMCODECDecodeOp *);
-extern bool_t xdr_VMCODECEncodeOp(XDR *, VMCODECEncodeOp *);
-extern bool_t
+bool_t xdr_VMCODECCaps(XDR *, VMCODECCaps *);
+bool_t xdr_VMCODECContextId(XDR *, VMCODECContextId *);
+bool_t xdr_VMCODECContextAllocateDesc(XDR *, VMCODECContextAllocateDesc *);
+bool_t xdr_VMCODECContextAllocateStatus(XDR *, VMCODECContextAllocateStatus *);
+bool_t xdr_VMCODECSurfaceId(XDR *, VMCODECSurfaceId *);
+bool_t xdr_VMCODECSurfaceAllocateDesc(XDR *, VMCODECSurfaceAllocateDesc *);
+bool_t xdr_VMCODECImageUploadOp(XDR *, VMCODECImageUploadOp *);
+bool_t xdr_VMCODECImageDownloadOp(XDR *, VMCODECImageDownloadOp *);
+bool_t xdr_VMCODECArg(XDR *, VMCODECArg *);
+bool_t xdr_VMCODECDecodeOp(XDR *, VMCODECDecodeOp *);
+bool_t xdr_VMCODECEncodeOp(XDR *, VMCODECEncodeOp *);
+bool_t
 xdr_VMCODECContextAllocateReturnStatus(XDR *,
                                        VMCODECContextAllocateReturnStatus *);
 
 #else /* K&R C */
-extern bool_t xdr_VMCODECCaps();
-extern bool_t xdr_VMCODECContextId();
-extern bool_t xdr_VMCODECContextAllocateDesc();
-extern bool_t xdr_VMCODECContextAllocateStatus();
-extern bool_t xdr_VMCODECSurfaceId();
-extern bool_t xdr_VMCODECSurfaceAllocateDesc();
-extern bool_t xdr_VMCODECImageUploadOp();
-extern bool_t xdr_VMCODECImageDownloadOp();
-extern bool_t xdr_VMCODECArg();
-extern bool_t xdr_VMCODECDecodeOp();
-extern bool_t xdr_VMCODECEncodeOp();
-extern bool_t xdr_VMCODECContextAllocateReturnStatus();
+bool_t xdr_VMCODECCaps();
+bool_t xdr_VMCODECContextId();
+bool_t xdr_VMCODECContextAllocateDesc();
+bool_t xdr_VMCODECContextAllocateStatus();
+bool_t xdr_VMCODECSurfaceId();
+bool_t xdr_VMCODECSurfaceAllocateDesc();
+bool_t xdr_VMCODECImageUploadOp();
+bool_t xdr_VMCODECImageDownloadOp();
+bool_t xdr_VMCODECArg();
+bool_t xdr_VMCODECDecodeOp();
+bool_t xdr_VMCODECEncodeOp();
+bool_t xdr_VMCODECContextAllocateReturnStatus();
 
 #endif /* K&R C */
 

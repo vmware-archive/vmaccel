@@ -32,14 +32,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef _VMACCEL_RPC_H_RPCGEN
-#define _VMACCEL_RPC_H_RPCGEN
-
-#include <rpc/rpc.h>
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define _VMACCEL_RPC_H_RPCGEN
+
+#include <rpc/rpc.h>
 
 #include "vmaccel_defs.h"
 #define VMACCEL_MAX_NONCE_SIZE 4
@@ -558,200 +556,194 @@ typedef struct VMAccelComputeReturnStatus VMAccelComputeReturnStatus;
 
 #if defined(__STDC__) || defined(__cplusplus)
 #define VMACCEL_RESOURCEALLOC 1
-extern VMAccelResourceAllocateReturnStatus *
+VMAccelResourceAllocateReturnStatus *
 vmaccel_resourcealloc_1(VMAccelResourceDesc *, CLIENT *);
-extern VMAccelResourceAllocateReturnStatus *
+VMAccelResourceAllocateReturnStatus *
 vmaccel_resourcealloc_1_svc(VMAccelResourceDesc *, struct svc_req *);
 #define VMACCEL_RESOURCERELEASE 2
-extern VMAccelReturnStatus *vmaccel_resourcerelease_1(VMAccelId *, CLIENT *);
-extern VMAccelReturnStatus *vmaccel_resourcerelease_1_svc(VMAccelId *,
-                                                          struct svc_req *);
+VMAccelReturnStatus *vmaccel_resourcerelease_1(VMAccelId *, CLIENT *);
+VMAccelReturnStatus *vmaccel_resourcerelease_1_svc(VMAccelId *,
+                                                   struct svc_req *);
 #define VMACCEL_COMPUTE 3
-extern VMAccelComputeReturnStatus *vmaccel_compute_1(VMAccelComputeOp *,
-                                                     CLIENT *);
-extern VMAccelComputeReturnStatus *vmaccel_compute_1_svc(VMAccelComputeOp *,
-                                                         struct svc_req *);
-extern int vmaccel_1_freeresult(SVCXPRT *, xdrproc_t, caddr_t);
+VMAccelComputeReturnStatus *vmaccel_compute_1(VMAccelComputeOp *, CLIENT *);
+VMAccelComputeReturnStatus *vmaccel_compute_1_svc(VMAccelComputeOp *,
+                                                  struct svc_req *);
+int vmaccel_1_freeresult(SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
 #define VMACCEL_RESOURCEALLOC 1
-extern VMAccelResourceAllocateReturnStatus *vmaccel_resourcealloc_1();
-extern VMAccelResourceAllocateReturnStatus *vmaccel_resourcealloc_1_svc();
+VMAccelResourceAllocateReturnStatus *vmaccel_resourcealloc_1();
+VMAccelResourceAllocateReturnStatus *vmaccel_resourcealloc_1_svc();
 #define VMACCEL_RESOURCERELEASE 2
-extern VMAccelReturnStatus *vmaccel_resourcerelease_1();
-extern VMAccelReturnStatus *vmaccel_resourcerelease_1_svc();
+VMAccelReturnStatus *vmaccel_resourcerelease_1();
+VMAccelReturnStatus *vmaccel_resourcerelease_1_svc();
 #define VMACCEL_COMPUTE 3
-extern VMAccelComputeReturnStatus *vmaccel_compute_1();
-extern VMAccelComputeReturnStatus *vmaccel_compute_1_svc();
-extern int vmaccel_1_freeresult();
+VMAccelComputeReturnStatus *vmaccel_compute_1();
+VMAccelComputeReturnStatus *vmaccel_compute_1_svc();
+int vmaccel_1_freeresult();
 #endif /* K&R C */
 
 /* the xdr functions */
 
 #if defined(__STDC__) || defined(__cplusplus)
-extern bool_t xdr_VMAccelStatusCode(XDR *, VMAccelStatusCode *);
-extern bool_t xdr_VMAccelResourceType(XDR *, VMAccelResourceType *);
-extern bool_t xdr_VMAccelArchitectureType(XDR *, VMAccelArchitectureType *);
-extern bool_t xdr_VMAccelSelectionMask(XDR *, VMAccelSelectionMask *);
-extern bool_t xdr_VMAccelId(XDR *, VMAccelId *);
-extern bool_t xdr_VMAccelCaps(XDR *, VMAccelCaps *);
-extern bool_t xdr_VMAccelSurfaceType(XDR *, VMAccelSurfaceType *);
-extern bool_t xdr_VMAccelSurfaceUsage(XDR *, VMAccelSurfaceUsage *);
-extern bool_t xdr_VMAccelSurfaceMapFlags(XDR *, VMAccelSurfaceMapFlags *);
-extern bool_t
-xdr_VMAccelSurfaceReadConsistency(XDR *, VMAccelSurfaceReadConsistency *);
-extern bool_t
-xdr_VMAccelSurfaceWriteConsistency(XDR *, VMAccelSurfaceWriteConsistency *);
-extern bool_t xdr_VMAccelFormatCaps(XDR *, VMAccelFormatCaps *);
-extern bool_t xdr_VMAccelSurfaceBindFlags(XDR *, VMAccelSurfaceBindFlags *);
-extern bool_t xdr_VMAccelSurfaceFormat(XDR *, VMAccelSurfaceFormat *);
-extern bool_t xdr_VMAccelSurfaceFormatCaps(XDR *, VMAccelSurfaceFormatCaps *);
-extern bool_t xdr_VMAccelStatus(XDR *, VMAccelStatus *);
-extern bool_t xdr_VMAccelAddress(XDR *, VMAccelAddress *);
-extern bool_t xdr_VMAccelCallback(XDR *, VMAccelCallback *);
-extern bool_t xdr_VMAccelFormatDesc(XDR *, VMAccelFormatDesc *);
-extern bool_t xdr_VMAccelWorkloadDesc(XDR *, VMAccelWorkloadDesc *);
-extern bool_t xdr_VMAccelDesc(XDR *, VMAccelDesc *);
-extern bool_t xdr_VMAccelResourceDesc(XDR *, VMAccelResourceDesc *);
-extern bool_t xdr_VMAccelAllocateStatus(XDR *, VMAccelAllocateStatus *);
-extern bool_t xdr_VMAccelRegisterDesc(XDR *, VMAccelRegisterDesc *);
-extern bool_t
-xdr_VMAccelResourceAllocateStatus(XDR *, VMAccelResourceAllocateStatus *);
-extern bool_t
-xdr_VMAccelRegisterAllocationDesc(XDR *, VMAccelRegisterAllocationDesc *);
-extern bool_t xdr_VMAccelRegisterStatus(XDR *, VMAccelRegisterStatus *);
-extern bool_t xdr_VMAccelElementDouble4D(XDR *, VMAccelElementDouble4D *);
-extern bool_t xdr_VMAccelElementFloat4D(XDR *, VMAccelElementFloat4D *);
-extern bool_t xdr_VMAccelElementUINT4D(XDR *, VMAccelElementUINT4D *);
-extern bool_t xdr_VMAccelCoordinate2DUINT(XDR *, VMAccelCoordinate2DUINT *);
-extern bool_t xdr_VMAccelCoordinate3DUINT(XDR *, VMAccelCoordinate3DUINT *);
-extern bool_t xdr_VMAccelCoordinate4DUINT(XDR *, VMAccelCoordinate4DUINT *);
-extern bool_t xdr_VMAccelSurfaceDesc(XDR *, VMAccelSurfaceDesc *);
-extern bool_t xdr_VMAccelHandleType(XDR *, VMAccelHandleType *);
-extern bool_t xdr_VMAccelSurfaceId(XDR *, VMAccelSurfaceId *);
-extern bool_t xdr_VMAccelSurfaceAllocateStatus(XDR *,
-                                               VMAccelSurfaceAllocateStatus *);
-extern bool_t xdr_VMAccelSharedHandleStatus(XDR *, VMAccelSharedHandleStatus *);
-extern bool_t xdr_VMAccelQueueFlags(XDR *, VMAccelQueueFlags *);
-extern bool_t xdr_VMAccelQueueDesc(XDR *, VMAccelQueueDesc *);
-extern bool_t xdr_VMAccelQueueStatus(XDR *, VMAccelQueueStatus *);
-extern bool_t xdr_VMAccelEnqueuedStatusCode(XDR *, VMAccelEnqueuedStatusCode *);
-extern bool_t xdr_VMAccelEventType(XDR *, VMAccelEventType *);
-extern bool_t xdr_VMAccelEventId(XDR *, VMAccelEventId *);
-extern bool_t xdr_VMAccelEventDesc(XDR *, VMAccelEventDesc *);
-extern bool_t xdr_VMAccelEventStatus(XDR *, VMAccelEventStatus *);
-extern bool_t xdr_VMAccelFenceType(XDR *, VMAccelFenceType *);
-extern bool_t xdr_VMAccelFenceDesc(XDR *, VMAccelFenceDesc *);
-extern bool_t xdr_VMAccelFenceStatus(XDR *, VMAccelFenceStatus *);
-extern bool_t xdr_VMAccelSurfaceRegion(XDR *, VMAccelSurfaceRegion *);
-extern bool_t xdr_VMAccelSurfaceCopyOp(XDR *, VMAccelSurfaceCopyOp *);
-extern bool_t xdr_VMAccelImageFillOp(XDR *, VMAccelImageFillOp *);
-extern bool_t xdr_VMAccelImageTransferOp(XDR *, VMAccelImageTransferOp *);
-extern bool_t xdr_VMAccelDMAStatus(XDR *, VMAccelDMAStatus *);
-extern bool_t xdr_VMAccelDownloadStatus(XDR *, VMAccelDownloadStatus *);
-extern bool_t xdr_VMAccelSurfaceMapOp(XDR *, VMAccelSurfaceMapOp *);
-extern bool_t xdr_VMAccelSurfaceUnmapOp(XDR *, VMAccelSurfaceUnmapOp *);
-extern bool_t xdr_VMAccelSurfaceMapStatus(XDR *, VMAccelSurfaceMapStatus *);
-extern bool_t xdr_VMAccelComputeArgDesc(XDR *, VMAccelComputeArgDesc *);
-extern bool_t xdr_VMAccelComputeOp(XDR *, VMAccelComputeOp *);
-extern bool_t xdr_VMAccelComputeStatus(XDR *, VMAccelComputeStatus *);
-extern bool_t xdr_VMAccelReturnStatus(XDR *, VMAccelReturnStatus *);
-extern bool_t xdr_VMAccelAllocateReturnStatus(XDR *,
-                                              VMAccelAllocateReturnStatus *);
-extern bool_t
+bool_t xdr_VMAccelStatusCode(XDR *, VMAccelStatusCode *);
+bool_t xdr_VMAccelResourceType(XDR *, VMAccelResourceType *);
+bool_t xdr_VMAccelArchitectureType(XDR *, VMAccelArchitectureType *);
+bool_t xdr_VMAccelSelectionMask(XDR *, VMAccelSelectionMask *);
+bool_t xdr_VMAccelId(XDR *, VMAccelId *);
+bool_t xdr_VMAccelCaps(XDR *, VMAccelCaps *);
+bool_t xdr_VMAccelSurfaceType(XDR *, VMAccelSurfaceType *);
+bool_t xdr_VMAccelSurfaceUsage(XDR *, VMAccelSurfaceUsage *);
+bool_t xdr_VMAccelSurfaceMapFlags(XDR *, VMAccelSurfaceMapFlags *);
+bool_t xdr_VMAccelSurfaceReadConsistency(XDR *,
+                                         VMAccelSurfaceReadConsistency *);
+bool_t xdr_VMAccelSurfaceWriteConsistency(XDR *,
+                                          VMAccelSurfaceWriteConsistency *);
+bool_t xdr_VMAccelFormatCaps(XDR *, VMAccelFormatCaps *);
+bool_t xdr_VMAccelSurfaceBindFlags(XDR *, VMAccelSurfaceBindFlags *);
+bool_t xdr_VMAccelSurfaceFormat(XDR *, VMAccelSurfaceFormat *);
+bool_t xdr_VMAccelSurfaceFormatCaps(XDR *, VMAccelSurfaceFormatCaps *);
+bool_t xdr_VMAccelStatus(XDR *, VMAccelStatus *);
+bool_t xdr_VMAccelAddress(XDR *, VMAccelAddress *);
+bool_t xdr_VMAccelCallback(XDR *, VMAccelCallback *);
+bool_t xdr_VMAccelFormatDesc(XDR *, VMAccelFormatDesc *);
+bool_t xdr_VMAccelWorkloadDesc(XDR *, VMAccelWorkloadDesc *);
+bool_t xdr_VMAccelDesc(XDR *, VMAccelDesc *);
+bool_t xdr_VMAccelResourceDesc(XDR *, VMAccelResourceDesc *);
+bool_t xdr_VMAccelAllocateStatus(XDR *, VMAccelAllocateStatus *);
+bool_t xdr_VMAccelRegisterDesc(XDR *, VMAccelRegisterDesc *);
+bool_t xdr_VMAccelResourceAllocateStatus(XDR *,
+                                         VMAccelResourceAllocateStatus *);
+bool_t xdr_VMAccelRegisterAllocationDesc(XDR *,
+                                         VMAccelRegisterAllocationDesc *);
+bool_t xdr_VMAccelRegisterStatus(XDR *, VMAccelRegisterStatus *);
+bool_t xdr_VMAccelElementDouble4D(XDR *, VMAccelElementDouble4D *);
+bool_t xdr_VMAccelElementFloat4D(XDR *, VMAccelElementFloat4D *);
+bool_t xdr_VMAccelElementUINT4D(XDR *, VMAccelElementUINT4D *);
+bool_t xdr_VMAccelCoordinate2DUINT(XDR *, VMAccelCoordinate2DUINT *);
+bool_t xdr_VMAccelCoordinate3DUINT(XDR *, VMAccelCoordinate3DUINT *);
+bool_t xdr_VMAccelCoordinate4DUINT(XDR *, VMAccelCoordinate4DUINT *);
+bool_t xdr_VMAccelSurfaceDesc(XDR *, VMAccelSurfaceDesc *);
+bool_t xdr_VMAccelHandleType(XDR *, VMAccelHandleType *);
+bool_t xdr_VMAccelSurfaceId(XDR *, VMAccelSurfaceId *);
+bool_t xdr_VMAccelSurfaceAllocateStatus(XDR *, VMAccelSurfaceAllocateStatus *);
+bool_t xdr_VMAccelSharedHandleStatus(XDR *, VMAccelSharedHandleStatus *);
+bool_t xdr_VMAccelQueueFlags(XDR *, VMAccelQueueFlags *);
+bool_t xdr_VMAccelQueueDesc(XDR *, VMAccelQueueDesc *);
+bool_t xdr_VMAccelQueueStatus(XDR *, VMAccelQueueStatus *);
+bool_t xdr_VMAccelEnqueuedStatusCode(XDR *, VMAccelEnqueuedStatusCode *);
+bool_t xdr_VMAccelEventType(XDR *, VMAccelEventType *);
+bool_t xdr_VMAccelEventId(XDR *, VMAccelEventId *);
+bool_t xdr_VMAccelEventDesc(XDR *, VMAccelEventDesc *);
+bool_t xdr_VMAccelEventStatus(XDR *, VMAccelEventStatus *);
+bool_t xdr_VMAccelFenceType(XDR *, VMAccelFenceType *);
+bool_t xdr_VMAccelFenceDesc(XDR *, VMAccelFenceDesc *);
+bool_t xdr_VMAccelFenceStatus(XDR *, VMAccelFenceStatus *);
+bool_t xdr_VMAccelSurfaceRegion(XDR *, VMAccelSurfaceRegion *);
+bool_t xdr_VMAccelSurfaceCopyOp(XDR *, VMAccelSurfaceCopyOp *);
+bool_t xdr_VMAccelImageFillOp(XDR *, VMAccelImageFillOp *);
+bool_t xdr_VMAccelImageTransferOp(XDR *, VMAccelImageTransferOp *);
+bool_t xdr_VMAccelDMAStatus(XDR *, VMAccelDMAStatus *);
+bool_t xdr_VMAccelDownloadStatus(XDR *, VMAccelDownloadStatus *);
+bool_t xdr_VMAccelSurfaceMapOp(XDR *, VMAccelSurfaceMapOp *);
+bool_t xdr_VMAccelSurfaceUnmapOp(XDR *, VMAccelSurfaceUnmapOp *);
+bool_t xdr_VMAccelSurfaceMapStatus(XDR *, VMAccelSurfaceMapStatus *);
+bool_t xdr_VMAccelComputeArgDesc(XDR *, VMAccelComputeArgDesc *);
+bool_t xdr_VMAccelComputeOp(XDR *, VMAccelComputeOp *);
+bool_t xdr_VMAccelComputeStatus(XDR *, VMAccelComputeStatus *);
+bool_t xdr_VMAccelReturnStatus(XDR *, VMAccelReturnStatus *);
+bool_t xdr_VMAccelAllocateReturnStatus(XDR *, VMAccelAllocateReturnStatus *);
+bool_t
 xdr_VMAccelResourceAllocateReturnStatus(XDR *,
                                         VMAccelResourceAllocateReturnStatus *);
-extern bool_t xdr_VMAccelRegisterReturnStatus(XDR *,
-                                              VMAccelRegisterReturnStatus *);
-extern bool_t xdr_VMAccelQueueReturnStatus(XDR *, VMAccelQueueReturnStatus *);
-extern bool_t xdr_VMAccelEventReturnStatus(XDR *, VMAccelEventReturnStatus *);
-extern bool_t xdr_VMAccelFenceReturnStatus(XDR *, VMAccelFenceReturnStatus *);
-extern bool_t
+bool_t xdr_VMAccelRegisterReturnStatus(XDR *, VMAccelRegisterReturnStatus *);
+bool_t xdr_VMAccelQueueReturnStatus(XDR *, VMAccelQueueReturnStatus *);
+bool_t xdr_VMAccelEventReturnStatus(XDR *, VMAccelEventReturnStatus *);
+bool_t xdr_VMAccelFenceReturnStatus(XDR *, VMAccelFenceReturnStatus *);
+bool_t
 xdr_VMAccelSurfaceAllocateReturnStatus(XDR *,
                                        VMAccelSurfaceAllocateReturnStatus *);
-extern bool_t
-xdr_VMAccelSharedHandleReturnStatus(XDR *, VMAccelSharedHandleReturnStatus *);
-extern bool_t xdr_VMAccelDownloadReturnStatus(XDR *,
-                                              VMAccelDownloadReturnStatus *);
-extern bool_t
-xdr_VMAccelSurfaceMapReturnStatus(XDR *, VMAccelSurfaceMapReturnStatus *);
-extern bool_t xdr_VMAccelComputeReturnStatus(XDR *,
-                                             VMAccelComputeReturnStatus *);
+bool_t xdr_VMAccelSharedHandleReturnStatus(XDR *,
+                                           VMAccelSharedHandleReturnStatus *);
+bool_t xdr_VMAccelDownloadReturnStatus(XDR *, VMAccelDownloadReturnStatus *);
+bool_t xdr_VMAccelSurfaceMapReturnStatus(XDR *,
+                                         VMAccelSurfaceMapReturnStatus *);
+bool_t xdr_VMAccelComputeReturnStatus(XDR *, VMAccelComputeReturnStatus *);
 
 #else /* K&R C */
-extern bool_t xdr_VMAccelStatusCode();
-extern bool_t xdr_VMAccelResourceType();
-extern bool_t xdr_VMAccelArchitectureType();
-extern bool_t xdr_VMAccelSelectionMask();
-extern bool_t xdr_VMAccelId();
-extern bool_t xdr_VMAccelCaps();
-extern bool_t xdr_VMAccelSurfaceType();
-extern bool_t xdr_VMAccelSurfaceUsage();
-extern bool_t xdr_VMAccelSurfaceMapFlags();
-extern bool_t xdr_VMAccelSurfaceReadConsistency();
-extern bool_t xdr_VMAccelSurfaceWriteConsistency();
-extern bool_t xdr_VMAccelFormatCaps();
-extern bool_t xdr_VMAccelSurfaceBindFlags();
-extern bool_t xdr_VMAccelSurfaceFormat();
-extern bool_t xdr_VMAccelSurfaceFormatCaps();
-extern bool_t xdr_VMAccelStatus();
-extern bool_t xdr_VMAccelAddress();
-extern bool_t xdr_VMAccelCallback();
-extern bool_t xdr_VMAccelFormatDesc();
-extern bool_t xdr_VMAccelWorkloadDesc();
-extern bool_t xdr_VMAccelDesc();
-extern bool_t xdr_VMAccelResourceDesc();
-extern bool_t xdr_VMAccelAllocateStatus();
-extern bool_t xdr_VMAccelRegisterDesc();
-extern bool_t xdr_VMAccelResourceAllocateStatus();
-extern bool_t xdr_VMAccelRegisterAllocationDesc();
-extern bool_t xdr_VMAccelRegisterStatus();
-extern bool_t xdr_VMAccelElementDouble4D();
-extern bool_t xdr_VMAccelElementFloat4D();
-extern bool_t xdr_VMAccelElementUINT4D();
-extern bool_t xdr_VMAccelCoordinate2DUINT();
-extern bool_t xdr_VMAccelCoordinate3DUINT();
-extern bool_t xdr_VMAccelCoordinate4DUINT();
-extern bool_t xdr_VMAccelSurfaceDesc();
-extern bool_t xdr_VMAccelHandleType();
-extern bool_t xdr_VMAccelSurfaceId();
-extern bool_t xdr_VMAccelSurfaceAllocateStatus();
-extern bool_t xdr_VMAccelSharedHandleStatus();
-extern bool_t xdr_VMAccelQueueFlags();
-extern bool_t xdr_VMAccelQueueDesc();
-extern bool_t xdr_VMAccelQueueStatus();
-extern bool_t xdr_VMAccelEnqueuedStatusCode();
-extern bool_t xdr_VMAccelEventType();
-extern bool_t xdr_VMAccelEventId();
-extern bool_t xdr_VMAccelEventDesc();
-extern bool_t xdr_VMAccelEventStatus();
-extern bool_t xdr_VMAccelFenceType();
-extern bool_t xdr_VMAccelFenceDesc();
-extern bool_t xdr_VMAccelFenceStatus();
-extern bool_t xdr_VMAccelSurfaceRegion();
-extern bool_t xdr_VMAccelSurfaceCopyOp();
-extern bool_t xdr_VMAccelImageFillOp();
-extern bool_t xdr_VMAccelImageTransferOp();
-extern bool_t xdr_VMAccelDMAStatus();
-extern bool_t xdr_VMAccelDownloadStatus();
-extern bool_t xdr_VMAccelSurfaceMapOp();
-extern bool_t xdr_VMAccelSurfaceUnmapOp();
-extern bool_t xdr_VMAccelSurfaceMapStatus();
-extern bool_t xdr_VMAccelComputeArgDesc();
-extern bool_t xdr_VMAccelComputeOp();
-extern bool_t xdr_VMAccelComputeStatus();
-extern bool_t xdr_VMAccelReturnStatus();
-extern bool_t xdr_VMAccelAllocateReturnStatus();
-extern bool_t xdr_VMAccelResourceAllocateReturnStatus();
-extern bool_t xdr_VMAccelRegisterReturnStatus();
-extern bool_t xdr_VMAccelQueueReturnStatus();
-extern bool_t xdr_VMAccelEventReturnStatus();
-extern bool_t xdr_VMAccelFenceReturnStatus();
-extern bool_t xdr_VMAccelSurfaceAllocateReturnStatus();
-extern bool_t xdr_VMAccelSharedHandleReturnStatus();
-extern bool_t xdr_VMAccelDownloadReturnStatus();
-extern bool_t xdr_VMAccelSurfaceMapReturnStatus();
-extern bool_t xdr_VMAccelComputeReturnStatus();
+bool_t xdr_VMAccelStatusCode();
+bool_t xdr_VMAccelResourceType();
+bool_t xdr_VMAccelArchitectureType();
+bool_t xdr_VMAccelSelectionMask();
+bool_t xdr_VMAccelId();
+bool_t xdr_VMAccelCaps();
+bool_t xdr_VMAccelSurfaceType();
+bool_t xdr_VMAccelSurfaceUsage();
+bool_t xdr_VMAccelSurfaceMapFlags();
+bool_t xdr_VMAccelSurfaceReadConsistency();
+bool_t xdr_VMAccelSurfaceWriteConsistency();
+bool_t xdr_VMAccelFormatCaps();
+bool_t xdr_VMAccelSurfaceBindFlags();
+bool_t xdr_VMAccelSurfaceFormat();
+bool_t xdr_VMAccelSurfaceFormatCaps();
+bool_t xdr_VMAccelStatus();
+bool_t xdr_VMAccelAddress();
+bool_t xdr_VMAccelCallback();
+bool_t xdr_VMAccelFormatDesc();
+bool_t xdr_VMAccelWorkloadDesc();
+bool_t xdr_VMAccelDesc();
+bool_t xdr_VMAccelResourceDesc();
+bool_t xdr_VMAccelAllocateStatus();
+bool_t xdr_VMAccelRegisterDesc();
+bool_t xdr_VMAccelResourceAllocateStatus();
+bool_t xdr_VMAccelRegisterAllocationDesc();
+bool_t xdr_VMAccelRegisterStatus();
+bool_t xdr_VMAccelElementDouble4D();
+bool_t xdr_VMAccelElementFloat4D();
+bool_t xdr_VMAccelElementUINT4D();
+bool_t xdr_VMAccelCoordinate2DUINT();
+bool_t xdr_VMAccelCoordinate3DUINT();
+bool_t xdr_VMAccelCoordinate4DUINT();
+bool_t xdr_VMAccelSurfaceDesc();
+bool_t xdr_VMAccelHandleType();
+bool_t xdr_VMAccelSurfaceId();
+bool_t xdr_VMAccelSurfaceAllocateStatus();
+bool_t xdr_VMAccelSharedHandleStatus();
+bool_t xdr_VMAccelQueueFlags();
+bool_t xdr_VMAccelQueueDesc();
+bool_t xdr_VMAccelQueueStatus();
+bool_t xdr_VMAccelEnqueuedStatusCode();
+bool_t xdr_VMAccelEventType();
+bool_t xdr_VMAccelEventId();
+bool_t xdr_VMAccelEventDesc();
+bool_t xdr_VMAccelEventStatus();
+bool_t xdr_VMAccelFenceType();
+bool_t xdr_VMAccelFenceDesc();
+bool_t xdr_VMAccelFenceStatus();
+bool_t xdr_VMAccelSurfaceRegion();
+bool_t xdr_VMAccelSurfaceCopyOp();
+bool_t xdr_VMAccelImageFillOp();
+bool_t xdr_VMAccelImageTransferOp();
+bool_t xdr_VMAccelDMAStatus();
+bool_t xdr_VMAccelDownloadStatus();
+bool_t xdr_VMAccelSurfaceMapOp();
+bool_t xdr_VMAccelSurfaceUnmapOp();
+bool_t xdr_VMAccelSurfaceMapStatus();
+bool_t xdr_VMAccelComputeArgDesc();
+bool_t xdr_VMAccelComputeOp();
+bool_t xdr_VMAccelComputeStatus();
+bool_t xdr_VMAccelReturnStatus();
+bool_t xdr_VMAccelAllocateReturnStatus();
+bool_t xdr_VMAccelResourceAllocateReturnStatus();
+bool_t xdr_VMAccelRegisterReturnStatus();
+bool_t xdr_VMAccelQueueReturnStatus();
+bool_t xdr_VMAccelEventReturnStatus();
+bool_t xdr_VMAccelFenceReturnStatus();
+bool_t xdr_VMAccelSurfaceAllocateReturnStatus();
+bool_t xdr_VMAccelSharedHandleReturnStatus();
+bool_t xdr_VMAccelDownloadReturnStatus();
+bool_t xdr_VMAccelSurfaceMapReturnStatus();
+bool_t xdr_VMAccelComputeReturnStatus();
 
 #endif /* K&R C */
 

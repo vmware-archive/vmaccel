@@ -27,6 +27,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #ifndef _VMACCEL_UTILS_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define _VMACCEL_UTILS_H_ 1
 
 #include <stdbool.h>
@@ -65,28 +68,23 @@ typedef struct IdentifierDB {
    unsigned int *bits;
 } IdentifierDB;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+IdentifierDB *IdentifierDB_Alloc(unsigned int size);
+unsigned int IdentifierDB_Count(IdentifierDB *db);
+unsigned int IdentifierDB_Size(IdentifierDB *db);
+void IdentifierDB_Free(IdentifierDB *db);
+bool IdentifierDB_AcquireId(IdentifierDB *db, unsigned int id);
+bool IdentifierDB_AcquireIdRange(IdentifierDB *db, unsigned int start,
+                                 unsigned int end);
+bool IdentifierDB_ActiveId(IdentifierDB *db, unsigned int id);
+bool IdentifierDB_AllocId(IdentifierDB *db, unsigned int *id);
+void IdentifierDB_ReleaseId(IdentifierDB *db, unsigned int id);
+bool IdentifierDB_ReleaseIdRange(IdentifierDB *db, unsigned int start,
+                                 unsigned int end);
+void IdentifierDB_Log(IdentifierDB *db, const char *prefix);
 
-extern IdentifierDB *IdentifierDB_Alloc(unsigned int size);
-extern unsigned int IdentifierDB_Count(IdentifierDB *db);
-extern unsigned int IdentifierDB_Size(IdentifierDB *db);
-extern void IdentifierDB_Free(IdentifierDB *db);
-extern bool IdentifierDB_AcquireId(IdentifierDB *db, unsigned int id);
-extern bool IdentifierDB_AcquireIdRange(IdentifierDB *db, unsigned int start,
-                                        unsigned int end);
-extern bool IdentifierDB_ActiveId(IdentifierDB *db, unsigned int id);
-extern bool IdentifierDB_AllocId(IdentifierDB *db, unsigned int *id);
-extern void IdentifierDB_ReleaseId(IdentifierDB *db, unsigned int id);
-extern bool IdentifierDB_ReleaseIdRange(IdentifierDB *db, unsigned int start,
-                                        unsigned int end);
-extern void IdentifierDB_Log(IdentifierDB *db, const char *prefix);
-
-extern bool VMAccel_AddressOpaqueAddrToString(const VMAccelAddress *addr,
-                                              char *out, int len);
-extern bool VMAccel_AddressStringToOpaqueAddr(const char *addr, char *out,
-                                              int len);
+bool VMAccel_AddressOpaqueAddrToString(const VMAccelAddress *addr, char *out,
+                                       int len);
+bool VMAccel_AddressStringToOpaqueAddr(const char *addr, char *out, int len);
 
 #ifdef __cplusplus
 }

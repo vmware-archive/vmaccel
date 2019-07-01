@@ -27,13 +27,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #ifndef _VMCL_CALLBACK_RPC_H_RPCGEN
-#define _VMCL_CALLBACK_RPC_H_RPCGEN
-
-#include <rpc/rpc.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define _VMCL_CALLBACK_RPC_H_RPCGEN
+
+#include <rpc/rpc.h>
 
 #include "vmcl_rpc.h"
 

@@ -27,11 +27,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #ifndef _VMWFFMPEG_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define _VMWFFMPEG_H_
 
 #include "vmcodec_rpc.h"
 #include "vmcodec_ops.h"
 
-extern VMCODECOps vmwffmpegOps;
+VMCODECOps vmwffmpegOps;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !_VMWFFMPEG_H_ */

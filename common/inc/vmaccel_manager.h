@@ -27,13 +27,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #if !defined(_VMACCEL_MANAGER_H_)
-#define _VMACCEL_MANAGER_H_
-
-#include <stdbool.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define _VMACCEL_MANAGER_H_
+
+#include <stdbool.h>
 
 unsigned int vmaccel_manager_poweron();
 unsigned int vmaccel_manager_poweroff();

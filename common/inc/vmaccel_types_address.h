@@ -27,6 +27,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #ifndef _VMACCEL_TYPES_ADDRESS_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define _VMACCEL_TYPES_ADDRESS_H_ 1
 
 #include <assert.h>
@@ -34,10 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <arpa/inet.h>
 
 #include "log_level.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #if DEBUG_ACCEL_ADDRESS
 inline void Log_VMAccelAddress(const char *prefix, const VMAccelAddress *addr) {

@@ -27,13 +27,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #ifndef _VMXC_H_RPCGEN
-#define _VMXC_H_RPCGEN
-
-#include <rpc/rpc.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define _VMXC_H_RPCGEN
+
+#include <rpc/rpc.h>
 
 #include "vmaccel_rpc.h"
 #include "vmcl_rpc.h"
@@ -106,41 +105,40 @@ typedef struct VMXCReturnStatus VMXCReturnStatus;
 
 #if defined(__STDC__) || defined(__cplusplus)
 #define VMXC_XCODE 1
-extern VMXCReturnStatus *vmxc_xcode_1(VMXCodeOp *, CLIENT *);
-extern VMXCReturnStatus *vmxc_xcode_1_svc(VMXCodeOp *, struct svc_req *);
+VMXCReturnStatus *vmxc_xcode_1(VMXCodeOp *, CLIENT *);
+VMXCReturnStatus *vmxc_xcode_1_svc(VMXCodeOp *, struct svc_req *);
 #define VMXC_VALIDATE 2
-extern VMXCReturnStatus *vmxc_validate_1(VMXCKernelDesc *, CLIENT *);
-extern VMXCReturnStatus *vmxc_validate_1_svc(VMXCKernelDesc *,
-                                             struct svc_req *);
-extern int vmxc_1_freeresult(SVCXPRT *, xdrproc_t, caddr_t);
+VMXCReturnStatus *vmxc_validate_1(VMXCKernelDesc *, CLIENT *);
+VMXCReturnStatus *vmxc_validate_1_svc(VMXCKernelDesc *, struct svc_req *);
+int vmxc_1_freeresult(SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
 #define VMXC_XCODE 1
-extern VMXCReturnStatus *vmxc_xcode_1();
-extern VMXCReturnStatus *vmxc_xcode_1_svc();
+VMXCReturnStatus *vmxc_xcode_1();
+VMXCReturnStatus *vmxc_xcode_1_svc();
 #define VMXC_VALIDATE 2
-extern VMXCReturnStatus *vmxc_validate_1();
-extern VMXCReturnStatus *vmxc_validate_1_svc();
-extern int vmxc_1_freeresult();
+VMXCReturnStatus *vmxc_validate_1();
+VMXCReturnStatus *vmxc_validate_1_svc();
+int vmxc_1_freeresult();
 #endif /* K&R C */
 
 /* the xdr functions */
 
 #if defined(__STDC__) || defined(__cplusplus)
-extern bool_t xdr_VMXCStatusCodeEnum(XDR *, VMXCStatusCodeEnum *);
-extern bool_t xdr_VMXCKernelArgDesc(XDR *, VMXCKernelArgDesc *);
-extern bool_t xdr_VMXCKernelDesc(XDR *, VMXCKernelDesc *);
-extern bool_t xdr_VMXCodeOp(XDR *, VMXCodeOp *);
-extern bool_t xdr_VMXCStatus(XDR *, VMXCStatus *);
-extern bool_t xdr_VMXCReturnStatus(XDR *, VMXCReturnStatus *);
+bool_t xdr_VMXCStatusCodeEnum(XDR *, VMXCStatusCodeEnum *);
+bool_t xdr_VMXCKernelArgDesc(XDR *, VMXCKernelArgDesc *);
+bool_t xdr_VMXCKernelDesc(XDR *, VMXCKernelDesc *);
+bool_t xdr_VMXCodeOp(XDR *, VMXCodeOp *);
+bool_t xdr_VMXCStatus(XDR *, VMXCStatus *);
+bool_t xdr_VMXCReturnStatus(XDR *, VMXCReturnStatus *);
 
 #else /* K&R C */
-extern bool_t xdr_VMXCStatusCodeEnum();
-extern bool_t xdr_VMXCKernelArgDesc();
-extern bool_t xdr_VMXCKernelDesc();
-extern bool_t xdr_VMXCodeOp();
-extern bool_t xdr_VMXCStatus();
-extern bool_t xdr_VMXCReturnStatus();
+bool_t xdr_VMXCStatusCodeEnum();
+bool_t xdr_VMXCKernelArgDesc();
+bool_t xdr_VMXCKernelDesc();
+bool_t xdr_VMXCodeOp();
+bool_t xdr_VMXCStatus();
+bool_t xdr_VMXCReturnStatus();
 
 #endif /* K&R C */
 

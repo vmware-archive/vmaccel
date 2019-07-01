@@ -32,13 +32,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef _VMACCEL_MGR_H_RPCGEN
-#define _VMACCEL_MGR_H_RPCGEN
-
-#include <rpc/rpc.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define _VMACCEL_MGR_H_RPCGEN
+
+#include <rpc/rpc.h>
 
 #include "vmaccel_defs.h"
 #include "vmaccel_rpc.h"
@@ -48,38 +47,36 @@ extern "C" {
 
 #if defined(__STDC__) || defined(__cplusplus)
 #define VMACCELMGR_REGISTER 1
-extern VMAccelAllocateReturnStatus *vmaccelmgr_register_1(VMAccelRegisterDesc *,
-                                                          CLIENT *);
-extern VMAccelAllocateReturnStatus *
-vmaccelmgr_register_1_svc(VMAccelRegisterDesc *, struct svc_req *);
+VMAccelAllocateReturnStatus *vmaccelmgr_register_1(VMAccelRegisterDesc *,
+                                                   CLIENT *);
+VMAccelAllocateReturnStatus *vmaccelmgr_register_1_svc(VMAccelRegisterDesc *,
+                                                       struct svc_req *);
 #define VMACCELMGR_UNREGISTER 2
-extern VMAccelReturnStatus *vmaccelmgr_unregister_1(VMAccelId *, CLIENT *);
-extern VMAccelReturnStatus *vmaccelmgr_unregister_1_svc(VMAccelId *,
-                                                        struct svc_req *);
+VMAccelReturnStatus *vmaccelmgr_unregister_1(VMAccelId *, CLIENT *);
+VMAccelReturnStatus *vmaccelmgr_unregister_1_svc(VMAccelId *, struct svc_req *);
 #define VMACCELMGR_ALLOC 3
-extern VMAccelAllocateReturnStatus *vmaccelmgr_alloc_1(VMAccelDesc *, CLIENT *);
-extern VMAccelAllocateReturnStatus *vmaccelmgr_alloc_1_svc(VMAccelDesc *,
-                                                           struct svc_req *);
+VMAccelAllocateReturnStatus *vmaccelmgr_alloc_1(VMAccelDesc *, CLIENT *);
+VMAccelAllocateReturnStatus *vmaccelmgr_alloc_1_svc(VMAccelDesc *,
+                                                    struct svc_req *);
 #define VMACCELMGR_FREE 4
-extern VMAccelReturnStatus *vmaccelmgr_free_1(VMAccelId *, CLIENT *);
-extern VMAccelReturnStatus *vmaccelmgr_free_1_svc(VMAccelId *,
-                                                  struct svc_req *);
-extern int vmaccelmgr_1_freeresult(SVCXPRT *, xdrproc_t, caddr_t);
+VMAccelReturnStatus *vmaccelmgr_free_1(VMAccelId *, CLIENT *);
+VMAccelReturnStatus *vmaccelmgr_free_1_svc(VMAccelId *, struct svc_req *);
+int vmaccelmgr_1_freeresult(SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
 #define VMACCELMGR_REGISTER 1
-extern VMAccelAllocateReturnStatus *vmaccelmgr_register_1();
-extern VMAccelAllocateReturnStatus *vmaccelmgr_register_1_svc();
+VMAccelAllocateReturnStatus *vmaccelmgr_register_1();
+VMAccelAllocateReturnStatus *vmaccelmgr_register_1_svc();
 #define VMACCELMGR_UNREGISTER 2
-extern VMAccelReturnStatus *vmaccelmgr_unregister_1();
-extern VMAccelReturnStatus *vmaccelmgr_unregister_1_svc();
+VMAccelReturnStatus *vmaccelmgr_unregister_1();
+VMAccelReturnStatus *vmaccelmgr_unregister_1_svc();
 #define VMACCELMGR_ALLOC 3
-extern VMAccelAllocateReturnStatus *vmaccelmgr_alloc_1();
-extern VMAccelAllocateReturnStatus *vmaccelmgr_alloc_1_svc();
+VMAccelAllocateReturnStatus *vmaccelmgr_alloc_1();
+VMAccelAllocateReturnStatus *vmaccelmgr_alloc_1_svc();
 #define VMACCELMGR_FREE 4
-extern VMAccelReturnStatus *vmaccelmgr_free_1();
-extern VMAccelReturnStatus *vmaccelmgr_free_1_svc();
-extern int vmaccelmgr_1_freeresult();
+VMAccelReturnStatus *vmaccelmgr_free_1();
+VMAccelReturnStatus *vmaccelmgr_free_1_svc();
+int vmaccelmgr_1_freeresult();
 #endif /* K&R C */
 
 #ifdef __cplusplus
