@@ -27,9 +27,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #ifndef _VMACCEL_MGR_UTILS_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
 #define _VMACCEL_MGR_UTILS_H_
 
 #include "vmaccel_utils.h"
@@ -151,9 +148,5 @@ static void vmaccelmgr_unregister(VMAccelMgrClient *mgrClient) {
    free(mgrClient->host);
    mgrClient->host = NULL;
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* !_VMACCEL_MGR_UTILS_H_ */

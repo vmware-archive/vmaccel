@@ -27,9 +27,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #ifndef _VMCL_OPS_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
 #define _VMCL_OPS_H_
 
 /*
@@ -91,9 +88,5 @@ typedef struct VMCLOps {
 
 VMAccelAllocateStatus *vmcl_poweron_svc(VMCLOps *ops);
 VMAccelStatus *vmcl_poweroff_svc();
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* !defined _VMCL_OPS_H_ */

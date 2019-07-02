@@ -27,9 +27,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #ifndef _VMACCEL_UTILS_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
 #define _VMACCEL_UTILS_H_ 1
 
 #include <stdbool.h>
@@ -85,9 +82,5 @@ void IdentifierDB_Log(IdentifierDB *db, const char *prefix);
 bool VMAccel_AddressOpaqueAddrToString(const VMAccelAddress *addr, char *out,
                                        int len);
 bool VMAccel_AddressStringToOpaqueAddr(const char *addr, char *out, int len);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* _VMACCEL_UTILS_H_ */

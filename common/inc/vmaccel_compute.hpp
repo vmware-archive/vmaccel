@@ -42,9 +42,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _VMACCEL_COMPUTE_HPP_ 1
 
 #include "vmaccel.hpp"
+
+extern "C" {
 #include "vmaccel_defs.h"
 #include "vmcl_defs.h"
 #include "vmcl_rpc.h"
+}
+
 #include <cassert>
 #include <map>
 #include <string>

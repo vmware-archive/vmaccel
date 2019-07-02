@@ -32,9 +32,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef _VMCODEC_RPC_H_RPCGEN
-#ifdef __cplusplus
-extern "C" {
-#endif
 #define _VMCODEC_RPC_H_RPCGEN
 
 #include <rpc/rpc.h>
@@ -223,9 +220,5 @@ bool_t xdr_VMCODECEncodeOp();
 bool_t xdr_VMCODECContextAllocateReturnStatus();
 
 #endif /* K&R C */
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* !_VMCODEC_RPC_H_RPCGEN */

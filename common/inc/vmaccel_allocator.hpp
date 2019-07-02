@@ -49,9 +49,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _VMACCEL_ALLOCATOR_HPP_
 #define _VMACCEL_ALLOCATOR_HPP_ 1
 
+extern "C" {
 #include "vmaccel_rpc.h"
 #include "vmaccel_manager.h"
 #include "vmaccel_utils.h"
+}
+
 #include <algorithm>
 #include <cassert>
 #include <queue>

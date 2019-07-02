@@ -27,9 +27,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #ifndef _VMCL_CALLBACK_RPC_H_RPCGEN
-#ifdef __cplusplus
-extern "C" {
-#endif
 #define _VMCL_CALLBACK_RPC_H_RPCGEN
 
 #include <rpc/rpc.h>
@@ -74,9 +71,5 @@ extern bool_t xdr_VMCLCallbackOp(XDR *, VMCLCallbackOp *);
 extern bool_t xdr_VMCLCallbackOp();
 
 #endif /* K&R C */
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* !_VMCL_CALLBACK_RPC_H_RPCGEN */

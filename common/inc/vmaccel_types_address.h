@@ -27,9 +27,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #ifndef _VMACCEL_TYPES_ADDRESS_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
 #define _VMACCEL_TYPES_ADDRESS_H_ 1
 
 #include <assert.h>
@@ -49,10 +46,6 @@ inline void Log_VMAccelAddress(const char *prefix, const VMAccelAddress *addr) {
    }
    Log("%s port=%u\n", prefix, addr->port);
    Log("%s resourceTypeMask=%u\n", prefix, addr->resourceTypeMask);
-}
-#endif
-
-#ifdef __cplusplus
 }
 #endif
 

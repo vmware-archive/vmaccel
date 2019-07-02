@@ -27,9 +27,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #ifndef _VMACCEL_OPS_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
 #define _VMACCEL_OPS_H_
 
 /*
@@ -43,9 +40,5 @@ typedef struct VMAccelOps {
    VMAccelStatus *(*checkpoint)(void);
    VMAccelStatus *(*restore)(void);
 } VMAccelOps;
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* !defined _VMACCEL_OPS_H_ */

@@ -26,13 +26,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ******************************************************************************/
 
+extern "C" {
 #include <assert.h>
-#include <iostream>
 #include <stdbool.h>
-#include <string>
 
 #include "vmaccel_rpc.h"
 #include "vmaccel_utils.h"
+}
+
+#include <iostream>
+#include <string>
 
 #include "log_level.h"
 
