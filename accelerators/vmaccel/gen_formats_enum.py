@@ -3,7 +3,7 @@
 """
 *******************************************************************************
 
-Copyright (c) 2016-2019 VMware, Inc.
+Copyright (c) 2016-2020 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -49,15 +49,15 @@ import sys
 if __name__ == "__main__":
    startTime = datetime.now()
 
-   print "*********************************************************************************"
-   print "Generating formats enumerants CSV"
-   print ""
-   print "os.name = %s" % (os.name)
-   print "platform.system() = %s" % (platform.system())
-   print "sys.platform = %s" % (sys.platform)
-   print ""
-   print "Time = %s" % (startTime)
-   print "********************************************************************************"
+   print("*********************************************************************************")
+   print("Generating formats enumerants CSV")
+   print("")
+   print("os.name = %s" % (os.name))
+   print("platform.system() = %s" % (platform.system()))
+   print("sys.platform = %s" % (sys.platform))
+   print("")
+   print("Time = %s" % (startTime))
+   print("********************************************************************************")
 
    #
    # Handle command line options for the parser
@@ -76,26 +76,26 @@ if __name__ == "__main__":
    # Check for the required json argument file
    #
    if options.INPUT_JSON is None or options.INPUT_JSON == "":
-      print "ERROR: You must supply a JSON argument file, i.e. \"gen_formats_enum.py -i formats.json\""
+      print("ERROR: You must supply a JSON argument file, i.e. \"gen_formats_enum.py -i formats.json\"")
       sys.exit(1)
 
    if options.OUTPUT_CSV is None or options.OUTPUT_CSV == "":
-      print "ERROR: You must supply an output CSV file, i.e. \"gen_formats_enum.py -o enums.h\""
+      print("ERROR: You must supply an output CSV file, i.e. \"gen_formats_enum.py -o enums.h\"")
       sys.exit(1)
 
-   print "JSON input: %s" % (options.INPUT_JSON)
-   print "CSV output: %s" % (options.OUTPUT_CSV)
+   print("JSON input: %s" % (options.INPUT_JSON))
+   print("CSV output: %s" % (options.OUTPUT_CSV))
 
    try:
       formats = json.load(open(options.INPUT_JSON, 'r'))
    except Exception as e:
-      print "Unable to load JSON file %s" % (options.INPUT_JSON)
+      print("Unable to load JSON file %s" % (options.INPUT_JSON))
       sys.exit(1)
 
    try:
       f = open(options.OUTPUT_CSV, 'w')
    except Exception as e:
-      print "Unable to open output CSV file %s" % (options.OUTPUT_CSV)
+      print("Unable to open output CSV file %s" % (options.OUTPUT_CSV))
       sys.exit(1)
 
    numFormats = 0
@@ -127,13 +127,13 @@ if __name__ == "__main__":
 
    endTime = datetime.now()
 
-   print "********************************************************************************"
-   print "numFormats = %s" % (str(numFormats))
-   print ""
-   print "Start Time: %s" % (str(startTime))
-   print "End Time  : %s" % (str(endTime))
-   print "Elapsed   : %s" % (str(endTime - startTime))
-   print ""
-   print "Exiting gen_formats_enum.py..."
-   print "********************************************************************************"
+   print("********************************************************************************")
+   print("numFormats = %s" % (str(numFormats)))
+   print("")
+   print("Start Time: %s" % (str(startTime)))
+   print("End Time  : %s" % (str(endTime)))
+   print("Elapsed   : %s" % (str(endTime - startTime)))
+   print("")
+   print("Exiting gen_formats_enum.py...")
+   print("********************************************************************************")
    sys.exit(0)

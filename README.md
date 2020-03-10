@@ -20,6 +20,7 @@ server as possible.
 ### Prerequisites
 
 * cmake 3.4.3 or newer
+* python 3.7.4 or newer
 * MacOSX
   * macOS 10.13.4 or newer (note: OpenCL is deprecated as of 10.14)
   * XCode Version 9.3 or newer (w/command line tools)
