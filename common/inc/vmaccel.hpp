@@ -312,8 +312,7 @@ public:
       char host[256];
       if (VMAccel_AddressOpaqueAddrToString(mgr.get_accel_addr(), host,
                                             sizeof(host))) {
-         VMACCEL_LOG("%s: Connecting to Accelerator manager %s\n", __FUNCTION__,
-                     host);
+         VMACCEL_LOG("vmaccel: Connecting to Accelerator manager %s\n", host);
          mgrClnt = clnt_create(host, VMACCELMGR, VMACCELMGR_VERSION, "tcp");
          if (mgrClnt != NULL) {
             /*
@@ -331,7 +330,6 @@ public:
                VMACCEL_WARNING("vmaccel: Unable to set timeout..\n");
             }
          }
-         VMACCEL_LOG("%s: mgrClient = %p\n", __FUNCTION__, mgrClnt);
       }
       refObjectDB = IdentifierDB_Alloc(accelMaxRefObjects);
       if (refObjectDB == NULL) {
