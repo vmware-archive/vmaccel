@@ -42,11 +42,14 @@ const char *matrixAdd2DKernel =
    "   int j = get_global_id(1);\n"
    "   int m = dims[0];\n"
    "   int n = dims[1];\n"
-   "   int k;\n"
-   "   int l = dims[2];\n"
-   "   for (k = 0; k < l; k++) {\n"
-   "      b[n * l * i + l * j + k] +=\n"
-   "         a[n * l * i + l * j + k];\n"
+   "   int k, l;\n"
+   "   int chunkSize = dims[2];\n"
+   "   int numPasses = dims[3];\n"
+   "   for (l = 0; l < numPasses; l++) {\n"
+   "      for (k = 0; k < chunkSize; k++) {\n"
+   "         b[n * chunkSize * i + chunkSize * j + k] +=\n"
+   "            a[n * chunkSize * i + chunkSize * j + k];\n"
+   "      }\n"
    "   }\n"
    "}\n";
 
@@ -59,11 +62,14 @@ const char *matrixCopy2DKernel =
    "   int j = get_global_id(1);\n"
    "   int m = dims[0];\n"
    "   int n = dims[1];\n"
-   "   int k;\n"
-   "   int l = dims[2];\n"
-   "   for (k = 0; k < l; k++) {\n"
-   "      b[n * l * i + l * j + k] =\n"
-   "         a[n * l * i + l * j + k];\n"
+   "   int k, l;\n"
+   "   int chunkSize = dims[2];\n"
+   "   int numPasses = dims[3];\n"
+   "   for (l = 0; l < numPasses; l++) {\n"
+   "      for (k = 0; k < chunkSize; k++) {\n"
+   "         b[n * chunkSize * i + chunkSize * j + k] =\n"
+   "            a[n * chunkSize * i + chunkSize * j + k];\n"
+   "      }\n"
    "   }\n"
    "}\n";
 
@@ -76,11 +82,14 @@ const char *matrixAddTranspose2DKernel =
    "   int j = get_global_id(1);\n"
    "   int m = dims[0];\n"
    "   int n = dims[1];\n"
-   "   int k;\n"
-   "   int l = dims[2];\n"
-   "   for (k = 0; k < l; k++) {\n"
-   "      b[n * l * j + l * i + k] +=\n"
-   "         a[n * l * i + l * j + k];\n"
+   "   int k, l;\n"
+   "   int chunkSize = dims[2];\n"
+   "   int numPasses = dims[3];\n"
+   "   for (l = 0; l < numPasses; l++) {\n"
+   "      for (k = 0; k < chunkSize; k++) {\n"
+   "         b[n * chunkSize * j + chunkSize * i + k] +=\n"
+   "            a[n * chunkSize * i + chunkSize * j + k];\n"
+   "      }\n"
    "   }\n"
    "}\n";
 
@@ -93,12 +102,15 @@ const char *matrixAdd2DSemaphore1UKernel =
    "   int j = get_global_id(1);\n"
    "   int m = dims[0];\n"
    "   int n = dims[1];\n"
-   "   int k;\n"
-   "   int l = dims[2];\n"
+   "   int k, l;\n"
+   "   int chunkSize = dims[2];\n"
+   "   int numPasses = dims[3];\n"
    "   while (semaphores[0] == 0);\n"
-   "   for (k = 0; k < l; k++) {\n"
-   "      b[n * l * i + l * j + k] +=\n"
-   "         a[n * l * i + l * j + k];\n"
+   "   for (l = 0; l < numPasses; l++) {\n"
+   "      for (k = 0; k < chunkSize; k++) {\n"
+   "         b[n * chunkSize * i + chunkSize * j + k] +=\n"
+   "            a[n * chunkSize * i + chunkSize * j + k];\n"
+   "      }\n"
    "   }\n"
    "}\n";
 
@@ -111,12 +123,15 @@ const char *matrixAdd2DSemaphoreNUKernel =
    "   int j = get_global_id(1);\n"
    "   int m = dims[0];\n"
    "   int n = dims[1];\n"
-   "   int k;\n"
-   "   int l = dims[2];\n"
+   "   int k, l;\n"
+   "   int chunkSize = dims[2];\n"
+   "   int numPasses = dims[3];\n"
    "   while (semaphores[n * i + j] == 0);\n"
-   "   for (k = 0; k < l; k++) {\n"
-   "      b[n * l * i + l * j + k] +=\n"
-   "         a[n * l * i + l * j + k];\n"
+   "   for (l = 0; l < numPasses; l++) {\n"
+   "      for (k = 0; k < chunkSize; k++) {\n"
+   "         b[n * chunkSize * i + chunkSize * j + k] +=\n"
+   "            a[n * chunkSize * i + chunkSize * j + k];\n"
+   "      }\n"
    "   }\n"
    "}\n";
 
@@ -129,13 +144,16 @@ const char *matrixAdd2DExecChainNUKernel =
    "   int j = get_global_id(1);\n"
    "   int m = dims[0];\n"
    "   int n = dims[1];\n"
-   "   int k;\n"
-   "   int l = dims[2];\n"
+   "   int k, l;\n"
+   "   int chunkSize = dims[2];\n"
+   "   int numPasses = dims[3];\n"
    "   while (semaphores[n * i + j] == 0);\n"
    "   semaphores[n * i + j + 1] = 1;\n"
-   "   for (k = 0; k < l; k++) {\n"
-   "      b[n * l * i + l * j + k] +=\n"
-   "         a[n * l * i + l * j + k];\n"
+   "   for (l = 0; l < numPasses; l++) {\n"
+   "      for (k = 0; k < chunkSize; k++) {\n"
+   "         b[n * chunkSize * i + chunkSize * j + k] +=\n"
+   "            a[n * chunkSize * i + chunkSize * j + k];\n"
+   "      }\n"
    "   }\n"
    "}\n";
 
@@ -201,9 +219,9 @@ struct timespec DiffTime(struct timespec *start, struct timespec *end) {
  */
 int ParseCommandArguments(int argc, char **argv, std::string &host,
                           int *pNumRows, int *pNumColumns, int *pChunkSize,
-                          int *pNumIterations, int *pMemoryPoolA,
-                          int *pMemoryPoolB, int *pMemoryPoolS,
-                          int *pKernelFunc) {
+                          int *pNumPasses, int *pNumIterations,
+                          int *pMemoryPoolA, int *pMemoryPoolB,
+                          int *pMemoryPoolS, int *pKernelFunc) {
    int i = 1;
 
    while (i < argc) {
@@ -222,11 +240,17 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
          }
          *pNumColumns = atoi(argv[i + 1]);
          i += 2;
-      } else if (strcmp("-l", argv[i]) == 0) {
+      } else if (strcmp("-k", argv[i]) == 0) {
          if (i + 1 == argc) {
             return 1;
          }
          *pChunkSize = atoi(argv[i + 1]);
+         i += 2;
+      } else if (strcmp("-l", argv[i]) == 0) {
+         if (i + 1 == argc) {
+            return 1;
+         }
+         *pNumPasses = atoi(argv[i + 1]);
          i += 2;
       } else if (strcmp("-i", argv[i]) == 0) {
          if (i + 1 == argc) {
@@ -273,23 +297,27 @@ int main(int argc, char **argv) {
    std::string host = "127.0.0.1";
    int numRows = 8192;
    int numColumns = 1;
+   int chunkSize = 4096;
+   int numPasses = 128;
    int numIterations = 100;
    int memoryPoolA = VMACCEL_SURFACE_POOL_AUTO;
    int memoryPoolB = VMACCEL_SURFACE_POOL_AUTO;
    int memoryPoolS = VMACCEL_SURFACE_POOL_AUTO;
    int kernelFunc = MATRIX_ADD_2D;
-   int chunkSize = 4096;
 
    if (ParseCommandArguments(argc, argv, host, &numRows, &numColumns,
-                             &chunkSize, &numIterations, &memoryPoolA,
-                             &memoryPoolB, &memoryPoolS, &kernelFunc)) {
+                             &chunkSize, &numPasses, &numIterations,
+                             &memoryPoolA, &memoryPoolB, &memoryPoolS,
+                             &kernelFunc)) {
       return 1;
    }
 
-   VMACCEL_LOG("VMCL memory benchmark\n");
+   VMACCEL_LOG("\n");
+   VMACCEL_LOG("== VMCL Memory Benchmark ==\n");
    VMACCEL_LOG("  Kernel Function:             %d\n", kernelFunc);
    VMACCEL_LOG("  Rows, Columns, Chunk Size:   %d, %d, %d\n", numRows,
                numColumns, chunkSize);
+   VMACCEL_LOG("  Number of Kernel Passes:     %d\n", numPasses);
    VMACCEL_LOG("  Source Memory Pool:          %d\n", memoryPoolA);
    VMACCEL_LOG("  Destination Memory Pool:     %d\n", memoryPoolB);
    VMACCEL_LOG("  Semaphore Memory Pool:       %d\n", memoryPoolS);
@@ -317,12 +345,13 @@ int main(int argc, char **argv) {
    ref_object<int> memS(new int[numRows * numColumns],
                         sizeof(int) * (numRows * numColumns + 1),
                         VMACCEL_SURFACE_USAGE_READWRITE);
-   ref_object<int> memDims(new int[3], sizeof(int) * 3,
+   ref_object<int> memDims(new int[4], sizeof(int) * 4,
                            VMACCEL_SURFACE_USAGE_READWRITE);
 
    memDims[0] = numRows;
    memDims[1] = numColumns;
    memDims[2] = chunkSize;
+   memDims[3] = numPasses;
 
    /*
     * Initialize the array with default values.
@@ -372,7 +401,7 @@ int main(int argc, char **argv) {
       descB = descA;
       descB.pool = memoryPoolB;
       descDims = descA;
-      descDims.width = sizeof(int) * 3;
+      descDims.width = sizeof(int) * 4;
       descDims.pool = VMACCEL_SURFACE_POOL_AUTO;
       semDesc = descA;
       semDesc.width = sizeof(int) * numRows * numColumns;
@@ -401,7 +430,7 @@ int main(int argc, char **argv) {
          return VMACCEL_FAIL;
       }
 
-      VMAccelSurfaceRegion rgnDims = {0, {0, 0, 0}, {3, 0, 0}};
+      VMAccelSurfaceRegion rgnDims = {0, {0, 0, 0}, {4, 0, 0}};
       if (accelDims->upload<int>(rgnDims, memDims) != VMACCEL_SUCCESS) {
          VMACCEL_LOG("ERROR: Unable to upload dims\n");
          return VMACCEL_FAIL;
@@ -450,7 +479,8 @@ int main(int argc, char **argv) {
          ((e2eDiffTime.tv_nsec != 0) ? (double)e2eDiffTime.tv_nsec / 1000000.0f
                                      : 0.0f);
 
-      size_t iterationBytes = numRows * numColumns * chunkSize * sizeof(int);
+      size_t iterationBytes =
+         numRows * numColumns * chunkSize * numPasses * sizeof(int);
       size_t totalComputeBytes = iterationBytes * numIterations;
       size_t totalTransferredBytes =
          iterationBytes * 3 + numRows * numColumns * sizeof(int);
@@ -474,7 +504,7 @@ int main(int argc, char **argv) {
                if (kernelFunc == MATRIX_COPY_2D) {
                   exp = (i * numColumns + j);
                } else if (kernelFunc == MATRIX_ADD_2D) {
-                  exp = numIterations * (i * numColumns + j);
+                  exp = numIterations * numPasses * (i * numColumns + j);
                } else {
                   continue;
                }
