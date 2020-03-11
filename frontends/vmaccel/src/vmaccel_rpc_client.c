@@ -38,7 +38,7 @@ static void vmaccel_1(char *host) {
    VMAccelComputeOp vmaccel_compute_1_arg;
 
 #ifndef DEBUG
-   clnt = clnt_create(host, VMACCEL, VMACCEL_VERSION, "udp");
+   clnt = clnt_create(host, VMACCEL, VMACCEL_VERSION, "tcp");
    if (clnt == NULL) {
       clnt_pcreateerror(host);
       exit(1);

@@ -61,7 +61,7 @@ def FormatSourceTree(treeRoot, clangPath, includeDirs, fileExtensions):
             if not filePath.endswith(ext):
                continue
 
-            print "Formatting: %s" % (filePath)
+            print("Formatting: %s" % (filePath))
             os.system("%s -i %s" % (clangFormatPath, filePath))
       elif (os.path.isdir(filePath) and
             fileName != "external" and
@@ -73,15 +73,15 @@ def FormatSourceTree(treeRoot, clangPath, includeDirs, fileExtensions):
 if __name__ == "__main__":
    startTime = datetime.now()
 
-   print "*********************************************************************************"
-   print "Formatting source tree using clang-format"
-   print ""
-   print "os.name = %s" % (os.name)
-   print "platform.system() = %s" % (platform.system())
-   print "sys.platform = %s" % (sys.platform)
-   print ""
-   print "Time = %s" % (startTime)
-   print "********************************************************************************"
+   print("*********************************************************************************")
+   print("Formatting source tree using clang-format")
+   print("")
+   print("os.name = %s" % (os.name))
+   print("platform.system() = %s" % (platform.system()))
+   print("sys.platform = %s" % (sys.platform))
+   print("")
+   print("Time = %s" % (startTime))
+   print("********************************************************************************")
 
    #
    # Handle command line options for the parser
@@ -111,26 +111,26 @@ if __name__ == "__main__":
 
    if (options.CLANG_PATH is None or options.CLANG_PATH == "" or
        not os.path.exists(clangPath)):
-      print "ERROR: You must supply a directory containing clang-format"
-      print "       e.g. ../build/external/spirv-llvm/bin"
+      print("ERROR: You must supply a directory containing clang-format")
+      print("       e.g. ../build/external/spirv-llvm/bin")
       sys.exit(1)
 
-   print "clang path: %s" % (clangPath)
-   print "Source tree: %s" % (os.path.abspath(options.SOURCE_TREE))
-   print "Include directories: %s" % (includeDirs)
-   print "File extensions: %s" % (options.FILE_EXTENSIONS)
-   print ""
+   print("clang path: %s" % (clangPath))
+   print("Source tree: %s" % (os.path.abspath(options.SOURCE_TREE)))
+   print("Include directories: %s" % (includeDirs))
+   print("File extensions: %s" % (options.FILE_EXTENSIONS))
+   print("")
 
    FormatSourceTree(options.SOURCE_TREE, clangPath, includeDirs,
                     options.FILE_EXTENSIONS.split(","))
 
    endTime = datetime.now()
 
-   print "********************************************************************************"
-   print "Start Time: %s" % (str(startTime))
-   print "End Time  : %s" % (str(endTime))
-   print "Elapsed   : %s" % (str(endTime - startTime))
-   print ""
-   print "Exiting format_source.py..."
-   print "********************************************************************************"
+   print("********************************************************************************")
+   print("Start Time: %s" % (str(startTime)))
+   print("End Time  : %s" % (str(endTime)))
+   print("Elapsed   : %s" % (str(endTime - startTime)))
+   print("")
+   print("Exiting format_source.py...")
+   print("********************************************************************************")
    sys.exit(0)

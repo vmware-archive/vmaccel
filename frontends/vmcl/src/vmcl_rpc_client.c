@@ -85,7 +85,7 @@ static void vmcl_1(char *host, char *spirv) {
    unsigned int i;
    char *kernelBinary = NULL;
 
-   clnt = clnt_create(host, VMCL, VMCL_VERSION, "udp");
+   clnt = clnt_create(host, VMCL, VMCL_VERSION, "tcp");
    if (clnt == NULL) {
       clnt_pcreateerror(host);
       exit(1);

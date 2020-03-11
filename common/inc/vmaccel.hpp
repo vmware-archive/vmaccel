@@ -314,9 +314,22 @@ public:
                                             sizeof(host))) {
          VMACCEL_LOG("%s: Connecting to Accelerator manager %s\n", __FUNCTION__,
                      host);
-         mgrClnt = clnt_create(host, VMACCELMGR, VMACCELMGR_VERSION, "udp");
-         if (mgrClnt == NULL) {
-            VMACCEL_WARNING("Failed to create VMAccelMgr client.");
+         mgrClnt = clnt_create(host, VMACCELMGR, VMACCELMGR_VERSION, "tcp");
+         if (mgrClnt != NULL) {
+            /*
+             * Set a one minute timeout. This must be sufficient for any bulkd
+             * data transfer.
+             */
+            struct timeval tv;
+            tv.tv_sec = 60;
+            tv.tv_usec = 0;
+
+            VMACCEL_LOG("vmaccel: Setting prototol timeout to %ld seconds",
+                        tv.tv_sec);
+
+            if (!clnt_control(mgrClnt, CLSET_TIMEOUT, (char *)&tv)) {
+               VMACCEL_WARNING("vmaccel: Unable to set timeout..\n");
+            }
          }
          VMACCEL_LOG("%s: mgrClient = %p\n", __FUNCTION__, mgrClnt);
       }

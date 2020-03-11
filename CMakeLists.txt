@@ -41,6 +41,7 @@ IF (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
    set(CMAKE_EXAMPLES_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples)
 
    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=unused-function -Werror=unused-variable")
+   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=misleading-indentation")
 
    set(CMAKE_BUILD_TYPE Debug)
    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")

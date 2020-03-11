@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019 VMware, Inc.
+# Copyright (c) 2019-2020 VMware, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,3 +29,4 @@ add_subdirectory(basic_compute)
 add_subdirectory(basic_compute_nolib)
 add_subdirectory(compute_persistent_surfaces)
 add_subdirectory(basic_ml)
+add_subdirectory(membench)

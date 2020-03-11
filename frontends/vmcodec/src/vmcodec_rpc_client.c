@@ -55,7 +55,7 @@ static void vmcodec_1(char *host) {
    VMCODECEncodeOp vmcodec_encode_1_arg;
 
 #ifndef DEBUG
-   clnt = clnt_create(host, VMCODEC, VMCODEC_VERSION, "udp");
+   clnt = clnt_create(host, VMCODEC, VMCODEC_VERSION, "tcp");
    if (clnt == NULL) {
       clnt_pcreateerror(host);
       exit(1);

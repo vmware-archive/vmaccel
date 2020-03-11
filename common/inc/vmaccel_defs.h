@@ -194,6 +194,12 @@ typedef enum VMAccelCapsEnum {
  * |                                |
  * +--------------------------------+
  */
+typedef enum VMAccelSurfacePoolEnum {
+   VMACCEL_SURFACE_POOL_AUTO,
+   VMACCEL_SURFACE_POOL_ACCELERATOR,
+   VMACCEL_SURFACE_POOL_SYSTEM_MEMORY,
+} VMAccelSurfacePoolEnum;
+
 typedef enum VMAccelSurfaceTypeEnum {
    /*
     * Shared Virtual Memory surface type, can be accessed by any context

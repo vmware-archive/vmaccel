@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016-2019 VMware, Inc.
+# Copyright (c) 2020 VMware, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,26 +24,17 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../external/vtk/CMake")
+set(CMAKE_CXX_STANDARD 11)
 
-message("CMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}")
+set(SOURCES
+    membench.cpp)
 
-find_package(FFMPEG COMPONENTS AVCODEC AVDEVICE AVFOMAT AVUTIL REQUIRED)
+set(GLOBAL_INC ../../../common/inc)
 
-if (FFMPEG_FOUND)
-   message("FFMPEG_INCLUDE_DIR=${FFMPEG_INCLUDE_DIR}")
-   message("FFMPEG_LIBRARIES=${FFMPEG_LIBRARIES}")
+include_directories(${GLOBAL_INC})
 
-   include_directories(${FFMPEG_INCLUDE_DIRS})
-
-   add_subdirectory(vmwffmpeg)
-endif()
-
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-sign-compare -Wmissing-declarations")
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-deprecated -Wno-unused-local-typedefs")
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter -Wno-unused-variable")
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unknown-pragmas -Wno-attributes")
-
-add_subdirectory(vmwopencl)
-
+add_executable(membench ${SOURCES})
+target_link_libraries(membench vmaccel)
+set_target_properties(membench
+   PROPERTIES
+   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_EXAMPLES_OUTPUT_DIRECTORY}")

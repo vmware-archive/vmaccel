@@ -40,7 +40,7 @@ static void vmaccelmgr_1(char *host) {
    VMAccelId vmaccelmgr_free_1_arg;
 
 #ifndef DEBUG
-   clnt = clnt_create(host, VMACCELMGR, VMACCELMGR_VERSION, "udp");
+   clnt = clnt_create(host, VMACCELMGR, VMACCELMGR_VERSION, "tcp");
    if (clnt == NULL) {
       clnt_pcreateerror(host);
       exit(1);

@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2019 VMware, Inc.
+Copyright (c) 2016-2020 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -75,6 +75,7 @@ typedef unsigned int VMAccelSelectionMask;
 
 typedef unsigned int VMAccelId;
 typedef unsigned int VMAccelCaps;
+typedef unsigned int VMAccelSurfacePool;
 typedef unsigned int VMAccelSurfaceType;
 typedef unsigned int VMAccelSurfaceUsage;
 typedef unsigned int VMAccelSurfaceMapFlags;
@@ -348,6 +349,11 @@ struct VMAccelSurfaceDesc {
 
    VMAccelSurfaceFormat      format;
    VMAccelSurfaceFormatCaps  formatCaps;
+
+   /*
+    * Surface pool.
+    */
+   VMAccelSurfacePool        pool;
 
    /*
     * Usage hints.

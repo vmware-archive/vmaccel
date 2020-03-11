@@ -98,7 +98,7 @@ static VMAccelMgrClient vmaccelmgr_register(char *host, char *iface,
 
       memset(&vmaccelmgr_register_1_arg, 0, sizeof(vmaccelmgr_register_1_arg));
 
-      mgrClient.clnt = clnt_create(host, VMACCELMGR, VMACCELMGR_VERSION, "udp");
+      mgrClient.clnt = clnt_create(host, VMACCELMGR, VMACCELMGR_VERSION, "tcp");
       if (mgrClient.clnt == NULL) {
          clnt_pcreateerror(host);
          exit(1);

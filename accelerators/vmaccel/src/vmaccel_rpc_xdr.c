@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2019 VMware, Inc.
+Copyright (c) 2016-2020 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -64,6 +64,12 @@ bool_t xdr_VMAccelId(XDR *xdrs, VMAccelId *objp) {
 }
 
 bool_t xdr_VMAccelCaps(XDR *xdrs, VMAccelCaps *objp) {
+   if (!xdr_u_int(xdrs, objp))
+      return FALSE;
+   return TRUE;
+}
+
+bool_t xdr_VMAccelSurfacePool(XDR *xdrs, VMAccelSurfacePool *objp) {
    if (!xdr_u_int(xdrs, objp))
       return FALSE;
    return TRUE;
@@ -141,7 +147,7 @@ bool_t xdr_VMAccelAddress(XDR *xdrs, VMAccelAddress *objp) {
       return FALSE;
    if (!xdr_u_int(xdrs, &objp->port))
       return FALSE;
-   if (!xdr_VMAccelResourceType(xdrs, &objp->resourceTypeMask))
+   if (!xdr_VMAccelResourceType(xdrs, &objp->resourceType))
       return FALSE;
    return TRUE;
 }
@@ -165,6 +171,7 @@ bool_t xdr_VMAccelFormatDesc(XDR *xdrs, VMAccelFormatDesc *objp) {
 
 bool_t xdr_VMAccelWorkloadDesc(XDR *xdrs, VMAccelWorkloadDesc *objp) {
    register int32_t *buf;
+
 
    if (xdrs->x_op == XDR_ENCODE) {
       buf = XDR_INLINE(xdrs, 9 * BYTES_PER_XDR_UNIT);
@@ -467,6 +474,7 @@ bool_t xdr_VMAccelElementFloat4D(XDR *xdrs, VMAccelElementFloat4D *objp) {
 bool_t xdr_VMAccelElementUINT4D(XDR *xdrs, VMAccelElementUINT4D *objp) {
    register int32_t *buf;
 
+
    if (xdrs->x_op == XDR_ENCODE) {
       buf = XDR_INLINE(xdrs, 4 * BYTES_PER_XDR_UNIT);
       if (buf == NULL) {
@@ -537,6 +545,7 @@ bool_t xdr_VMAccelCoordinate3DUINT(XDR *xdrs, VMAccelCoordinate3DUINT *objp) {
 bool_t xdr_VMAccelCoordinate4DUINT(XDR *xdrs, VMAccelCoordinate4DUINT *objp) {
    register int32_t *buf;
 
+
    if (xdrs->x_op == XDR_ENCODE) {
       buf = XDR_INLINE(xdrs, 4 * BYTES_PER_XDR_UNIT);
       if (buf == NULL) {
@@ -589,6 +598,7 @@ bool_t xdr_VMAccelCoordinate4DUINT(XDR *xdrs, VMAccelCoordinate4DUINT *objp) {
 bool_t xdr_VMAccelSurfaceDesc(XDR *xdrs, VMAccelSurfaceDesc *objp) {
    register int32_t *buf;
 
+
    if (xdrs->x_op == XDR_ENCODE) {
       if (!xdr_VMAccelId(xdrs, &objp->parentId))
          return FALSE;
@@ -620,6 +630,8 @@ bool_t xdr_VMAccelSurfaceDesc(XDR *xdrs, VMAccelSurfaceDesc *objp) {
       if (!xdr_VMAccelSurfaceFormat(xdrs, &objp->format))
          return FALSE;
       if (!xdr_VMAccelSurfaceFormatCaps(xdrs, &objp->formatCaps))
+         return FALSE;
+      if (!xdr_VMAccelSurfacePool(xdrs, &objp->pool))
          return FALSE;
       if (!xdr_VMAccelSurfaceUsage(xdrs, &objp->usage))
          return FALSE;
@@ -662,6 +674,8 @@ bool_t xdr_VMAccelSurfaceDesc(XDR *xdrs, VMAccelSurfaceDesc *objp) {
          return FALSE;
       if (!xdr_VMAccelSurfaceFormatCaps(xdrs, &objp->formatCaps))
          return FALSE;
+      if (!xdr_VMAccelSurfacePool(xdrs, &objp->pool))
+         return FALSE;
       if (!xdr_VMAccelSurfaceUsage(xdrs, &objp->usage))
          return FALSE;
       if (!xdr_VMAccelSurfaceBindFlags(xdrs, &objp->bindFlags))
@@ -692,6 +706,8 @@ bool_t xdr_VMAccelSurfaceDesc(XDR *xdrs, VMAccelSurfaceDesc *objp) {
    if (!xdr_VMAccelSurfaceFormat(xdrs, &objp->format))
       return FALSE;
    if (!xdr_VMAccelSurfaceFormatCaps(xdrs, &objp->formatCaps))
+      return FALSE;
+   if (!xdr_VMAccelSurfacePool(xdrs, &objp->pool))
       return FALSE;
    if (!xdr_VMAccelSurfaceUsage(xdrs, &objp->usage))
       return FALSE;
