@@ -479,18 +479,18 @@ int main(int argc, char **argv) {
          ((e2eDiffTime.tv_nsec != 0) ? (double)e2eDiffTime.tv_nsec / 1000000.0f
                                      : 0.0f);
 
-      size_t iterationBytes =
-         numRows * numColumns * chunkSize * numPasses * sizeof(int);
+      size_t passBytes = (size_t)numRows * numColumns * chunkSize * sizeof(int);
+      size_t iterationBytes = passBytes * numPasses;
       size_t totalComputeBytes = iterationBytes * numIterations;
       size_t totalTransferredBytes =
-         iterationBytes * 3 + numRows * numColumns * sizeof(int);
+         passBytes * 3 + numRows * numColumns * sizeof(int);
       VMACCEL_LOG("\n");
       VMACCEL_LOG("End-to-end Time = %lf ms\n", totalRuntimeMS);
       VMACCEL_LOG("Total Referenced = %ld bytes\n", totalComputeBytes);
       VMACCEL_LOG("Total Dirtied = %ld bytes\n", totalComputeBytes);
       VMACCEL_LOG("Total Uploaded = %ld bytes\n",
-                  iterationBytes * 2 + numRows * numColumns * sizeof(int));
-      VMACCEL_LOG("Total Downloaded = %ld bytes\n", iterationBytes);
+                  passBytes * 2 + numRows * numColumns * sizeof(int));
+      VMACCEL_LOG("Total Downloaded = %ld bytes\n", passBytes);
       VMACCEL_LOG("Compute Throughput = %lf bytes/ms\n",
                   totalComputeBytes / totalRuntimeMS);
       VMACCEL_LOG("\n");
