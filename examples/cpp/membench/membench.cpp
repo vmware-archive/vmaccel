@@ -298,7 +298,7 @@ int main(int argc, char **argv) {
    int numRows = 8192;
    int numColumns = 1;
    int chunkSize = 4096;
-   int numPasses = 128;
+   int numPasses = 1;
    int numIterations = 100;
    int memoryPoolA = VMACCEL_SURFACE_POOL_AUTO;
    int memoryPoolB = VMACCEL_SURFACE_POOL_AUTO;
