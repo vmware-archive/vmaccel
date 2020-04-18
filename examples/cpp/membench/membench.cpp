@@ -26,6 +26,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ******************************************************************************/
 
+#define DEBUG_COMPUTE_OPERATION
 #include "vmaccel_compute.hpp"
 
 #include "log_level.h"
@@ -88,6 +89,26 @@ const char *matrixAddTranspose2DKernel =
    "   for (l = 0; l < numPasses; l++) {\n"
    "      for (k = 0; k < chunkSize; k++) {\n"
    "         b[n * chunkSize * j + chunkSize * i + k] +=\n"
+   "            a[n * chunkSize * i + chunkSize * j + k];\n"
+   "      }\n"
+   "   }\n"
+   "}\n";
+
+const char *matrixCopyTranspose2DKernel =
+   "__kernel void MatrixCopyTranspose2D(__global int *a, __global int *b,\n"
+   "                                    __global int *semaphores,\n"
+   "                                    __global int *dims)\n"
+   "{\n"
+   "   int i = get_global_id(0);\n"
+   "   int j = get_global_id(1);\n"
+   "   int m = dims[0];\n"
+   "   int n = dims[1];\n"
+   "   int k, l;\n"
+   "   int chunkSize = dims[2];\n"
+   "   int numPasses = dims[3];\n"
+   "   for (l = 0; l < numPasses; l++) {\n"
+   "      for (k = 0; k < chunkSize; k++) {\n"
+   "         b[n * chunkSize * j + chunkSize * i + k] =\n"
    "            a[n * chunkSize * i + chunkSize * j + k];\n"
    "      }\n"
    "   }\n"
@@ -163,19 +184,24 @@ typedef struct FunctionTableEntry {
 } FunctionTableEntry;
 
 enum {
-   MATRIX_ADD_2D,
+   MATRIX_ADD_2D = 0,
    MATRIX_COPY_2D,
    MATRIX_ADD_TRANSPOSE_2D,
+   MATRIX_COPY_TRANSPOSE_2D,
    MATRIX_ADD_2D_SEMAPHORE1U,
    MATRIX_ADD_2D_SEMAPHORENU,
    MATRIX_ADD_2D_EXEC_CHAIN,
    MATRIX_FUNCTION_MAX
 } FunctionEnum;
 
+#define MEMPOOL(_LOC) ((_LOC)&0xffff)
+#define MEMDEVICE(_LOC) (((_LOC) >> 16) & 0xffff)
+
 FunctionTableEntry functionTable[MATRIX_FUNCTION_MAX] = {
    {matrixAdd2DKernel, "MatrixAdd2D"},
    {matrixCopy2DKernel, "MatrixCopy2D"},
    {matrixAddTranspose2DKernel, "MatrixAddTranspose2D"},
+   {matrixCopyTranspose2DKernel, "MatrixCopyTranspose2D"},
    {matrixAdd2DSemaphore1UKernel, "MatrixAddSemaphore1U"},
    {matrixAdd2DSemaphoreNUKernel, "MatrixAddSemaphoreNU"},
    {matrixAdd2DExecChainNUKernel, "MatrixAdd2DExecChain"},
@@ -221,7 +247,8 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
                           int *pNumRows, int *pNumColumns, int *pChunkSize,
                           int *pNumPasses, int *pNumIterations,
                           int *pMemoryPoolA, int *pMemoryPoolB,
-                          int *pMemoryPoolS, int *pKernelFunc) {
+                          int *pMemoryPoolS, int *pKernelFunc,
+                          int *pKernelDevice) {
    int i = 1;
 
    while (i < argc) {
@@ -282,6 +309,12 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
          }
          *pKernelFunc = atoi(argv[i + 1]);
          i += 2;
+      } else if (strcmp("--kernelDevice", argv[i]) == 0) {
+         if (i + 1 == argc) {
+            return 1;
+         }
+         *pKernelDevice = atoi(argv[i + 1]);
+         i += 2;
       } else {
          VMACCEL_LOG("invalid argument %s\n", argv[i]);
          return 1;
@@ -304,17 +337,20 @@ int main(int argc, char **argv) {
    int memoryPoolB = VMACCEL_SURFACE_POOL_AUTO;
    int memoryPoolS = VMACCEL_SURFACE_POOL_AUTO;
    int kernelFunc = MATRIX_ADD_2D;
+   int kernelDevice = 0;
+   int numSubDevices = 0;
 
    if (ParseCommandArguments(argc, argv, host, &numRows, &numColumns,
                              &chunkSize, &numPasses, &numIterations,
                              &memoryPoolA, &memoryPoolB, &memoryPoolS,
-                             &kernelFunc)) {
+                             &kernelFunc, &kernelDevice)) {
       return 1;
    }
 
    VMACCEL_LOG("\n");
    VMACCEL_LOG("== VMCL Memory Benchmark ==\n");
    VMACCEL_LOG("  Kernel Function:             %d\n", kernelFunc);
+   VMACCEL_LOG("  Kernel Device:               %d\n", kernelDevice);
    VMACCEL_LOG("  Rows, Columns, Chunk Size:   %d, %d, %d\n", numRows,
                numColumns, chunkSize);
    VMACCEL_LOG("  Number of Kernel Passes:     %d\n", numPasses);
@@ -323,6 +359,10 @@ int main(int argc, char **argv) {
    VMACCEL_LOG("  Semaphore Memory Pool:       %d\n", memoryPoolS);
    VMACCEL_LOG("  Number of Iterations:        %d\n", numIterations);
    VMACCEL_LOG("\n");
+
+   numSubDevices = MAX(kernelDevice + 1, MEMDEVICE(memoryPoolA) + 1);
+   numSubDevices = MAX(numSubDevices, MEMDEVICE(memoryPoolB) + 1);
+   numSubDevices = MAX(numSubDevices, MEMDEVICE(memoryPoolS) + 1);
 
    address mgrAddr(host);
    work_topology workTopology({0}, {numRows}, {numColumns});
@@ -375,12 +415,12 @@ int main(int argc, char **argv) {
     * the surface download.
     */
    {
+      compute::context c(accel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
+                         numSubDevices, 0);
+
       /*
        * Query an accelerator manager for the Compute Resource.
        */
-      compute::context c(accel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
-                         0);
-
       VMAccelSurfaceDesc descA = {
          0,
       };
@@ -395,21 +435,21 @@ int main(int argc, char **argv) {
       descA.type = VMACCEL_SURFACE_BUFFER;
       descA.width = sizeof(int) * numRows * numColumns * chunkSize;
       descA.format = VMACCEL_FORMAT_R8_TYPELESS;
-      descA.pool = memoryPoolA;
+      descA.pool = MEMPOOL(memoryPoolA);
       descA.usage = VMACCEL_SURFACE_USAGE_READWRITE;
       descA.bindFlags = VMACCEL_BIND_UNORDERED_ACCESS_FLAG;
       descB = descA;
-      descB.pool = memoryPoolB;
+      descB.pool = MEMPOOL(memoryPoolB);
       descDims = descA;
       descDims.width = sizeof(int) * 4;
       descDims.pool = VMACCEL_SURFACE_POOL_AUTO;
       semDesc = descA;
       semDesc.width = sizeof(int) * numRows * numColumns;
-      semDesc.pool = memoryPoolS;
-      accelerator_surface accelA(accel.get(), descA);
-      accelerator_surface accelB(accel.get(), descB);
-      accelerator_surface accelS(accel.get(), semDesc);
-      accelerator_surface accelDims(accel.get(), descDims);
+      semDesc.pool = MEMPOOL(memoryPoolS);
+      accelerator_surface accelA(accel.get(), MEMDEVICE(memoryPoolA), descA);
+      accelerator_surface accelB(accel.get(), MEMDEVICE(memoryPoolB), descB);
+      accelerator_surface accelS(accel.get(), MEMDEVICE(memoryPoolS), semDesc);
+      accelerator_surface accelDims(accel.get(), kernelDevice, descDims);
 
       VMAccelSurfaceRegion rgn = {
          0, {0, 0, 0}, {numRows * numColumns * chunkSize, 0, 0}};
@@ -445,6 +485,19 @@ int main(int argc, char **argv) {
       compute::binding bindDims(VMACCEL_BIND_UNORDERED_ACCESS_FLAG,
                                 VMACCEL_SURFACE_USAGE_READWRITE, accelDims);
 
+      if (!c->alloc_surface(bindA->get_surf()) ||
+          !c->alloc_surface(bindB->get_surf()) ||
+          !c->alloc_surface(bindS->get_surf()) ||
+          !c->alloc_surface(bindDims->get_surf())) {
+         VMACCEL_LOG("ERROR: Unable to allocate surfaces\n");
+         return VMACCEL_FAIL;
+      }
+
+      c->upload_surface(bindA->get_surf());
+      c->upload_surface(bindB->get_surf());
+      c->upload_surface(bindS->get_surf());
+      c->upload_surface(bindDims->get_surf());
+
       clock_gettime(CLOCK_REALTIME, &e2eStartTime);
 
       for (int iter = 0; iter < numIterations; iter++) {
@@ -463,9 +516,12 @@ int main(int argc, char **argv) {
          compute::dispatch<
             ref_object<vmaccel::binding>, ref_object<vmaccel::binding>,
             ref_object<vmaccel::binding>, ref_object<vmaccel::binding>>(
-            c, opobj, VMCL_OPENCL_C_1_0, k, functionTable[kernelFunc].function,
-            workTopology, bindA, bindB, bindS, bindDims);
+            c, kernelDevice, opobj, VMCL_OPENCL_C_1_0, k,
+            functionTable[kernelFunc].function, workTopology, bindA, bindB,
+            bindS, bindDims);
       }
+
+      c->download_surface(bindB->get_surf());
 
       if (accelB->download<int>(rgn, memB) != VMACCEL_SUCCESS) {
          VMACCEL_LOG("ERROR: Unable to readback B\n");
@@ -503,6 +559,8 @@ int main(int argc, char **argv) {
 
                if (kernelFunc == MATRIX_COPY_2D) {
                   exp = (i * numColumns + j);
+               } else if (kernelFunc == MATRIX_COPY_TRANSPOSE_2D) {
+                  exp = (j * numColumns + i);
                } else if (kernelFunc == MATRIX_ADD_2D) {
                   exp = numIterations * numPasses * (i * numColumns + j);
                } else {

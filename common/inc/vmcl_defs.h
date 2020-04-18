@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2019 VMware, Inc.
+Copyright (c) 2016-2020 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "vmaccel_defs.h"
 
+#define VMCL_MAX_SUBDEVICES 32
 #define VMCL_MAX_CONTEXTS 32
 #define VMCL_MAX_SURFACES 32
 #define VMCL_MAX_QUEUES 32

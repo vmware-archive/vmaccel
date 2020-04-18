@@ -149,6 +149,8 @@ bool_t xdr_VMAccelAddress(XDR *xdrs, VMAccelAddress *objp) {
       return FALSE;
    if (!xdr_VMAccelResourceType(xdrs, &objp->resourceType))
       return FALSE;
+   if (!xdr_u_int(xdrs, &objp->subDevice))
+      return FALSE;
    return TRUE;
 }
 

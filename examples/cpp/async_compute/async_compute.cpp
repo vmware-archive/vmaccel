@@ -57,7 +57,8 @@ int main(int argc, char **argv) {
    /*
     * Query an accelerator manager for the Compute Resource.
     */
-   compute::context c(accel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK, 0);
+   compute::context c(accel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK, 0,
+                      0);
 
    /*
     * Initialize the Compute Kernel.
@@ -88,7 +89,7 @@ int main(int argc, char **argv) {
    desc.format = VMACCEL_FORMAT_R8_TYPELESS;
    desc.usage = VMACCEL_SURFACE_USAGE_READWRITE;
    desc.bindFlags = VMACCEL_BIND_UNORDERED_ACCESS_FLAG;
-   accelerator_surface s(accel.get(), desc);
+   accelerator_surface s(accel.get(), 0, desc);
 
    VMAccelSurfaceRegion rgn = {0, {0, 0, 0}, {ARRAY_SIZE, 0, 0}};
    if (s->upload<int>(rgn, a) != VMACCEL_SUCCESS) {
@@ -105,7 +106,7 @@ int main(int argc, char **argv) {
    {
       ref_object<compute::operation> opobj;
 
-      compute::dispatch<ref_object<binding>>(c, opobj, VMCL_OPENCL_C_1_0, k,
+      compute::dispatch<ref_object<binding>>(c, 0, opobj, VMCL_OPENCL_C_1_0, k,
                                              "hello_kernel", workTopology, b);
    }
 

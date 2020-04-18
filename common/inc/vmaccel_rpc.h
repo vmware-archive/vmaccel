@@ -93,6 +93,7 @@ struct VMAccelAddress {
    } addr;
    u_int port;
    VMAccelResourceType resourceType;
+   u_int subDevice;
 };
 typedef struct VMAccelAddress VMAccelAddress;
 

@@ -165,13 +165,21 @@ public:
    /**
     * Constructor.
     *
+    * Given a queue id, create an Accelerator object.
+    */
+   object(VMAccelId q) { queueId = q; }
+
+   /**
+    * Constructor.
+    *
     * Given a pointer and a size of the backing memory, create an Accelerator
     * object.
     */
-   object(void *p, size_t s, unsigned int u) {
+   object(void *p, size_t s, unsigned int u, VMAccelId q) {
       ptr = p;
       size = s;
       usage = u;
+      queueId = q;
    }
 
    /**
@@ -204,6 +212,14 @@ public:
    virtual const unsigned int get_usage() const { return usage; }
 
    /**
+    * get_queue_id
+    *
+    * @return The last assigned queue identifier, in VM Accelerator Manager
+    *         space.
+    */
+   virtual const VMAccelId get_queue_id() const { return queueId; }
+
+   /**
     * get_fence_id
     *
     * @return The last assigned fence identifier, in VM Accelerator Manager
@@ -222,6 +238,7 @@ private:
    void *ptr;
    size_t size;
    unsigned int usage;
+   VMAccelId queueId;
    VMAccelId fenceId;
 };
 
@@ -252,21 +269,21 @@ public:
     * within the context of the Accelerator.
     */
    ref_object(T *ptr)
-      : object(ptr, sizeof(T), VMACCEL_SURFACE_USAGE_READWRITE) {
+      : object(ptr, sizeof(T), VMACCEL_SURFACE_USAGE_READWRITE, 0) {
       data = std::shared_ptr<T>(ptr);
    }
 
    ref_object(T *ptr, size_t s)
-      : object(ptr, s, VMACCEL_SURFACE_USAGE_READWRITE) {
+      : object(ptr, s, VMACCEL_SURFACE_USAGE_READWRITE, 0) {
       data = std::shared_ptr<T>(ptr);
    }
 
-   ref_object(T *ptr, size_t s, unsigned int u) : object(ptr, s, u) {
+   ref_object(T *ptr, size_t s, unsigned int u) : object(ptr, s, u, 0) {
       data = std::shared_ptr<T>(ptr);
    }
 
-   ref_object(std::shared_ptr<T> &o, size_t s, unsigned int u)
-      : object(o.get(), s, u) {
+   ref_object(std::shared_ptr<T> &o, size_t s, unsigned int u, VMAccelId q)
+      : object(o.get(), s, u, q) {
       data = o;
    }
 
@@ -274,7 +291,8 @@ public:
     * Copy constructor.
     */
    ref_object(const ref_object &obj)
-      : object(obj.data.get(), obj.get_size(), obj.get_usage()) {
+      : object(obj.data.get(), obj.get_size(), obj.get_usage(),
+               obj.get_queue_id()) {
       LOG_ENTRY(("ref_object::Copy Constructor {\n"));
       data = obj.data;
       LOG_EXIT(("} ref_object::Copy Constructor\n"));
@@ -495,8 +513,9 @@ public:
    /**
     * Constructor.
     */
-   surface(const std::shared_ptr<accelerator> &a, VMAccelSurfaceDesc d)
-      : object() {
+   surface(const std::shared_ptr<accelerator> &a, VMAccelId q,
+           VMAccelSurfaceDesc d)
+      : object(q) {
       LOG_ENTRY(("surface::Constructor {\n"));
       accel = a;
       desc = d;
@@ -522,7 +541,8 @@ public:
     * Copy constructor.
     */
    surface(const surface &obj)
-      : object(obj.backing.get(), obj.get_size(), obj.get_usage()) {
+      : object(obj.backing.get(), obj.get_size(), obj.get_usage(),
+               obj.get_queue_id()) {
       LOG_ENTRY(("surface::Copy Constructor {\n"));
       accel = obj.accel;
       desc = obj.desc;
@@ -689,15 +709,14 @@ public:
     * Constructor.
     *
     * @param a Accelerator class used to instantiate the compute operation.
-    * @param megaFlops The estimated mega-flops needed for the workload.
-    * @param selectionMask The selection mask for the accelerators requested.
-    * @param requiredCaps The required capabilites for this compute context.
+    * @param q Queue ID for the accelerator surface.
+    * @param d Descriptor for the surface.
     */
-   accelerator_surface(const std::shared_ptr<accelerator> &a,
+   accelerator_surface(const std::shared_ptr<accelerator> &a, VMAccelId q,
                        VMAccelSurfaceDesc d) {
       std::shared_ptr<surface> surfPtr;
-      surfPtr = std::shared_ptr<surface>(new surface(a, d));
-      surf = ref_object<surface>(surfPtr, sizeof(vmaccel::surface), 0);
+      surfPtr = std::shared_ptr<surface>(new surface(a, q, d));
+      surf = ref_object<surface>(surfPtr, sizeof(vmaccel::surface), 0, 0);
       /*
        * Add the surface to the accelerator tracking list for context
        * destruction to dereference.

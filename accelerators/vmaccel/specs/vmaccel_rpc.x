@@ -128,6 +128,7 @@ struct VMAccelAddress {
     * See: inc/vmaccel_defs.h::VMAccelResourceTypeEnum
     */
    VMAccelResourceType       resourceType;
+   unsigned int              subDevice;
 };
 
 /*

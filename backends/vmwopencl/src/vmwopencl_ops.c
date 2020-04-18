@@ -46,7 +46,7 @@ typedef struct VMWOpenCLCaps {
 typedef struct VMWOpenCLContext {
    cl_context context;
    cl_platform_id platformId;
-   cl_device_id deviceId;
+   cl_device_id deviceIds[VMCL_MAX_SUBDEVICES];
    int majorVersion;
    int minorVersion;
 } VMWOpenCLContext;
@@ -438,13 +438,15 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
    cl_uint numPlatforms;
    cl_platform_id platforms[16];
    cl_context context = NULL;
-   cl_device_id deviceId;
+   cl_device_id deviceIds[VMCL_MAX_SUBDEVICES] = {
+      0,
+   };
    cl_int errNum;
    char platformName[128] = {'\0'};
    char platformVersion[128] = {'\0'};
    int majorVersion;
    int minorVersion;
-   int i = 0, j = 0;
+   int i = 0, j = 0, k = 0;
 
    memset(&result, 0, sizeof(result));
 
@@ -526,29 +528,33 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
 
       for (j = 0; j < VMACCEL_SELECT_MAX; j++) {
          char deviceName[128];
+         unsigned int numSubDevices = MAX(1, argp->numSubDevices);
 
          if ((argp->selectionMask & (1 << j)) == 0) {
             continue;
          }
 
-         errNum =
-            clGetDeviceIDs(platforms[i], clDeviceTypes[j], 1, &deviceId, NULL);
+         errNum = clGetDeviceIDs(platforms[i], clDeviceTypes[j], numSubDevices,
+                                 &deviceIds[0], NULL);
 
          if (errNum != CL_SUCCESS) {
             continue;
          }
 
-         errNum = clGetDeviceInfo(deviceId, CL_DEVICE_NAME, sizeof(deviceName),
-                                  deviceName, &sizeRet);
+         for (k = 0; k < numSubDevices; k++) {
+            errNum = clGetDeviceInfo(deviceIds[k], CL_DEVICE_NAME,
+                                     sizeof(deviceName), deviceName, &sizeRet);
 
-         if (errNum != CL_SUCCESS) {
-            VMACCEL_WARNING("Failed to query device name\n");
-            continue;
+            if (errNum != CL_SUCCESS) {
+               VMACCEL_WARNING("Failed to query device name\n");
+               continue;
+            }
+
+            VMACCEL_LOG("Device[%d] Allocated: %s\n", k, deviceName);
          }
 
-         VMACCEL_LOG("Device Allocated: %s\n", deviceName);
-
-         context = clCreateContext(0, 1, &deviceId, NULL, NULL, &errNum);
+         context = clCreateContext(0, numSubDevices, &deviceIds[0], NULL, NULL,
+                                   &errNum);
 
          if (errNum != CL_SUCCESS) {
             VMACCEL_WARNING("Unable to create context, errNum=%d\n", errNum);
@@ -571,7 +577,7 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
    if (IdentifierDB_AcquireId(contextIds, cid)) {
       contexts[cid].context = context;
       contexts[cid].platformId = platforms[i];
-      contexts[cid].deviceId = deviceId;
+      memcpy(contexts[cid].deviceIds, deviceIds, sizeof(deviceIds));
       contexts[cid].majorVersion = majorVersion;
       contexts[cid].minorVersion = minorVersion;
    } else {
@@ -747,9 +753,9 @@ VMAccelQueueStatus *vmwopencl_queuealloc_1(VMCLQueueAllocateDesc *argp) {
    static VMAccelQueueStatus result;
    unsigned int cid = (unsigned int)argp->client.cid;
    unsigned int qid = (unsigned int)argp->client.id;
+   unsigned int subDevice = (unsigned int)argp->subDevice;
    cl_context context = contexts[cid].context;
    cl_int errNum;
-   cl_device_id device;
    cl_device_id *devices;
    cl_command_queue commandQueue = NULL;
    size_t deviceBufferSize = -1;
@@ -787,7 +793,8 @@ VMAccelQueueStatus *vmwopencl_queuealloc_1(VMCLQueueAllocateDesc *argp) {
    errNum = clGetContextInfo(context, CL_CONTEXT_DEVICES, deviceBufferSize,
                              devices, NULL);
 
-   if (errNum != CL_SUCCESS) {
+   if (errNum != CL_SUCCESS ||
+       subDevice >= (deviceBufferSize / sizeof(cl_device_id))) {
       free(devices);
       result.status = VMACCEL_FAIL;
       return (&result);
@@ -796,7 +803,8 @@ VMAccelQueueStatus *vmwopencl_queuealloc_1(VMCLQueueAllocateDesc *argp) {
    // In this example, we just choose the first available device.  In a
    // real program, you would likely use all available devices or choose
    // the highest performance device based on OpenCL device queries
-   commandQueue = clCreateCommandQueue(context, devices[0], 0, NULL);
+   commandQueue =
+      clCreateCommandQueueWithProperties(context, devices[subDevice], 0, NULL);
 
    if (commandQueue == NULL) {
       VMACCEL_WARNING("Failed to create commandQueue for device 0");
@@ -805,13 +813,13 @@ VMAccelQueueStatus *vmwopencl_queuealloc_1(VMCLQueueAllocateDesc *argp) {
       return (&result);
    }
 
-   device = devices[0];
    free(devices);
 
    if (IdentifierDB_AcquireId(queueIds, qid)) {
       queues[qid].desc = argp->desc;
       queues[qid].queue = commandQueue;
    } else {
+      clReleaseCommandQueue(commandQueue);
       assert(0);
       result.status = VMACCEL_RESOURCE_UNAVAILABLE;
    }
@@ -1181,8 +1189,9 @@ vmwopencl_kernelalloc_1(VMCLKernelAllocateDesc *argp) {
    static VMCLKernelAllocateStatus result;
    unsigned int cid = (unsigned int)argp->client.cid;
    unsigned int kid = (unsigned int)argp->client.id;
+   unsigned int subDevice = (unsigned int)argp->subDevice;
    cl_context context = contexts[cid].context;
-   cl_device_id deviceId = contexts[cid].deviceId;
+   cl_device_id deviceId = contexts[cid].deviceIds[subDevice];
    cl_kernel kernel = 0;
    cl_int errNum;
    cl_program program;

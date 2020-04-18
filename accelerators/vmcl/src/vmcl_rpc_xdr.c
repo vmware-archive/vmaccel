@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2019 VMware, Inc.
+Copyright (c) 2016-2020 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -58,6 +58,8 @@ bool_t xdr_VMCLContextAllocateDesc(XDR *xdrs, VMCLContextAllocateDesc *objp) {
       return FALSE;
    if (!xdr_VMAccelSelectionMask(xdrs, &objp->selectionMask))
       return FALSE;
+   if (!xdr_u_int(xdrs, &objp->numSubDevices))
+      return FALSE;
    if (!xdr_VMCLCaps(xdrs, &objp->requiredCaps))
       return FALSE;
    return TRUE;
@@ -106,6 +108,8 @@ bool_t xdr_VMCLQueueId(XDR *xdrs, VMCLQueueId *objp) {
 
 bool_t xdr_VMCLQueueAllocateDesc(XDR *xdrs, VMCLQueueAllocateDesc *objp) {
    if (!xdr_VMCLQueueId(xdrs, &objp->client))
+      return FALSE;
+   if (!xdr_u_int(xdrs, &objp->subDevice))
       return FALSE;
    if (!xdr_VMAccelQueueDesc(xdrs, &objp->desc))
       return FALSE;
@@ -285,6 +289,8 @@ bool_t xdr_VMCLKernelId(XDR *xdrs, VMCLKernelId *objp) {
 bool_t xdr_VMCLKernelAllocateDesc(XDR *xdrs, VMCLKernelAllocateDesc *objp) {
    if (!xdr_VMCLKernelId(xdrs, &objp->client))
       return FALSE;
+   if (!xdr_u_int(xdrs, &objp->subDevice))
+      return FALSE;
    if (!xdr_VMCLKernelLanguage(xdrs, &objp->language))
       return FALSE;
    if (!xdr_bytes(xdrs, (char **)&objp->source.source_val,
@@ -315,6 +321,8 @@ bool_t xdr_VMCLKernelArgType(XDR *xdrs, VMCLKernelArgType *objp) {
 }
 
 bool_t xdr_VMCLKernelArgDesc(XDR *xdrs, VMCLKernelArgDesc *objp) {
+   if (!xdr_VMCLQueueId(xdrs, &objp->queue))
+      return FALSE;
    if (!xdr_u_int(xdrs, &objp->index))
       return FALSE;
    if (!xdr_VMCLKernelArgType(xdrs, &objp->type))

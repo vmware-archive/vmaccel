@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2019 VMware, Inc.
+Copyright (c) 2016-2020 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -52,6 +52,12 @@ struct VMCLContextAllocateDesc {
    VMAccelSelectionMask      selectionMask;
 
    /*
+    * Number of sub-devices backing this context. Sub-devices
+    * must be of equal capability.
+    */
+   unsigned int              numSubDevices;
+
+   /*
     * Required capabilities for context allocation.
     */
    VMCLCaps                  requiredCaps;
@@ -100,6 +106,7 @@ struct VMCLQueueId {
 
 struct VMCLQueueAllocateDesc {
    VMCLQueueId               client;
+   unsigned int              subDevice;
    VMAccelQueueDesc          desc;
 };
 
@@ -267,6 +274,7 @@ struct VMCLKernelId {
  */
 struct VMCLKernelAllocateDesc {
    VMCLKernelId              client;
+   unsigned int              subDevice;
    VMCLKernelLanguage        language;
    opaque                    source<>;
 
@@ -310,6 +318,7 @@ enum VMCLKernelArgType {
  * perimitted due to low-level data consistency contracts.
  */
 struct VMCLKernelArgDesc {
+   VMCLQueueId               queue;
    unsigned int              index;
    VMCLKernelArgType         type;
    VMAccelSurfaceUsage       usage;
