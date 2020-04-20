@@ -184,6 +184,7 @@ typedef struct FunctionTableEntry {
 } FunctionTableEntry;
 
 enum {
+   MEMCPY = -1,
    MATRIX_ADD_2D = 0,
    MATRIX_COPY_2D,
    MATRIX_ADD_TRANSPOSE_2D,
@@ -501,27 +502,36 @@ int main(int argc, char **argv) {
       clock_gettime(CLOCK_REALTIME, &e2eStartTime);
 
       for (int iter = 0; iter < numIterations; iter++) {
-         ref_object<compute::operation> opobj;
+         if (kernelFunc == MEMCPY) {
+            VMAccelSurfaceRegion copyRgn = {
+               0, {0, 0, 0}, {numRows * numColumns * chunkSize * sizeof(int), 0, 0}};
+            c->copy_surface(0, bindA->get_surf(), copyRgn, bindB->get_surf(), copyRgn);
+         } else {
+            ref_object<compute::operation> opobj;
 
-         if (kernelFunc == MATRIX_ADD_2D_SEMAPHORE1U ||
-             kernelFunc == MATRIX_ADD_2D_SEMAPHORENU ||
-             kernelFunc == MATRIX_ADD_2D_EXEC_CHAIN) {
-            // Clear the semaphores
-            if (accelS->upload<int>(rgnSem, memS) != VMACCEL_SUCCESS) {
-               VMACCEL_LOG("ERROR: Unable to reset semaphores\n");
-               return VMACCEL_FAIL;
+            if (kernelFunc == MATRIX_ADD_2D_SEMAPHORE1U ||
+                kernelFunc == MATRIX_ADD_2D_SEMAPHORENU ||
+                kernelFunc == MATRIX_ADD_2D_EXEC_CHAIN) {
+               // Clear the semaphores
+               if (accelS->upload<int>(rgnSem, memS) != VMACCEL_SUCCESS) {
+                  VMACCEL_LOG("ERROR: Unable to reset semaphores\n");
+                  return VMACCEL_FAIL;
+               }
             }
-         }
 
-         compute::dispatch<
-            ref_object<vmaccel::binding>, ref_object<vmaccel::binding>,
-            ref_object<vmaccel::binding>, ref_object<vmaccel::binding>>(
-            c, kernelDevice, opobj, VMCL_OPENCL_C_1_0, k,
-            functionTable[kernelFunc].function, workTopology, bindA, bindB,
-            bindS, bindDims);
+            compute::dispatch<
+               ref_object<vmaccel::binding>, ref_object<vmaccel::binding>,
+               ref_object<vmaccel::binding>, ref_object<vmaccel::binding>>(
+               c, kernelDevice, opobj, VMCL_OPENCL_C_1_0, k,
+               functionTable[kernelFunc].function, workTopology, bindA, bindB,
+               bindS, bindDims);
+         }
       }
 
-      c->download_surface(bindB->get_surf());
+      if (kernelFunc == MEMCPY) {
+         // Manually download the surface from the context
+         c->download_surface(bindB->get_surf());
+      }
 
       if (accelB->download<int>(rgn, memB) != VMACCEL_SUCCESS) {
          VMACCEL_LOG("ERROR: Unable to readback B\n");
@@ -557,7 +567,7 @@ int main(int argc, char **argv) {
                int val = memB[i * numColumns * chunkSize + j * chunkSize + k];
                int exp;
 
-               if (kernelFunc == MATRIX_COPY_2D) {
+               if (kernelFunc == MATRIX_COPY_2D || kernelFunc == MEMCPY) {
                   exp = (i * numColumns + j);
                } else if (kernelFunc == MATRIX_COPY_TRANSPOSE_2D) {
                   exp = (j * numColumns + i);

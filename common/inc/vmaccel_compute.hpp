@@ -326,13 +326,16 @@ public:
     *
     * Copies the contents of the source surface to the destination surface.
     */
-   void copy_surface(VMAccelId qid, VMAccelId srcId,
-                     VMAccelSurfaceRegion srcRegion, VMAccelId dstId,
+   void copy_surface(VMAccelId qid, ref_object<surface> srcSurf,
+                     VMAccelSurfaceRegion srcRegion,
+                     ref_object<surface> dstSurf,
                      VMAccelSurfaceRegion dstRegion) {
       VMAccelReturnStatus *result_1;
       VMCLSurfaceCopyOp vmcl_surfacecopy_1_arg;
       VMAccelReturnStatus *result_2;
       VMCLQueueId vmcl_queueflush_1_arg;
+      VMAccelId srcId = srcSurf->get_id();
+      VMAccelId dstId = dstSurf->get_id();
 
       if (!is_resident(srcId) || !is_resident(dstId)) {
          return;
@@ -353,6 +356,11 @@ public:
          VMACCEL_WARNING("%s: Unable to copy surface %d->%d using context %d\n",
                          __FUNCTION__, srcId, dstId, get_contextId());
       } else {
+         if (result_1->VMAccelReturnStatus_u.ret->status != VMACCEL_SUCCESS) {
+            VMACCEL_WARNING(
+               "%s: Unable to copy surface %d->%d using context %d\n",
+               __FUNCTION__, srcId, dstId, get_contextId());
+         }
          free(result_1->VMAccelReturnStatus_u.ret);
       }
 
@@ -364,6 +372,10 @@ public:
       if (result_2 == NULL) {
          VMACCEL_WARNING("%s: Unable to flush context %d\n", __FUNCTION__,
                          get_contextId());
+      }
+
+      if (dstSurf->is_consistent(get_contextId())) {
+         dstSurf->set_consistency(get_contextId(), false);
       }
    }
 
