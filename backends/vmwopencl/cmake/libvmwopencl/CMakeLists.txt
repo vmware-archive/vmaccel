@@ -25,7 +25,6 @@
 #
 
 set(SOURCES
-   ../../../../common/src/vmaccel_utils.c
    ../../src/vmwopencl_utils.c
    ../../src/vmwopencl_ops.c)
 

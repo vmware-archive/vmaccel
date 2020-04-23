@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016-2019 VMware, Inc.
+# Copyright (c) 2020 VMware, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,10 +24,36 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(SERVER_SOURCES
-   ../../src/vmaccel_callback_rpc_clnt.c
-   ../../src/vmaccel_callback_rpc_xdr.c
-   ../../src/vmaccel_rpc_server.c
-   ../../src/vmaccel_rpc_xdr.c)
+cmake_minimum_required(VERSION 3.4.3)
+project(common)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library(vmaccel_server ${SERVER_SOURCES})
+#
+# Apply settings for the project
+#
+IF (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+   set(CMAKE_INCLUDE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/inc)
+   set(CMAKE_SPECS_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/specs)
+   set(CMAKE_GEN_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/gen)
+
+   set(CMAKE_BUILD_TYPE Debug)
+   set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
+   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
+ENDIF()
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-sign-compare -Wmissing-declarations")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-deprecated -Wno-unused-local-typedefs")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter -Wno-unused-variable")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unknown-pragmas -Wno-attributes")
+
+set(GLOBAL_INC inc)
+
+include_directories(${GLOBAL_INC})
+
+add_subdirectory(cmake/libvmaccel_utils)
+add_subdirectory(cmake/libvmaccel_utils_local)

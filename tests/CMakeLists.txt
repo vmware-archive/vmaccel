@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016-2019 VMware, Inc.
+# Copyright (c) 2016-2020 VMware, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -51,19 +51,19 @@ set(TEST_SOURCES
 add_unittest(
   TARGET vmaccel_allocator_int_test
   SRCS vmaccel_allocator_int_test.cpp
-  LIBS vmaccelmgr_server)
+  LIBS vmaccelmgr_server vmaccel_utils)
 
 add_unittest(
   TARGET vmaccel_allocator_desc_test
   SRCS vmaccel_allocator_desc_test.cpp
-  LIBS vmaccelmgr_server)
+  LIBS vmaccelmgr_server vmaccel_utils)
 
 add_unittest(
   TARGET vmaccel_allocator_allocrange_test
   SRCS vmaccel_allocator_allocrange_test.cpp
-  LIBS vmaccelmgr_server)
+  LIBS vmaccelmgr_server vmaccel_utils)
 
 add_unittest(
   TARGET identifier_db_test
   SRCS identifier_db_test.cpp
-  LIBS vmaccelmgr_server)
+  LIBS vmaccelmgr_server vmaccel_utils)

@@ -25,7 +25,6 @@
 #
 
 set(SOURCES
-   ../../../../common/src/vmaccel_utils.c
    ../../src/vmwffmpeg_ops.c)
 
 add_library(vmwffmpeg ${SOURCES})

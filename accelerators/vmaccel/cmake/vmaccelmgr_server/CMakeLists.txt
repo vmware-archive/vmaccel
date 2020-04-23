@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016-2019 VMware, Inc.
+# Copyright (c) 2016-2020 VMware, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,4 +25,4 @@
 #
 
 add_executable(vmaccelmgr_svr ../../src/vmaccel_mgr_svc.c)
-target_link_libraries(vmaccelmgr_svr vmaccel_server vmaccelmgr_server)
+target_link_libraries(vmaccelmgr_svr vmaccel_server vmaccelmgr_server vmaccel_utils)

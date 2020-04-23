@@ -365,6 +365,10 @@ int main(int argc, char **argv) {
    numSubDevices = MAX(numSubDevices, MEMDEVICE(memoryPoolB) + 1);
    numSubDevices = MAX(numSubDevices, MEMDEVICE(memoryPoolS) + 1);
 
+#if VMACCEL_LOCAL
+   vmcl_poweron_svc(NULL);
+#endif
+
    address mgrAddr(host);
    work_topology workTopology({0}, {numRows}, {numColumns});
    ref_object<accelerator> accel(new accelerator(mgrAddr));
@@ -504,8 +508,11 @@ int main(int argc, char **argv) {
       for (int iter = 0; iter < numIterations; iter++) {
          if (kernelFunc == MEMCPY) {
             VMAccelSurfaceRegion copyRgn = {
-               0, {0, 0, 0}, {numRows * numColumns * chunkSize * sizeof(int), 0, 0}};
-            c->copy_surface(0, bindA->get_surf(), copyRgn, bindB->get_surf(), copyRgn);
+               0,
+               {0, 0, 0},
+               {numRows * numColumns * chunkSize * sizeof(int), 0, 0}};
+            c->copy_surface(0, bindA->get_surf(), copyRgn, bindB->get_surf(),
+                            copyRgn);
          } else {
             ref_object<compute::operation> opobj;
 
@@ -584,6 +591,10 @@ int main(int argc, char **argv) {
          }
       }
    }
+
+#if VMACCEL_LOCAL
+   vmcl_poweroff_svc();
+#endif
 
    return 1;
 }

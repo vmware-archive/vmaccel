@@ -56,6 +56,7 @@ add_subdirectory(external/spirv-llvm)
 set(CLANG_BINARY_DIR ${CMAKE_BINARY_DIR}/external/spirv-llvm/bin)
 add_subdirectory(cmake/developer)
 
+add_subdirectory(common)
 add_subdirectory(backends)
 add_subdirectory(accelerators)
 add_subdirectory(frontends)

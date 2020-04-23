@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2019 VMware, Inc.
+Copyright (c) 2019-2020 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #include "vmaccel_defs.h"
 #include "vmaccel_mgr.h"
+#if VMACCEL_LOCAL
+#include "vmaccel_local.h"
+#include "vmaccel_ops.h"
+#else
 #include "vmaccel_rpc.h"
+#endif
 #include "vmaccel_utils.h"
 #include "vmaccel_types_address.h"
 }

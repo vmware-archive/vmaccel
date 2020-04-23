@@ -29,6 +29,9 @@ set(CMAKE_CXX_STANDARD 11)
 set(SOURCES
     membench.cpp)
 
+set(LOCAL_SOURCES
+    ../../../frontends/vmaccel/src/vmaccel.cpp)
+
 set(GLOBAL_INC ../../../common/inc)
 
 include_directories(${GLOBAL_INC})
@@ -38,3 +41,12 @@ target_link_libraries(membench vmaccel)
 set_target_properties(membench
    PROPERTIES
    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_EXAMPLES_OUTPUT_DIRECTORY}")
+
+add_executable(membench_local ${SOURCES} ${LOCAL_SOURCES})
+target_link_libraries(membench_local vmaccel_local)
+target_compile_definitions(membench_local PUBLIC VMACCEL_LOCAL=1)
+set_target_properties(membench_local
+   PROPERTIES
+   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_EXAMPLES_OUTPUT_DIRECTORY}")
+
+

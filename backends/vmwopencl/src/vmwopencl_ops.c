@@ -1058,6 +1058,13 @@ VMAccelSurfaceMapStatus *vmwopencl_surfacemap_1(VMCLSurfaceMapOp *argp) {
                                argp->op.coord.x, argp->op.size.x, 0, NULL, NULL,
                                &errNum);
 
+#if DEBUG_SURFACE_CONSISTENCY
+      for (int i = 0; i < argp->op.size.x / 4; i++) {
+         VMACCEL_LOG("%s: uint32[%d] = 0x%x\n", __FUNCTION__, i,
+                     ((unsigned int *)ptr)[i]);
+      }
+#endif
+
       if (errNum != CL_SUCCESS) {
          result.status = VMACCEL_FAIL;
       } else {
@@ -1094,9 +1101,11 @@ VMAccelStatus *vmwopencl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp) {
    /*
     * We are done with the contents, free the pointer.
     */
-   free(argp->op.ptr.ptr_val);
-   argp->op.ptr.ptr_val = NULL;
-   argp->op.ptr.ptr_len = 0;
+   if (!VMAccel_IsLocal()) {
+      free(argp->op.ptr.ptr_val);
+      argp->op.ptr.ptr_val = NULL;
+      argp->op.ptr.ptr_len = 0;
+   }
 
    errNum =
       clEnqueueUnmapMemObject(queue, surfaces[sid].mem, ptr, 0, NULL, NULL);

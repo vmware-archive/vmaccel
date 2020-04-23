@@ -25,7 +25,6 @@
 #
 
 set(SERVER_SOURCES
-   ../../../../common/src/vmaccel_utils.c
    ../../src/vmaccel_manager.cpp
    ../../src/vmaccel_mgr_server.c)
 
