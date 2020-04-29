@@ -316,6 +316,37 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
          }
          *pKernelDevice = atoi(argv[i + 1]);
          i += 2;
+      } else if (strcmp("--help", argv[i]) == 0) {
+         printf("Usage: membench <options>\n\n");
+         printf("  --help               Help and usage information\n");
+         printf("  -h <IP>              Host to execute workload on\n");
+         printf("  -i <num iterations>  Number of iterations\n");
+         printf("  -l <num passes>      Number of passes within each thread\n");
+         printf("  -m <number of rows>  Number of rows in the matrix,\n");
+         printf("                       i.e. 1024x1024 matrix \'-m 1024\'\n");
+         printf("  -n <number of cols>  Number of columns in the matrix,\n");
+         printf("                       i.e. 1024x1024 matrix \'-n 1024\'\n");
+         printf("  -k <chunk size>      Chunk size for each thread to iterate "
+                "over\n");
+         printf("  --kernelFunc <fn>    Xfer function:\n");
+         printf("                         MEMCPY=-1, MATRIX ADD=0, MATRIX "
+                "COPY=1, ...\n");
+         printf("  --kernelDevice <#>   Device to run the compute kernel\n");
+         printf("  --memoryPoolA <x>    Input pool where we will allocate from "
+                "to store\n");
+         printf("                       this portion of the working set. x is "
+                "as follows:\n\n");
+         printf("                          pool={ AUTO=0, ACCELERATOR=1, "
+                "SYSTEM=2 }\n\n");
+         printf("                          if device index == 0\n");
+         printf("                            x=pool\n");
+         printf("                          else\n");
+         printf(
+            "                            x=65536 + device index + pool\n\n");
+         printf("  --memoryPoolB <x>    Output memory pool\n");
+         printf("  --memoryPoolS <x>    Semaphore memory pool\n");
+         printf("\n");
+         exit(1);
       } else {
          VMACCEL_LOG("invalid argument %s\n", argv[i]);
          return 1;
