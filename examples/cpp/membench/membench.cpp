@@ -627,5 +627,7 @@ int main(int argc, char **argv) {
    vmcl_poweroff_svc();
 #endif
 
+   VMACCEL_LOG("Test PASSED...");
+
    return 0;
 }
