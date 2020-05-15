@@ -353,7 +353,7 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
       }
    }
 
-   return 0;
+   return VMACCEL_SUCCESS;
 }
 
 int main(int argc, char **argv) {
@@ -491,11 +491,11 @@ int main(int argc, char **argv) {
          0, {0, 0, 0}, {numRows * numColumns * chunkSize, 0, 0}};
       if (accelA->upload<int>(rgn, memA) != VMACCEL_SUCCESS) {
          VMACCEL_LOG("ERROR: Unable to upload A\n");
-         return VMACCEL_FAIL;
+         return 1;
       }
       if (accelB->upload<int>(rgn, memB) != VMACCEL_SUCCESS) {
          VMACCEL_LOG("ERROR: Unable to upload B\n");
-         return VMACCEL_FAIL;
+         return 1;
       }
 
       VMAccelSurfaceRegion rgnSem = {
@@ -503,13 +503,13 @@ int main(int argc, char **argv) {
 
       if (accelS->upload<int>(rgnSem, memS) != VMACCEL_SUCCESS) {
          VMACCEL_LOG("ERROR: Unable to upload semaphores\n");
-         return VMACCEL_FAIL;
+         return 1;
       }
 
       VMAccelSurfaceRegion rgnDims = {0, {0, 0, 0}, {4, 0, 0}};
       if (accelDims->upload<int>(rgnDims, memDims) != VMACCEL_SUCCESS) {
          VMACCEL_LOG("ERROR: Unable to upload dims\n");
-         return VMACCEL_FAIL;
+         return 1;
       }
 
       compute::binding bindA(VMACCEL_BIND_UNORDERED_ACCESS_FLAG,
@@ -526,7 +526,7 @@ int main(int argc, char **argv) {
           !c->alloc_surface(bindS->get_surf()) ||
           !c->alloc_surface(bindDims->get_surf())) {
          VMACCEL_LOG("ERROR: Unable to allocate surfaces\n");
-         return VMACCEL_FAIL;
+         return 1;
       }
 
       c->upload_surface(bindA->get_surf());
@@ -553,7 +553,7 @@ int main(int argc, char **argv) {
                // Clear the semaphores
                if (accelS->upload<int>(rgnSem, memS) != VMACCEL_SUCCESS) {
                   VMACCEL_LOG("ERROR: Unable to reset semaphores\n");
-                  return VMACCEL_FAIL;
+                  return 1;
                }
             }
 
@@ -573,7 +573,7 @@ int main(int argc, char **argv) {
 
       if (accelB->download<int>(rgn, memB) != VMACCEL_SUCCESS) {
          VMACCEL_LOG("ERROR: Unable to readback B\n");
-         return VMACCEL_FAIL;
+         return 1;
       }
 
       clock_gettime(CLOCK_REALTIME, &e2eEndTime);
@@ -627,5 +627,5 @@ int main(int argc, char **argv) {
    vmcl_poweroff_svc();
 #endif
 
-   return 1;
+   return 0;
 }
