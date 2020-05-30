@@ -969,7 +969,7 @@ VMAccelStatus *vmwopencl_imageupload_1(VMCLImageUploadOp *argp) {
 
    if (surfaces[sid].desc.type == VMACCEL_SURFACE_BUFFER) {
       errNum = clEnqueueWriteBuffer(
-         queue, surfaces[sid].mem, FALSE, argp->op.imgRegion.coord.x,
+         queue, surfaces[sid].mem, CL_TRUE, argp->op.imgRegion.coord.x,
          argp->op.imgRegion.size.x, argp->op.ptr.ptr_val, 0, NULL, NULL);
 
       if (errNum != CL_SUCCESS) {

@@ -163,11 +163,15 @@ public:
     *
     * Update a resident surface.
     */
-   bool upload_surface(ref_object<surface> surf) {
+   bool upload_surface(ref_object<surface> surf, bool force = false) {
+#if DEBUG_SURFACE_CONSISTENCY
       VMAccelSurfaceMapReturnStatus *result_2;
       VMCLSurfaceMapOp vmcl_surfacemap_1_arg;
-      VMAccelReturnStatus *result_3;
       VMCLSurfaceUnmapOp vmcl_surfaceunmap_1_arg;
+#else
+      VMCLImageUploadOp vmcl_imgupload_1_arg;
+#endif
+      VMAccelReturnStatus *result_3;
 
 #if DEBUG_SURFACE_CONSISTENCY
       surf->log_consistency();
@@ -177,7 +181,7 @@ public:
  * Detect if there are any updates from the application for this surface.
  */
 #if !DEBUG_FORCE_SURFACE_CONSISTENCY
-      if (surf->is_consistent(get_contextId())) {
+      if (surf->is_consistent(get_contextId()) && !force) {
          return true;
       }
 #else
@@ -185,6 +189,7 @@ public:
                   surf->get_id());
 #endif
 
+#if DEBUG_SURFACE_CONSISTENCY
       memset(&vmcl_surfacemap_1_arg, 0, sizeof(vmcl_surfacemap_1_arg));
       vmcl_surfacemap_1_arg.queue.cid = get_contextId();
       vmcl_surfacemap_1_arg.queue.id = surf->get_queue_id();
@@ -240,6 +245,36 @@ public:
 
          surf->set_consistency(get_contextId(), true);
       }
+#else
+      memset(&vmcl_imgupload_1_arg, 0, sizeof(vmcl_imgupload_1_arg));
+      vmcl_imgupload_1_arg.queue.cid = get_contextId();
+      vmcl_imgupload_1_arg.queue.id = surf->get_queue_id();
+      vmcl_imgupload_1_arg.img.cid = get_contextId();
+      vmcl_imgupload_1_arg.img.accel.type = surf->get_desc().type;
+      vmcl_imgupload_1_arg.img.accel.handleType = VMACCEL_HANDLE_ID;
+      vmcl_imgupload_1_arg.img.accel.id = surf->get_id();
+      vmcl_imgupload_1_arg.op.imgRegion.coord.x = 0;
+      vmcl_imgupload_1_arg.op.imgRegion.coord.y = 0;
+      vmcl_imgupload_1_arg.op.imgRegion.coord.z = 0;
+      vmcl_imgupload_1_arg.op.imgRegion.size.x = surf->get_desc().width;
+      vmcl_imgupload_1_arg.op.imgRegion.size.y = surf->get_desc().height;
+      vmcl_imgupload_1_arg.op.imgRegion.size.z = surf->get_desc().depth;
+
+      vmcl_imgupload_1_arg.op.ptr.ptr_len = surf->get_desc().width;
+      vmcl_imgupload_1_arg.op.ptr.ptr_val = surf->get_backing().get();
+
+      /* Manage the fencing in the client.. */
+      vmcl_imgupload_1_arg.mode = VMACCEL_SURFACE_WRITE_ASYNCHRONOUS;
+
+      result_3 = vmcl_imageupload_1(&vmcl_imgupload_1_arg, get_client());
+
+      if (result_3 != NULL) {
+         vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
+                          (caddr_t)result_3);
+
+         surf->set_consistency(get_contextId(), true);
+      }
+#endif
 
       return true;
    }
@@ -249,7 +284,7 @@ public:
     *
     * Evict a surface from the context.
     */
-   bool download_surface(ref_object<surface> surf) {
+   bool download_surface(ref_object<surface> surf, bool force = false) {
       VMAccelSurfaceMapReturnStatus *result_1;
       VMCLSurfaceMapOp vmcl_surfacemap_1_arg;
       VMAccelReturnStatus *result_2;
@@ -259,7 +294,7 @@ public:
       surf->log_consistency();
 #endif
 
-      if (surf->get_desc().usage != VMACCEL_SURFACE_USAGE_READONLY) {
+      if (surf->get_desc().usage != VMACCEL_SURFACE_USAGE_READONLY || force) {
          memset(&vmcl_surfacemap_1_arg, 0, sizeof(vmcl_surfacemap_1_arg));
          vmcl_surfacemap_1_arg.queue.cid = get_contextId();
          vmcl_surfacemap_1_arg.queue.id = surf->get_queue_id();

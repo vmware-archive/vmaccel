@@ -184,6 +184,8 @@ typedef struct FunctionTableEntry {
 } FunctionTableEntry;
 
 enum {
+   UPLOAD_A = -3,
+   DOWNLOAD_A = -2,
    MEMCPY = -1,
    MATRIX_ADD_2D = 0,
    MATRIX_COPY_2D,
@@ -453,6 +455,12 @@ int main(int argc, char **argv) {
    {
       compute::context c(accel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
                          numSubDevices, 0);
+      size_t surfBytes = (size_t)numRows * numColumns * chunkSize * sizeof(int);
+      size_t uploadBytes = 0;
+      size_t downloadBytes = 0;
+      size_t refBytes = 0;
+      size_t dirtyBytes = 0;
+      size_t computeBytes = 0;
 
       /*
        * Query an accelerator manager for the Compute Resource.
@@ -498,6 +506,8 @@ int main(int argc, char **argv) {
          return 1;
       }
 
+      uploadBytes += 2 * surfBytes;
+
       VMAccelSurfaceRegion rgnSem = {
          0, {0, 0, 0}, {numRows * numColumns, 0, 0}};
 
@@ -511,6 +521,8 @@ int main(int argc, char **argv) {
          VMACCEL_LOG("ERROR: Unable to upload dims\n");
          return 1;
       }
+
+      uploadBytes += 2 * numRows * numColumns * sizeof(int);
 
       compute::binding bindA(VMACCEL_BIND_UNORDERED_ACCESS_FLAG,
                              VMACCEL_SURFACE_USAGE_READWRITE, accelA);
@@ -537,13 +549,20 @@ int main(int argc, char **argv) {
       clock_gettime(CLOCK_REALTIME, &e2eStartTime);
 
       for (int iter = 0; iter < numIterations; iter++) {
-         if (kernelFunc == MEMCPY) {
+         if (kernelFunc == UPLOAD_A) {
+            c->upload_surface(bindA->get_surf(), true);
+            uploadBytes += surfBytes;
+         } else if (kernelFunc == DOWNLOAD_A) {
+            c->download_surface(bindA->get_surf(), true);
+            downloadBytes += surfBytes;
+         } else if (kernelFunc == MEMCPY) {
             VMAccelSurfaceRegion copyRgn = {
-               0,
-               {0, 0, 0},
-               {numRows * numColumns * chunkSize * sizeof(int), 0, 0}};
+               0, {0, 0, 0}, {surfBytes * chunkSize, 0, 0}};
             c->copy_surface(0, bindA->get_surf(), copyRgn, bindB->get_surf(),
                             copyRgn);
+
+            refBytes += surfBytes;
+            dirtyBytes += surfBytes;
          } else {
             ref_object<compute::operation> opobj;
 
@@ -555,6 +574,7 @@ int main(int argc, char **argv) {
                   VMACCEL_LOG("ERROR: Unable to reset semaphores\n");
                   return 1;
                }
+               uploadBytes += 4 * sizeof(int);
             }
 
             compute::dispatch<
@@ -563,6 +583,16 @@ int main(int argc, char **argv) {
                c, kernelDevice, opobj, VMCL_OPENCL_C_1_0, k,
                functionTable[kernelFunc].function, workTopology, bindA, bindB,
                bindS, bindDims);
+
+            if (kernelFunc == MATRIX_COPY_2D ||
+                kernelFunc == MATRIX_COPY_TRANSPOSE_2D) {
+               refBytes += surfBytes * numPasses;
+               dirtyBytes += surfBytes * numPasses;
+            } else {
+               refBytes += 2 * surfBytes * numPasses;
+               dirtyBytes += 2 * surfBytes * numPasses;
+            }
+            computeBytes += surfBytes * numPasses;
          }
       }
 
@@ -576,6 +606,8 @@ int main(int argc, char **argv) {
          return 1;
       }
 
+      downloadBytes += surfBytes;
+
       clock_gettime(CLOCK_REALTIME, &e2eEndTime);
       e2eDiffTime = DiffTime(&e2eStartTime, &e2eEndTime);
       totalRuntimeMS =
@@ -583,20 +615,14 @@ int main(int argc, char **argv) {
          ((e2eDiffTime.tv_nsec != 0) ? (double)e2eDiffTime.tv_nsec / 1000000.0f
                                      : 0.0f);
 
-      size_t passBytes = (size_t)numRows * numColumns * chunkSize * sizeof(int);
-      size_t iterationBytes = passBytes * numPasses;
-      size_t totalComputeBytes = iterationBytes * numIterations;
-      size_t totalTransferredBytes =
-         passBytes * 3 + numRows * numColumns * sizeof(int);
       VMACCEL_LOG("\n");
       VMACCEL_LOG("End-to-end Time = %lf ms\n", totalRuntimeMS);
-      VMACCEL_LOG("Total Referenced = %ld bytes\n", totalComputeBytes);
-      VMACCEL_LOG("Total Dirtied = %ld bytes\n", totalComputeBytes);
-      VMACCEL_LOG("Total Uploaded = %ld bytes\n",
-                  passBytes * 2 + numRows * numColumns * sizeof(int));
-      VMACCEL_LOG("Total Downloaded = %ld bytes\n", passBytes);
+      VMACCEL_LOG("Total Referenced = %ld bytes\n", refBytes);
+      VMACCEL_LOG("Total Dirtied = %ld bytes\n", dirtyBytes);
+      VMACCEL_LOG("Total Uploaded = %ld bytes\n", uploadBytes);
+      VMACCEL_LOG("Total Downloaded = %ld bytes\n", downloadBytes);
       VMACCEL_LOG("Compute Throughput = %lf bytes/ms\n",
-                  totalComputeBytes / totalRuntimeMS);
+                  computeBytes / totalRuntimeMS);
       VMACCEL_LOG("\n");
 
       for (int i = 0; i < numRows; i++) {
@@ -627,7 +653,7 @@ int main(int argc, char **argv) {
    vmcl_poweroff_svc();
 #endif
 
-   VMACCEL_LOG("Test PASSED...");
+   VMACCEL_LOG("Test PASSED...\n");
 
    return 0;
 }
