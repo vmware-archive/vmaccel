@@ -383,7 +383,9 @@ public:
          mgrClnt = NULL;
       }
 
-      Destructor(mgrAddr);
+      if (!VMAccel_IsLocal()) {
+         Destructor(mgrAddr);
+      }
    }
 
    /**

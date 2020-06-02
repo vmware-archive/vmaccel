@@ -461,7 +461,9 @@ void vmaccel_stream_poweroff() {
             IdentifierDB_ReleaseId(g_svrDB[j], i);
          }
       }
-      IdentifierDB_Free(g_svrDB[j]);
+      if (g_svrDB[j] != NULL) {
+         IdentifierDB_Free(g_svrDB[j]);
+      }
    }
 
    free(scratch);
