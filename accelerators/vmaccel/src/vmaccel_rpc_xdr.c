@@ -735,6 +735,10 @@ bool_t xdr_VMAccelSurfaceId(XDR *xdrs, VMAccelSurfaceId *objp) {
       return FALSE;
    if (!xdr_VMAccelId(xdrs, &objp->id))
       return FALSE;
+   if (!xdr_u_int(xdrs, &objp->offset))
+      return FALSE;
+   if (!xdr_u_int(xdrs, &objp->generation))
+      return FALSE;
    return TRUE;
 }
 
@@ -917,6 +921,8 @@ bool_t xdr_VMAccelSurfaceMapOp(XDR *xdrs, VMAccelSurfaceMapOp *objp) {
 
 bool_t xdr_VMAccelSurfaceUnmapOp(XDR *xdrs, VMAccelSurfaceUnmapOp *objp) {
    if (!xdr_VMAccelSurfaceId(xdrs, &objp->surf))
+      return FALSE;
+   if (!xdr_VMAccelSurfaceMapFlags(xdrs, &objp->mapFlags))
       return FALSE;
    if (!xdr_bytes(xdrs, (char **)&objp->ptr.ptr_val,
                   (u_int *)&objp->ptr.ptr_len, ~0))

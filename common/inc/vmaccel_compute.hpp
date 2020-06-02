@@ -52,6 +52,7 @@ extern "C" {
 #else
 #include "vmcl_rpc.h"
 #endif
+#include "vmaccel_stream.h"
 #include "vmaccel_utils.h"
 }
 
@@ -158,19 +159,16 @@ public:
       return true;
    }
 
-   /**
-    * upload_surface
-    *
-    * Update a resident surface.
-    */
+/**
+ * upload_surface
+ *
+ * Update a resident surface.
+ */
+#if ENABLE_VMCL_STREAM_SERVER || DEBUG_SURFACE_CONSISTENCY
    bool upload_surface(ref_object<surface> surf, bool force = false) {
-#if DEBUG_SURFACE_CONSISTENCY
-      VMAccelSurfaceMapReturnStatus *result_2;
       VMCLSurfaceMapOp vmcl_surfacemap_1_arg;
+      VMAccelSurfaceMapReturnStatus *result_2;
       VMCLSurfaceUnmapOp vmcl_surfaceunmap_1_arg;
-#else
-      VMCLImageUploadOp vmcl_imgupload_1_arg;
-#endif
       VMAccelReturnStatus *result_3;
 
 #if DEBUG_SURFACE_CONSISTENCY
@@ -189,63 +187,89 @@ public:
                   surf->get_id());
 #endif
 
-#if DEBUG_SURFACE_CONSISTENCY
       memset(&vmcl_surfacemap_1_arg, 0, sizeof(vmcl_surfacemap_1_arg));
       vmcl_surfacemap_1_arg.queue.cid = get_contextId();
       vmcl_surfacemap_1_arg.queue.id = surf->get_queue_id();
       vmcl_surfacemap_1_arg.op.surf.id = surf->get_id();
+      vmcl_surfacemap_1_arg.op.surf.generation = surf->get_generation();
       vmcl_surfacemap_1_arg.op.size.x = surf->get_desc().width;
       vmcl_surfacemap_1_arg.op.size.y = surf->get_desc().height;
       vmcl_surfacemap_1_arg.op.mapFlags =
          VMACCEL_MAP_READ_FLAG | VMACCEL_MAP_WRITE_FLAG;
 
-      result_2 = vmcl_surfacemap_1(&vmcl_surfacemap_1_arg, get_client());
+      if (VMAccel_IsLocal()) {
+         result_2 = vmcl_surfacemap_1(&vmcl_surfacemap_1_arg, get_client());
 
-      if (result_2 != NULL &&
-          result_2->VMAccelSurfaceMapReturnStatus_u.ret->status ==
-             VMACCEL_SUCCESS) {
-         void *ptr = result_2->VMAccelSurfaceMapReturnStatus_u.ret->ptr.ptr_val;
+         if (result_2 != NULL &&
+             result_2->VMAccelSurfaceMapReturnStatus_u.ret->status ==
+                VMACCEL_SUCCESS) {
+            void *ptr =
+               result_2->VMAccelSurfaceMapReturnStatus_u.ret->ptr.ptr_val;
 
-         assert(result_2->VMAccelSurfaceMapReturnStatus_u.ret->ptr.ptr_len ==
-                vmcl_surfacemap_1_arg.op.size.x);
+            assert(result_2->VMAccelSurfaceMapReturnStatus_u.ret->ptr.ptr_len ==
+                   vmcl_surfacemap_1_arg.op.size.x);
 
-         /*
-          * Memory copy the contents into the value
-          */
-         memcpy(ptr, surf->get_backing().get(),
-                vmcl_surfacemap_1_arg.op.size.x);
+            /*
+             * Memory copy the contents into the value
+             */
+            memcpy(ptr, surf->get_backing().get(),
+                   vmcl_surfacemap_1_arg.op.size.x);
 
 #if DEBUG_COMPUTE_OPERATION
-         for (int i = 0;
-              i < vmcl_surfacemap_1_arg.op.size.x / sizeof(unsigned int); i++) {
-            VMACCEL_LOG("%s: in_uint32[%d]=%d\n", __FUNCTION__, i,
-                        ((unsigned int *)ptr)[i]);
-         }
+            for (int i = 0;
+                 i < vmcl_surfacemap_1_arg.op.size.x / sizeof(unsigned int);
+                 i++) {
+               VMACCEL_LOG("%s: in_uint32[%d]=%d\n", __FUNCTION__, i,
+                           ((unsigned int *)ptr)[i]);
+            }
 #endif
 
-         memset(&vmcl_surfaceunmap_1_arg, 0, sizeof(vmcl_surfaceunmap_1_arg));
-         vmcl_surfaceunmap_1_arg.queue.cid = get_contextId();
-         vmcl_surfaceunmap_1_arg.queue.id = surf->get_queue_id();
-         vmcl_surfaceunmap_1_arg.op.surf.id = surf->get_id();
-         vmcl_surfaceunmap_1_arg.op.ptr.ptr_len =
-            vmcl_surfacemap_1_arg.op.size.x;
-         vmcl_surfaceunmap_1_arg.op.ptr.ptr_val = (char *)ptr;
+            memset(&vmcl_surfaceunmap_1_arg, 0,
+                   sizeof(vmcl_surfaceunmap_1_arg));
+            vmcl_surfaceunmap_1_arg.queue.cid = get_contextId();
+            vmcl_surfaceunmap_1_arg.queue.id = surf->get_queue_id();
+            vmcl_surfaceunmap_1_arg.op.surf.id = surf->get_id();
+            vmcl_surfaceunmap_1_arg.op.surf.generation = surf->get_generation();
+            vmcl_surfaceunmap_1_arg.op.ptr.ptr_len =
+               vmcl_surfacemap_1_arg.op.size.x;
+            vmcl_surfaceunmap_1_arg.op.ptr.ptr_val = (char *)ptr;
 
-         result_3 = vmcl_surfaceunmap_1(&vmcl_surfaceunmap_1_arg, get_client());
+            result_3 =
+               vmcl_surfaceunmap_1(&vmcl_surfaceunmap_1_arg, get_client());
 
-         vmaccel_xdr_free((xdrproc_t)xdr_VMAccelSurfaceMapReturnStatus,
-                          (caddr_t)result_2);
+            vmaccel_xdr_free((xdrproc_t)xdr_VMAccelSurfaceMapReturnStatus,
+                             (caddr_t)result_2);
 
-         if (result_3 == NULL) {
-            return false;
+            if (result_3 == NULL) {
+               return false;
+            }
+
+            vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
+                             (caddr_t)result_3);
+
+            surf->set_consistency(get_contextId(), true);
          }
-
-         vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
-                          (caddr_t)result_3);
+      } else {
+         VMAccelAddress a = *(get_accel()->get_manager_addr());
+         a.port = VMACCEL_VMCL_BASE_PORT;
+         vmaccel_stream_send_async(
+            &a, VMACCEL_STREAM_TYPE_VMCL_UPLOAD, &vmcl_surfacemap_1_arg,
+            surf->get_backing().get(), vmcl_surfacemap_1_arg.op.size.x);
 
          surf->set_consistency(get_contextId(), true);
       }
+
+      return true;
+   }
 #else
+   bool upload_surface(ref_object<surface> surf, bool force = false) {
+      VMCLImageUploadOp vmcl_imgupload_1_arg;
+      VMAccelReturnStatus *result_3;
+
+      if (surf->is_consistent(get_contextId()) && !force) {
+         return true;
+      }
+
       memset(&vmcl_imgupload_1_arg, 0, sizeof(vmcl_imgupload_1_arg));
       vmcl_imgupload_1_arg.queue.cid = get_contextId();
       vmcl_imgupload_1_arg.queue.id = surf->get_queue_id();
@@ -253,6 +277,7 @@ public:
       vmcl_imgupload_1_arg.img.accel.type = surf->get_desc().type;
       vmcl_imgupload_1_arg.img.accel.handleType = VMACCEL_HANDLE_ID;
       vmcl_imgupload_1_arg.img.accel.id = surf->get_id();
+      vmcl_imgupload_1_arg.img.accel.generation = surf->get_generation();
       vmcl_imgupload_1_arg.op.imgRegion.coord.x = 0;
       vmcl_imgupload_1_arg.op.imgRegion.coord.y = 0;
       vmcl_imgupload_1_arg.op.imgRegion.coord.z = 0;
@@ -274,10 +299,10 @@ public:
 
          surf->set_consistency(get_contextId(), true);
       }
-#endif
 
       return true;
    }
+#endif
 
    /**
     * download_surface
@@ -299,6 +324,7 @@ public:
          vmcl_surfacemap_1_arg.queue.cid = get_contextId();
          vmcl_surfacemap_1_arg.queue.id = surf->get_queue_id();
          vmcl_surfacemap_1_arg.op.surf.id = surf->get_id();
+         vmcl_surfacemap_1_arg.op.surf.generation = surf->get_generation();
          vmcl_surfacemap_1_arg.op.size.x = surf->get_desc().width;
          vmcl_surfacemap_1_arg.op.size.y = surf->get_desc().height;
          vmcl_surfacemap_1_arg.op.mapFlags = VMACCEL_MAP_READ_FLAG;
@@ -334,6 +360,7 @@ public:
             vmcl_surfaceunmap_1_arg.queue.cid = get_contextId();
             vmcl_surfaceunmap_1_arg.queue.id = surf->get_queue_id();
             vmcl_surfaceunmap_1_arg.op.surf.id = surf->get_id();
+            vmcl_surfaceunmap_1_arg.op.surf.generation = surf->get_generation();
             vmcl_surfaceunmap_1_arg.op.ptr.ptr_len =
                vmcl_surfacemap_1_arg.op.size.x;
             vmcl_surfaceunmap_1_arg.op.ptr.ptr_val = (char *)ptr;
@@ -375,7 +402,9 @@ public:
       VMAccelReturnStatus *result_2;
       VMCLQueueId vmcl_queueflush_1_arg;
       VMAccelId srcId = srcSurf->get_id();
+      unsigned int srcGen = srcSurf->get_generation();
       VMAccelId dstId = dstSurf->get_id();
+      unsigned int dstGen = dstSurf->get_generation();
 
       if (!is_resident(srcId) || !is_resident(dstId)) {
          return;
@@ -385,8 +414,10 @@ public:
       vmcl_surfacecopy_1_arg.queue.id = qid;
       vmcl_surfacecopy_1_arg.dst.cid = get_contextId();
       vmcl_surfacecopy_1_arg.dst.accel.id = dstId;
+      vmcl_surfacecopy_1_arg.dst.accel.generation = dstGen;
       vmcl_surfacecopy_1_arg.src.cid = get_contextId();
       vmcl_surfacecopy_1_arg.src.accel.id = srcId;
+      vmcl_surfacecopy_1_arg.src.accel.generation = srcGen;
       vmcl_surfacecopy_1_arg.op.dstRegion = dstRegion;
       vmcl_surfacecopy_1_arg.op.srcRegion = srcRegion;
 
@@ -731,11 +762,15 @@ bool prepareComputeArgs(ref_object<clcontext> &clctx,
                     (caddr_t)result_1);
 
    kernelArgs[argIndex].surf.id = vmcl_surfacealloc_1_arg.client.accel.id;
+   kernelArgs[argIndex].surf.generation =
+      vmcl_surfacealloc_1_arg.client.accel.generation;
 
    memset(&vmcl_surfacemap_1_arg, 0, sizeof(vmcl_surfacemap_1_arg));
    vmcl_surfacemap_1_arg.queue.cid = clctx->get_contextId();
    vmcl_surfacemap_1_arg.queue.id = arg.get_queue_id();
    vmcl_surfacemap_1_arg.op.surf.id = (VMAccelId)argIndex;
+   vmcl_surfacemap_1_arg.op.surf.generation =
+      kernelArgs[argIndex].surf.generation;
    vmcl_surfacemap_1_arg.op.size.x = arg.get_size();
    vmcl_surfacemap_1_arg.op.mapFlags =
       VMACCEL_MAP_READ_FLAG | VMACCEL_MAP_WRITE_FLAG;
@@ -767,6 +802,8 @@ bool prepareComputeArgs(ref_object<clcontext> &clctx,
       vmcl_surfaceunmap_1_arg.queue.cid = clctx->get_contextId();
       vmcl_surfaceunmap_1_arg.queue.id = arg.get_queue_id();
       vmcl_surfaceunmap_1_arg.op.surf.id = argIndex;
+      vmcl_surfaceunmap_1_arg.op.surf.generation =
+         kernelArgs[argIndex].surf.generation;
       vmcl_surfaceunmap_1_arg.op.ptr.ptr_len = vmcl_surfacemap_1_arg.op.size.x;
       vmcl_surfaceunmap_1_arg.op.ptr.ptr_val = (char *)ptr;
 
@@ -827,7 +864,6 @@ bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx,
       __FUNCTION__, argIndex, arg->get_id(), clctx->get_contextId(),
       arg->get_queue_id());
 #endif
-
    kernelArgs[argIndex].surf.id = VMACCEL_INVALID_ID;
    kernelArgs[argIndex].index = -1;
 
@@ -839,6 +875,7 @@ bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx,
       kernelArgs[argIndex].index = argIndex;
       kernelArgs[argIndex].type = VMCL_ARG_SURFACE;
       kernelArgs[argIndex].surf.id = arg->get_id();
+      kernelArgs[argIndex].surf.generation = arg->get_generation();
       return true;
    }
 
@@ -897,6 +934,8 @@ bool quiesceComputeArgs(ref_object<clcontext> &clctx,
       vmcl_surfacemap_1_arg.queue.id = kernelArgs[argIndex].queue.id;
       vmcl_surfacemap_1_arg.op.surf.id =
          (VMAccelId)kernelArgs[argIndex].surf.id;
+      vmcl_surfacemap_1_arg.op.surf.generation =
+         kernelArgs[argIndex].surf.generation;
       vmcl_surfacemap_1_arg.op.size.x = arg.get_size();
       vmcl_surfacemap_1_arg.op.mapFlags = VMACCEL_MAP_READ_FLAG;
 
@@ -926,6 +965,8 @@ bool quiesceComputeArgs(ref_object<clcontext> &clctx,
          vmcl_surfaceunmap_1_arg.queue.cid = clctx->get_contextId();
          vmcl_surfaceunmap_1_arg.queue.id = kernelArgs[argIndex].queue.id;
          vmcl_surfaceunmap_1_arg.op.surf.id = kernelArgs[argIndex].surf.id;
+         vmcl_surfaceunmap_1_arg.op.surf.generation =
+            kernelArgs[argIndex].surf.generation;
          vmcl_surfaceunmap_1_arg.op.ptr.ptr_len =
             vmcl_surfacemap_1_arg.op.size.x;
          vmcl_surfaceunmap_1_arg.op.ptr.ptr_val = (char *)ptr;

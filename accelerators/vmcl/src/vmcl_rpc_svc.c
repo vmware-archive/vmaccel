@@ -44,6 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "vmaccel_types_address.h"
 #include "vmaccel_mgr_utils.h"
+#include "vmaccel_stream.h"
 #include "log_level.h"
 
 #ifndef SIG_PF
@@ -309,6 +310,8 @@ int main(int argc, char **argv) {
       exit(1);
    }
 
+   vmaccel_stream_poweron();
+
    allocStatus = vmcl_poweron_svc(NULL);
 
    if ((allocStatus == NULL) || (allocStatus->status != VMACCEL_SUCCESS)) {
@@ -338,6 +341,8 @@ int main(int argc, char **argv) {
    if (mgrClient.clnt != NULL) {
       vmaccelmgr_unregister(&mgrClient);
    }
+
+   vmaccel_stream_poweroff();
 
    vmcl_poweroff_svc();
 

@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 
 #include "vmwopencl.h"
+#include "vmaccel_stream.h"
 #include "vmaccel_utils.h"
 #include "vmwopencl_utils.h"
 
@@ -53,7 +54,8 @@ typedef struct VMWOpenCLContext {
 
 typedef struct VMWOpenCLSurface {
    VMAccelSurfaceDesc desc;
-   cl_mem mem;
+   cl_mem mem[VMACCEL_MAX_ACTIVE_GENERATIONS];
+   pthread_mutex_t mutex;
 } VMWOpenCLSurface;
 
 typedef struct VMWOpenCLQueue {
@@ -114,6 +116,18 @@ const cl_int clDeviceTypes[VMACCEL_SELECT_MAX] = {
 };
 
 VMAccelStatus *vmwopencl_poweroff();
+VMAccelSurfaceMapStatus *vmwopencl_surfacemap_1(VMCLSurfaceMapOp *argp);
+VMAccelStatus *vmwopencl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp);
+
+#if ENABLE_VMCL_STREAM_SERVER
+#define WAIT_SURF(_SID)                                                        \
+   while (mappings[_SID].ptr != NULL) {                                        \
+      pthread_yield();                                                         \
+   }
+#else
+#define WAIT_SURF(_SID) assert(mappings[_SID].ptr == NULL)
+#endif
+
 
 VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
                                          unsigned int accelIndex) {
@@ -389,12 +403,24 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
    result.desc.maxSurfaces = VMCL_MAX_SURFACES;
    result.desc.maxMappings = VMCL_MAX_SURFACES;
 
+#if ENABLE_VMCL_STREAM_SERVER
+   if (!VMAccel_IsLocal()) {
+      VMAccelStreamCallbacks cb;
+      cb.clSurfacemap_1 = vmwopencl_surfacemap_1;
+      cb.clSurfaceunmap_1 = vmwopencl_surfaceunmap_1;
+      vmaccel_stream_server(VMACCEL_STREAM_TYPE_VMCL_UPLOAD,
+                            VMACCEL_VMCL_BASE_PORT, &cb);
+   }
+#endif
+
    return (&result);
 }
 
 VMAccelStatus *vmwopencl_poweroff() {
    static VMAccelStatus result;
    int i;
+
+   vmaccel_stream_poweroff();
 
    memset(&result, 0, sizeof(result));
 
@@ -657,7 +683,9 @@ vmwopencl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp) {
    unsigned int cid = (unsigned int)argp->client.cid;
    unsigned int sid = (unsigned int)argp->client.accel.id;
    cl_context context = contexts[cid].context;
-   cl_mem memObject = NULL;
+   cl_mem memObject[VMACCEL_MAX_ACTIVE_GENERATIONS] = {
+      NULL,
+   };
    unsigned int clMemFlags = 0;
 
    memset(&result, 0, sizeof(result));
@@ -679,8 +707,10 @@ vmwopencl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp) {
       }
       assert(argp->desc.format == VMACCEL_FORMAT_R8_TYPELESS);
 
-      memObject =
-         clCreateBuffer(context, clMemFlags, argp->desc.width, NULL, NULL);
+      for (int i = 0; i < VMACCEL_MAX_ACTIVE_GENERATIONS; i++) {
+         memObject[i] =
+            clCreateBuffer(context, clMemFlags, argp->desc.width, NULL, NULL);
+      }
    } else {
       assert(argp->desc.usage == VMACCEL_SURFACE_USAGE_READWRITE);
       clMemFlags |= CL_MEM_READ_WRITE;
@@ -696,9 +726,13 @@ vmwopencl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp) {
       return (&result);
    }
 
+   pthread_mutex_init(&surfaces[sid].mutex);
+
    if (IdentifierDB_AcquireId(surfaceIds, sid)) {
+      pthread_mutex_lock(&surfaces[sid].mutex);
       surfaces[sid].desc = argp->desc;
-      surfaces[sid].mem = memObject;
+      memcpy(surfaces[sid].mem, memObject, sizeof(memObject));
+      pthread_mutex_unlock(&surfaces[sid].mutex);
    } else {
       assert(0);
       result.status = VMACCEL_RESOURCE_UNAVAILABLE;
@@ -711,12 +745,22 @@ VMAccelStatus *vmwopencl_surfacedestroy_1(VMCLSurfaceId *argp) {
    static VMAccelStatus result;
    unsigned int sid = (unsigned int)argp->accel.id;
 
+   WAIT_SURF(sid);
+
+   pthread_mutex_lock(&surfaces[sid].mutex);
+
    memset(&result, 0, sizeof(result));
 
    assert(IdentifierDB_ActiveId(surfaceIds, sid));
 
-   clReleaseMemObject(surfaces[sid].mem);
+   for (int i = 0; i < VMACCEL_MAX_ACTIVE_GENERATIONS; i++) {
+      clReleaseMemObject(surfaces[sid].mem[i]);
+   }
+
    memset(&surfaces[sid], 0, sizeof(surfaces[0]));
+
+   pthread_mutex_unlock(&surfaces[sid].mutex);
+   pthread_mutex_destroy(&surfaces[sid].mutex);
 
    IdentifierDB_ReleaseId(surfaceIds, sid);
    result.status = VMACCEL_SUCCESS;
@@ -960,8 +1004,11 @@ VMAccelStatus *vmwopencl_imageupload_1(VMCLImageUploadOp *argp) {
    unsigned int cid = (unsigned int)argp->queue.cid;
    unsigned int qid = (unsigned int)argp->queue.id;
    unsigned int sid = (unsigned int)argp->img.accel.id;
+   unsigned int gen = (unsigned int)argp->img.accel.generation;
    cl_command_queue queue = queues[qid].queue;
    cl_int errNum;
+
+   pthread_mutex_lock(&surfaces[sid].mutex);
 
    memset(&result, 0, sizeof(result));
 
@@ -969,7 +1016,7 @@ VMAccelStatus *vmwopencl_imageupload_1(VMCLImageUploadOp *argp) {
 
    if (surfaces[sid].desc.type == VMACCEL_SURFACE_BUFFER) {
       errNum = clEnqueueWriteBuffer(
-         queue, surfaces[sid].mem, CL_TRUE, argp->op.imgRegion.coord.x,
+         queue, surfaces[sid].mem[gen], CL_TRUE, argp->op.imgRegion.coord.x,
          argp->op.imgRegion.size.x, argp->op.ptr.ptr_val, 0, NULL, NULL);
 
       if (errNum != CL_SUCCESS) {
@@ -981,6 +1028,8 @@ VMAccelStatus *vmwopencl_imageupload_1(VMCLImageUploadOp *argp) {
       result.status = VMACCEL_FAIL;
    }
 
+   pthread_mutex_unlock(&surfaces[sid].mutex);
+
    return (&result);
 }
 
@@ -989,9 +1038,12 @@ VMAccelDownloadStatus *vmwopencl_imagedownload_1(VMCLImageDownloadOp *argp) {
    unsigned int cid = (unsigned int)argp->queue.cid;
    unsigned int qid = (unsigned int)argp->queue.id;
    unsigned int sid = (unsigned int)argp->img.accel.id;
+   unsigned int gen = (unsigned int)argp->img.accel.generation;
    cl_command_queue queue = queues[qid].queue;
    void *ptr;
    cl_int errNum;
+
+   pthread_mutex_lock(&surfaces[sid].mutex);
 
    memset(&result, 0, sizeof(result));
 
@@ -1007,7 +1059,7 @@ VMAccelDownloadStatus *vmwopencl_imagedownload_1(VMCLImageDownloadOp *argp) {
       }
 
       errNum = clEnqueueReadBuffer(
-         queue, surfaces[sid].mem, blocking, argp->op.imgRegion.coord.x,
+         queue, surfaces[sid].mem[gen], blocking, argp->op.imgRegion.coord.x,
          argp->op.imgRegion.size.x, ptr, 0, NULL, NULL);
 
       if (errNum != CL_SUCCESS) {
@@ -1022,6 +1074,8 @@ VMAccelDownloadStatus *vmwopencl_imagedownload_1(VMCLImageDownloadOp *argp) {
       result.status = VMACCEL_FAIL;
    }
 
+   pthread_mutex_unlock(&surfaces[sid].mutex);
+
    return (&result);
 }
 
@@ -1029,6 +1083,7 @@ VMAccelSurfaceMapStatus *vmwopencl_surfacemap_1(VMCLSurfaceMapOp *argp) {
    static VMAccelSurfaceMapStatus result;
    unsigned int qid = (unsigned int)argp->queue.id;
    unsigned int sid = (unsigned int)argp->op.surf.id;
+   unsigned int gen = (unsigned int)argp->op.surf.generation;
    cl_command_queue queue = queues[qid].queue;
    void *ptr;
    cl_map_flags flags = 0;
@@ -1039,7 +1094,7 @@ VMAccelSurfaceMapStatus *vmwopencl_surfacemap_1(VMCLSurfaceMapOp *argp) {
    /*
     * Only allow one mapping per surface.
     */
-   assert(mappings[sid].ptr == NULL);
+   WAIT_SURF(sid);
 
    if (argp->op.mapFlags & VMACCEL_MAP_READ_FLAG) {
       flags |= CL_MAP_READ;
@@ -1053,8 +1108,10 @@ VMAccelSurfaceMapStatus *vmwopencl_surfacemap_1(VMCLSurfaceMapOp *argp) {
       flags |= CL_MAP_WRITE_INVALIDATE_REGION;
    }
 
+   pthread_mutex_lock(&surfaces[sid].mutex);
+
    if (surfaces[sid].desc.type == VMACCEL_SURFACE_BUFFER) {
-      ptr = clEnqueueMapBuffer(queue, surfaces[sid].mem, TRUE, flags,
+      ptr = clEnqueueMapBuffer(queue, surfaces[sid].mem[gen], TRUE, flags,
                                argp->op.coord.x, argp->op.size.x, 0, NULL, NULL,
                                &errNum);
 
@@ -1078,6 +1135,8 @@ VMAccelSurfaceMapStatus *vmwopencl_surfacemap_1(VMCLSurfaceMapOp *argp) {
       result.status = VMACCEL_FAIL;
    }
 
+   pthread_mutex_unlock(&surfaces[sid].mutex);
+
    return (&result);
 }
 
@@ -1085,11 +1144,14 @@ VMAccelStatus *vmwopencl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp) {
    static VMAccelStatus result;
    unsigned int qid = (unsigned int)argp->queue.id;
    unsigned int sid = (unsigned int)argp->op.surf.id;
+   unsigned int gen = (unsigned int)argp->op.surf.generation;
    cl_command_queue queue = queues[qid].queue;
    void *ptr;
    cl_int errNum;
 
    memset(&result, 0, sizeof(result));
+
+   pthread_mutex_lock(&surfaces[sid].mutex);
 
    /*
     * memcpy the data from the incoming mapping object.
@@ -1101,20 +1163,23 @@ VMAccelStatus *vmwopencl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp) {
    /*
     * We are done with the contents, free the pointer.
     */
-   if (!VMAccel_IsLocal()) {
+   if (!VMAccel_IsLocal() &&
+       ((argp->op.mapFlags & VMACCEL_MAP_NO_FREE_PTR_FLAG) == 0)) {
       free(argp->op.ptr.ptr_val);
       argp->op.ptr.ptr_val = NULL;
       argp->op.ptr.ptr_len = 0;
    }
 
-   errNum =
-      clEnqueueUnmapMemObject(queue, surfaces[sid].mem, ptr, 0, NULL, NULL);
+   errNum = clEnqueueUnmapMemObject(queue, surfaces[sid].mem[gen], ptr, 0, NULL,
+                                    NULL);
 
    mappings[sid].ptr = NULL;
 
    if (errNum != CL_SUCCESS) {
       result.status = VMACCEL_FAIL;
    }
+
+   pthread_mutex_unlock(&surfaces[sid].mutex);
 
    return (&result);
 }
@@ -1123,7 +1188,9 @@ VMAccelStatus *vmwopencl_surfacecopy_1(VMCLSurfaceCopyOp *argp) {
    static VMAccelStatus result;
    unsigned int qid = (unsigned int)argp->queue.id;
    unsigned int dstSid = (unsigned int)argp->dst.accel.id;
+   unsigned int dstGen = (unsigned int)argp->dst.accel.generation;
    unsigned int srcSid = (unsigned int)argp->src.accel.id;
+   unsigned int srcGen = (unsigned int)argp->src.accel.generation;
    cl_command_queue queue = queues[qid].queue;
    cl_int errNum;
 
@@ -1141,7 +1208,7 @@ VMAccelStatus *vmwopencl_surfacecopy_1(VMCLSurfaceCopyOp *argp) {
    if ((surfaces[dstSid].desc.type == VMACCEL_SURFACE_BUFFER) &&
        (surfaces[srcSid].desc.type == VMACCEL_SURFACE_BUFFER)) {
       errNum = clEnqueueCopyBuffer(
-         queue, surfaces[srcSid].mem, surfaces[dstSid].mem,
+         queue, surfaces[srcSid].mem[srcGen], surfaces[dstSid].mem[dstGen],
          argp->op.srcRegion.coord.x, argp->op.dstRegion.coord.x,
          argp->op.dstRegion.size.x, 0, NULL, NULL);
 
@@ -1362,7 +1429,9 @@ VMAccelStatus *vmwopencl_dispatch_1(VMCLDispatchOp *argp) {
    for (i = 0; i < argp->args.args_len; i++) {
       if (argp->args.args_val[i].type == VMCL_ARG_SURFACE) {
          unsigned int sid = (unsigned int)argp->args.args_val[i].surf.id;
-         cl_mem mem = surfaces[sid].mem;
+         unsigned int gen =
+            (unsigned int)argp->args.args_val[i].surf.generation;
+         cl_mem mem = surfaces[sid].mem[gen];
 
          errNum = clSetKernelArg(kernel, argp->args.args_val[i].index,
                                  sizeof(cl_mem), &mem);

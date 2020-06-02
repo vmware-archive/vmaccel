@@ -29,4 +29,4 @@ set(SOURCES
    ../../src/vmwopencl_ops.c)
 
 add_library(vmwopencl ${SOURCES})
-target_link_libraries(vmwopencl ${OPENCL_LIB})
+target_link_libraries(vmwopencl ${OPENCL_LIB} vmaccel_utils)

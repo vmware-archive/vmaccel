@@ -52,6 +52,7 @@ extern "C" {
 #endif
 #include "vmaccel_utils.h"
 #include "vmaccel_types_address.h"
+#include "vmaccel_types_address.hpp"
 }
 
 #include <cassert>
@@ -137,6 +138,7 @@ public:
     * @return A pointer to the VMAccelAddress.
     */
    const VMAccelAddress *get_accel_addr() const { return &addr; }
+   const VMAccelAddress &ref_accel_addr() const { return addr; }
 
    /**
     * get_opaque_addr
@@ -333,6 +335,9 @@ public:
    accelerator(const address &mgr,
                int accelMaxRefObjects = VMACCEL_MAX_REF_OBJECTS) {
       char host[256];
+      if (!VMAccel_IsLocal()) {
+         DeepCopy(mgrAddr, mgr.ref_accel_addr());
+      }
       if (VMAccel_AddressOpaqueAddrToString(mgr.get_accel_addr(), host,
                                             sizeof(host))) {
          VMACCEL_LOG("vmaccel: Connecting to Accelerator manager %s\n", host);
@@ -377,7 +382,16 @@ public:
          clnt_destroy(mgrClnt);
          mgrClnt = NULL;
       }
+
+      Destructor(mgrAddr);
    }
+
+   /**
+    * get_manager_addr
+    *
+    * @return A pointer to the address structure for the manager.
+    */
+   VMAccelAddress *get_manager_addr() { return &mgrAddr; }
 
    /**
     * get_manager
@@ -472,6 +486,7 @@ public:
    }
 
 private:
+   VMAccelAddress mgrAddr;
    CLIENT *mgrClnt;
 
    /*
@@ -524,6 +539,7 @@ public:
       LOG_ENTRY(("surface::Constructor {\n"));
       accel = a;
       desc = d;
+      generation = 0;
       id = a->alloc_id();
       backing = std::shared_ptr<char>(new char[d.width]);
       consistencyDB = IdentifierDB_Alloc(a->get_max_ref_objects());
@@ -551,6 +567,7 @@ public:
       LOG_ENTRY(("surface::Copy Constructor {\n"));
       accel = obj.accel;
       desc = obj.desc;
+      generation = 0;
       id = accel->alloc_id();
       backing = obj.backing;
       consistencyDB = IdentifierDB_Alloc(accel->get_max_ref_objects());
@@ -565,6 +582,8 @@ public:
    VMAccelId &get_id() { return id; }
 
    VMAccelSurfaceDesc &get_desc() { return desc; }
+
+   unsigned int &get_generation() { return generation; }
 
    std::shared_ptr<char> &get_backing() { return backing; }
 
@@ -589,6 +608,7 @@ public:
           imgRegion.size.y == desc.height && imgRegion.size.z == desc.depth) {
          memcpy(backing.get(), in.get_ptr(), MIN(desc.width, in.get_size()));
          set_consistency_range(0, accel->get_max_ref_objects() - 1, false);
+         generation = ((generation + 1) % VMACCEL_MAX_ACTIVE_GENERATIONS);
          return VMACCEL_SUCCESS;
       }
       return VMACCEL_FAIL;
@@ -680,6 +700,11 @@ private:
     * Surface descriptor structure.
     */
    VMAccelSurfaceDesc desc;
+
+   /*
+    * Current generation
+    */
+   unsigned int generation;
 
    /*
     * Backing memory for the surface.

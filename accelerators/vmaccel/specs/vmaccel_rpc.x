@@ -386,7 +386,9 @@ typedef unsigned int VMAccelHandleType;
 struct VMAccelSurfaceId {
    VMAccelSurfaceType        type;
    VMAccelHandleType         handleType;
-   VMAccelId                 id; 
+   VMAccelId                 id;
+   unsigned int              offset;
+   unsigned int              generation;
 };
 
 /*
@@ -571,6 +573,7 @@ struct VMAccelSurfaceMapOp {
 
 struct VMAccelSurfaceUnmapOp {
    VMAccelSurfaceId          surf;
+   VMAccelSurfaceMapFlags    mapFlags;
 
    /*
     * Client address.

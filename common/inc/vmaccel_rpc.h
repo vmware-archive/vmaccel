@@ -259,6 +259,8 @@ struct VMAccelSurfaceId {
    VMAccelSurfaceType type;
    VMAccelHandleType handleType;
    VMAccelId id;
+   u_int offset;
+   u_int generation;
 };
 typedef struct VMAccelSurfaceId VMAccelSurfaceId;
 
@@ -385,6 +387,7 @@ typedef struct VMAccelSurfaceMapOp VMAccelSurfaceMapOp;
 
 struct VMAccelSurfaceUnmapOp {
    VMAccelSurfaceId surf;
+   VMAccelSurfaceMapFlags mapFlags;
    struct {
       u_int ptr_len;
       char *ptr_val;
