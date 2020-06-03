@@ -58,6 +58,7 @@ extern "C" {
 
 #include <cassert>
 #include <map>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -114,9 +115,11 @@ public:
                  "obj.accelId=%d, obj.contextId=%d, "
                  "obj.get_typeMask()=%d) {\n",
                  obj.clnt, obj.accelId, obj.contextId, obj.get_typeMask()));
+      lock();
       clnt = obj.clnt;
       accelId = obj.accelId;
       contextId = obj.contextId;
+      unlock();
       LOG_EXIT(("} clcontext::CopyConstructor\n"));
    }
 
@@ -129,7 +132,10 @@ public:
       VMAccelSurfaceAllocateReturnStatus *result_1;
       VMCLSurfaceAllocateDesc vmcl_surfacealloc_1_arg;
 
+      lock();
+
       if (is_resident(surf->get_id())) {
+         unlock();
          return true;
       }
 
@@ -148,6 +154,7 @@ public:
       if (result_1 == NULL) {
          VMACCEL_WARNING("%s: Unable to allocate surface %d for context %d.\n",
                          __FUNCTION__, surf->get_id(), get_contextId());
+         unlock();
          return false;
       }
 
@@ -156,14 +163,16 @@ public:
 
       set_residency(surf->get_id(), true);
 
+      unlock();
+
       return true;
    }
 
-/**
- * upload_surface
- *
- * Update a resident surface.
- */
+   /**
+    * upload_surface
+    *
+    * Update a resident surface.
+    */
 #if ENABLE_VMCL_STREAM_SERVER || DEBUG_SURFACE_CONSISTENCY
    bool upload_surface(ref_object<surface> surf, bool force = false) {
       VMCLSurfaceMapOp vmcl_surfacemap_1_arg;
@@ -171,15 +180,18 @@ public:
       VMCLSurfaceUnmapOp vmcl_surfaceunmap_1_arg;
       VMAccelReturnStatus *result_3;
 
+      lock();
+
 #if DEBUG_SURFACE_CONSISTENCY
       surf->log_consistency();
 #endif
 
-/*
- * Detect if there are any updates from the application for this surface.
- */
+      /*
+       * Detect if there are any updates from the application for this surface.
+       */
 #if !DEBUG_FORCE_SURFACE_CONSISTENCY
       if (surf->is_consistent(get_contextId()) && !force) {
+         unlock();
          return true;
       }
 #else
@@ -241,6 +253,7 @@ public:
                              (caddr_t)result_2);
 
             if (result_3 == NULL) {
+               unlock();
                return false;
             }
 
@@ -259,6 +272,8 @@ public:
          surf->set_consistency(get_contextId(), true);
       }
 
+      unlock();
+
       return true;
    }
 #else
@@ -266,7 +281,10 @@ public:
       VMCLImageUploadOp vmcl_imgupload_1_arg;
       VMAccelReturnStatus *result_3;
 
+      lock();
+
       if (surf->is_consistent(get_contextId()) && !force) {
+         unlock();
          return true;
       }
 
@@ -300,6 +318,8 @@ public:
          surf->set_consistency(get_contextId(), true);
       }
 
+      unlock();
+
       return true;
    }
 #endif
@@ -314,6 +334,8 @@ public:
       VMCLSurfaceMapOp vmcl_surfacemap_1_arg;
       VMAccelReturnStatus *result_2;
       VMCLSurfaceUnmapOp vmcl_surfaceunmap_1_arg;
+
+      lock();
 
 #if DEBUG_SURFACE_CONSISTENCY
       surf->log_consistency();
@@ -372,6 +394,7 @@ public:
                              (caddr_t)result_1);
 
             if (result_2 == NULL) {
+               unlock();
                return false;
             }
 
@@ -385,6 +408,9 @@ public:
                      __FUNCTION__);
       }
 #endif
+
+      unlock();
+
       return true;
    }
 
@@ -406,7 +432,10 @@ public:
       VMAccelId dstId = dstSurf->get_id();
       unsigned int dstGen = dstSurf->get_generation();
 
+      lock();
+
       if (!is_resident(srcId) || !is_resident(dstId)) {
+         unlock();
          return;
       }
 
@@ -449,6 +478,8 @@ public:
       if (dstSurf->is_consistent(get_contextId())) {
          dstSurf->set_consistency(get_contextId(), false);
       }
+
+      unlock();
    }
 
    /**
@@ -458,7 +489,10 @@ public:
       VMAccelReturnStatus *result_1;
       VMCLSurfaceId vmcl_surfacedestroy_1_arg;
 
+      lock();
+
       if (!is_resident(id)) {
+         unlock();
          return;
       }
 
@@ -482,11 +516,13 @@ public:
       }
 
       set_residency(id, false);
+
+      unlock();
    }
 
-/**
- * Accessors.
- */
+   /**
+    * Accessors.
+    */
 #if VMACCEL_LOCAL
    struct svc_req *get_client() {
       return NULL;
@@ -498,6 +534,13 @@ public:
    VMAccelId get_accelId() { return accelId; }
 
    VMAccelId get_contextId() { return contextId; }
+
+   /**
+    * Thread safety
+    */
+   void lock() { m.lock(); }
+
+   void unlock() { m.unlock(); }
 
 private:
    /**
@@ -708,6 +751,7 @@ private:
    VMAccelId accelId;
    VMAccelId contextId;
    unsigned int numSubDevices;
+   std::mutex m;
 };
 
 typedef unsigned int VMCLKernelArchitecture;
