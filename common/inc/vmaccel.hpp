@@ -610,7 +610,7 @@ public:
           imgRegion.size.y == desc.height && imgRegion.size.z == desc.depth) {
          memcpy(backing.get(), in.get_ptr(), MIN(desc.width, in.get_size()));
          set_consistency_range(0, accel->get_max_ref_objects() - 1, false);
-         generation = ((generation + 1) % VMACCEL_MAX_ACTIVE_GENERATIONS);
+         generation++;
          return VMACCEL_SUCCESS;
       }
       return VMACCEL_FAIL;

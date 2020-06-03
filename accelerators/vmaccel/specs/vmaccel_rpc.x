@@ -387,6 +387,7 @@ struct VMAccelSurfaceId {
    VMAccelSurfaceType        type;
    VMAccelHandleType         handleType;
    VMAccelId                 id;
+   unsigned int              instance;
    unsigned int              offset;
    unsigned int              generation;
 };

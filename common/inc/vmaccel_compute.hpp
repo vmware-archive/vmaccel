@@ -1234,6 +1234,7 @@ public:
       unsigned int queueId = subDevice;
       unsigned int kernelId = 0;
       unsigned int i;
+      unsigned int res;
 
       if (!prepared) {
          return VMACCEL_FAIL;
@@ -1335,16 +1336,28 @@ public:
          vmaccel_xdr_free((xdrproc_t)xdr_VMCLKernelAllocateReturnStatus,
                           (caddr_t)result_1);
 
-         result_2 =
-            vmcl_dispatch_1(&vmcl_dispatch_1_arg, clctx.get()->get_client());
+         res = VMACCEL_RESOURCE_UNAVAILABLE;
+         while (res == VMACCEL_RESOURCE_UNAVAILABLE) {
+            result_2 =
+               vmcl_dispatch_1(&vmcl_dispatch_1_arg, clctx.get()->get_client());
 
-         if (result_2 != NULL) {
-            vmcl_queueflush_1_arg.cid = contextId;
-            vmcl_queueflush_1_arg.id = subDevice;
+            if (result_2 != NULL) {
+               vmcl_queueflush_1_arg.cid = contextId;
+               vmcl_queueflush_1_arg.id = subDevice;
 
-            vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
-                             (caddr_t)result_2);
+               res = result_2->VMAccelReturnStatus_u.ret->status;
 
+               if (res == VMACCEL_RESOURCE_UNAVAILABLE) {
+                  VMACCEL_LOG(
+                     "Dispatch requested resource that is unavailble...\n");
+               }
+
+               vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
+                                (caddr_t)result_2);
+            }
+         }
+
+         if (res == VMACCEL_SUCCESS) {
             result_3 =
                vmcl_queueflush_1(&vmcl_queueflush_1_arg, clctx->get_client());
 
