@@ -635,6 +635,13 @@ public:
           imgRegion.coord.y == 0 && imgRegion.coord.z == 0 &&
           imgRegion.size.x * sizeof(E) == desc.width &&
           imgRegion.size.y == desc.height && imgRegion.size.z == desc.depth) {
+#if DEBUG_SURFACE_CONSISTENCY
+         VMACCEL_LOG("%s: id=%d ptr=%d, %d, %d, %d\n", __FUNCTION__, id,
+                     ((unsigned int *)backing.get())[0],
+                     ((unsigned int *)backing.get())[1],
+                     ((unsigned int *)backing.get())[2],
+                     ((unsigned int *)backing.get())[3]);
+#endif
          memcpy(out.get_ptr(), backing.get(), MIN(desc.width, out.get_size()));
          return VMACCEL_SUCCESS;
       }

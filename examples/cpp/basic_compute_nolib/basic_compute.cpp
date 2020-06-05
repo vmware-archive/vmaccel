@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
    /*
     * Initialize the Compute Kernel.
     */
-   compute::kernel k(VMCL_IR_NATIVE, helloKernel);
+   compute::kernel k(VMCL_OPENCL_C_1_0, helloKernel);
 
    /*
     * Setup the working set.
@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
     * Execute the compute operation.
     */
    int ret = compute::execute<ref_object<int>>(
-      accel.get(), 0, VMCL_OPENCL_C_1_0, k, "hello_kernel", workTopology, a);
+      accel.get(), 0, k, VMCL_OPENCL_C_1_0, "hello_kernel", workTopology, a);
 
    VMACCEL_LOG("%s: compute ret = %d\n", __FUNCTION__, ret);
 

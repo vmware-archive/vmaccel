@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
    /*
     * Initialize the Compute Kernel.
     */
-   compute::kernel k(VMCL_IR_NATIVE, helloKernel);
+   compute::kernel k(VMCL_OPENCL_C_1_0, helloKernel);
 
    /*
     * Setup the working set.
@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
    {
       ref_object<compute::operation> opobj;
 
-      compute::dispatch<ref_object<binding>>(c, 0, opobj, VMCL_OPENCL_C_1_0, k,
+      compute::dispatch<ref_object<binding>>(c, 0, opobj, k, VMCL_OPENCL_C_1_0,
                                              "hello_kernel", workTopology, b);
    }
 

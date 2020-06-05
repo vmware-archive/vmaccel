@@ -1014,6 +1014,15 @@ VMAccelStatus *vmwopencl_imageupload_1(VMCLImageUploadOp *argp) {
    cl_command_queue queue = queues[qid].queue;
    cl_int errNum;
 
+#if DEBUG_SURFACE_CONSISTENCY
+   VMACCEL_LOG("%s: sid=%d, gen=%d, inst=%d\n", __FUNCTION__, sid, gen, inst);
+
+   for (int i = 0; i < argp->op.imgRegion.coord.x / 4; i++) {
+      VMACCEL_LOG("%s: uint32[%d] = 0x%x\n", __FUNCTION__, i,
+                  ((unsigned int *)ptr)[i]);
+   }
+#endif
+
    pthread_mutex_lock(&surfaces[sid].mutex);
    pthread_mutex_lock(&surfaces[sid].inst[inst].mutex);
 
@@ -1154,6 +1163,10 @@ VMAccelSurfaceMapStatus *vmwopencl_surfacemap_1(VMCLSurfaceMapOp *argp) {
       flags |= CL_MAP_WRITE_INVALIDATE_REGION;
    }
 
+#if DEBUG_SURFACE_CONSISTENCY
+   VMACCEL_LOG("%s: sid=%d, gen=%d, inst=%d\n", __FUNCTION__, sid, gen, inst);
+#endif
+
    if (surfaces[sid].desc.type == VMACCEL_SURFACE_BUFFER) {
       if (++surfaces[sid].inst[inst].mapping.refCount == 1) {
          ptr = clEnqueueMapBuffer(queue, surfaces[sid].inst[inst].mem, TRUE,
@@ -1184,6 +1197,7 @@ VMAccelSurfaceMapStatus *vmwopencl_surfacemap_1(VMCLSurfaceMapOp *argp) {
       result.status = VMACCEL_FAIL;
    }
 
+
    pthread_mutex_unlock(&surfaces[sid].inst[inst].mutex);
    pthread_mutex_unlock(&surfaces[sid].mutex);
 
@@ -1208,6 +1222,15 @@ VMAccelStatus *vmwopencl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp) {
     * memcpy the data from the incoming mapping object.
     */
    ptr = surfaces[sid].inst[inst].mapping.ptr;
+
+#if DEBUG_SURFACE_CONSISTENCY
+   VMACCEL_LOG("%s: sid=%d, gen=%d, inst=%d, *ptr=%x, %x, %x, %x\n",
+               __FUNCTION__, sid, gen, inst,
+               ((unsigned int *)argp->op.ptr.ptr_val)[0],
+               ((unsigned int *)argp->op.ptr.ptr_val)[1],
+               ((unsigned int *)argp->op.ptr.ptr_val)[2],
+               ((unsigned int *)argp->op.ptr.ptr_val)[3]);
+#endif
 
    memcpy(ptr, argp->op.ptr.ptr_val, argp->op.ptr.ptr_len);
 
@@ -1272,6 +1295,9 @@ VMAccelStatus *vmwopencl_surfacecopy_1(VMCLSurfaceCopyOp *argp) {
    pthread_mutex_lock(&surfaces[dstSid].inst[dstInst].mutex);
 
    if (surfaces[srcSid].inst[srcInst].generation < srcGen) {
+      VMACCEL_LOG("%s: generation %d < %d\n", __FUNCTION__,
+                  surfaces[srcSid].inst[srcInst].generation, srcGen);
+
       result.status = VMACCEL_RESOURCE_UNAVAILABLE;
 
       pthread_mutex_unlock(&surfaces[dstSid].inst[dstInst].mutex);
@@ -1284,7 +1310,12 @@ VMAccelStatus *vmwopencl_surfacecopy_1(VMCLSurfaceCopyOp *argp) {
    }
 
    if ((surfaces[srcSid].inst[srcInst].generation > srcGen) ||
-       (surfaces[dstSid].inst[dstInst].generation >= dstGen)) {
+       (surfaces[dstSid].inst[dstInst].generation > dstGen)) {
+      VMACCEL_LOG("%s: semantic error backend.srcGen=%d srcGen=%d"
+                  " backend.dstGen=%d dstGen=%d\n",
+                  __FUNCTION__, surfaces[srcSid].inst[srcInst].generation,
+                  srcGen, surfaces[dstSid].inst[dstInst].generation, dstGen);
+
       result.status = VMACCEL_SEMANTIC_ERROR;
 
       pthread_mutex_unlock(&surfaces[dstSid].inst[dstInst].mutex);
@@ -1295,6 +1326,11 @@ VMAccelStatus *vmwopencl_surfacecopy_1(VMCLSurfaceCopyOp *argp) {
 
       return (&result);
    }
+
+#if DEBUG_SURFACE_CONSISTENCY
+   VMACCEL_LOG("%s: srcSid=%d, srcGen=%d, dstSid=%d, dstGen=%d\n", __FUNCTION__,
+               srcSid, srcGen, dstSid, dstGen);
+#endif
 
    if ((surfaces[dstSid].desc.type == VMACCEL_SURFACE_BUFFER) &&
        (surfaces[srcSid].desc.type == VMACCEL_SURFACE_BUFFER)) {
@@ -1391,6 +1427,10 @@ vmwopencl_kernelalloc_1(VMCLKernelAllocateDesc *argp) {
 #endif
           ) {
       VMACCEL_LOG("Creating OpenCL C program\n");
+
+#if DEBUG_COMPUTE_OPERATION
+      VMACCEL_LOG("%s\n", argp->source.source_val);
+#endif
 
       program = clCreateProgramWithSource(
          context, 1, (const char **)&argp->source.source_val, &sourceLength,
@@ -1495,6 +1535,8 @@ VMAccelStatus *vmwopencl_kerneldestroy_1(VMCLKernelId *argp) {
 
    memset(&result, 0, sizeof(result));
 
+   VMACCEL_LOG("Destroying kernel id=%d\n", kid);
+
    if (!IdentifierDB_ActiveId(kernelIds, kid)) {
       result.status = VMACCEL_SUCCESS;
       return &result;
@@ -1518,10 +1560,15 @@ VMAccelStatus *vmwopencl_dispatch_1(VMCLDispatchOp *argp) {
    cl_command_queue queue = queues[qid].queue;
    cl_kernel kernel = kernels[kid].kernel;
    cl_int errNum;
-   size_t *globalWorkOffset;
-   size_t *globalWorkSize;
-   size_t *localWorkSize;
+   size_t *globalWorkOffset = NULL;
+   size_t *globalWorkSize = NULL;
+   size_t *localWorkSize = NULL;
    int argIndex, i;
+
+#if DEBUG_COMPUTE_OPERATION
+   VMACCEL_LOG("%s: qid=%d, kid=%d, kernel=%p\n", __FUNCTION__,
+               qid, kid, kernel);
+#endif
 
    for (argIndex = 0; argIndex < argp->args.args_len; argIndex++) {
       if (argp->args.args_val[i].type == VMCL_ARG_SURFACE) {
@@ -1536,6 +1583,13 @@ VMAccelStatus *vmwopencl_dispatch_1(VMCLDispatchOp *argp) {
          pthread_mutex_lock(&surfaces[sid].inst[inst].mutex);
 
          mem = surfaces[sid].inst[inst].mem;
+
+#if DEBUG_COMPUTE_OPERATION
+         VMACCEL_LOG("%s: arg[%d]: index=%d, sid=%d, gen=%d, inst=%d,"
+                     " mem=%p\n",
+                     __FUNCTION__, argIndex,
+                     argp->args.args_val[argIndex].index, sid, gen, inst, mem);
+#endif
 
          if (surfaces[sid].inst[inst].generation != gen) {
             if (surfaces[sid].inst[inst].generation > gen) {
@@ -1553,6 +1607,8 @@ VMAccelStatus *vmwopencl_dispatch_1(VMCLDispatchOp *argp) {
                                  sizeof(cl_mem), &mem);
 
          if (errNum != CL_SUCCESS) {
+            VMACCEL_WARNING("Unable to set kernel argument, errNum=%d\n",
+                            errNum);
             result.status = VMACCEL_FAIL;
             goto cleanup;
          }
@@ -1576,6 +1632,12 @@ VMAccelStatus *vmwopencl_dispatch_1(VMCLDispatchOp *argp) {
       globalWorkOffset[i] = argp->globalWorkOffset.globalWorkOffset_val[i];
       globalWorkSize[i] = argp->globalWorkSize.globalWorkSize_val[i];
       localWorkSize[i] = argp->localWorkSize.localWorkSize_val[i];
+#if DEBUG_COMPUTE_OPERATION
+      VMACCEL_LOG("%s: globalWorkOffset[%d]=%d, globalWorkSize[%d]=%d,"
+                  " localWorkSize[%d]=%d\n",
+                  __FUNCTION__, i, globalWorkOffset[i], i, globalWorkSize[i], i,
+                  localWorkSize[i]);
+#endif
    }
 
    /*
@@ -1591,7 +1653,8 @@ VMAccelStatus *vmwopencl_dispatch_1(VMCLDispatchOp *argp) {
 
 cleanup:
 
-   for (argIndex--; argIndex >= 0; argIndex--) {
+   for (argIndex = MIN(argIndex, argp->args.args_len - 1); argIndex >= 0;
+        argIndex--) {
       if (argp->args.args_val[argIndex].type == VMCL_ARG_SURFACE) {
          unsigned int sid = (unsigned int)argp->args.args_val[argIndex].surf.id;
          unsigned int inst =
@@ -1602,9 +1665,17 @@ cleanup:
       }
    }
 
-   free(localWorkSize);
-   free(globalWorkSize);
-   free(globalWorkOffset);
+   if (localWorkSize != NULL) {
+      free(localWorkSize);
+   }
+
+   if (globalWorkSize != NULL) {
+      free(globalWorkSize);
+   }
+
+   if (globalWorkOffset != NULL) {
+      free(globalWorkOffset);
+   }
 
    return (&result);
 }

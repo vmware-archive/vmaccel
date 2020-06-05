@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
    /*
     * Initialize the Compute Kernel.
     */
-   compute::kernel k(VMCL_IR_NATIVE, helloKernel);
+   compute::kernel k(VMCL_OPENCL_C_1_0, helloKernel);
 
    /*
     * Setup the working set.
@@ -113,10 +113,10 @@ int main(int argc, char **argv) {
          ref_object<compute::operation> opobj;
 
          compute::dispatch<ref_object<vmaccel::binding>>(
-            c, 0, opobj, VMCL_OPENCL_C_1_0, k, "hello_kernel", workTopology, b);
+            c, 0, opobj, k, VMCL_OPENCL_C_1_0, "hello_kernel", workTopology, b);
 
          compute::dispatch<ref_object<vmaccel::binding>>(
-            c, 0, opobj, VMCL_OPENCL_C_1_0, k, "hello_kernel", workTopology, b);
+            c, 0, opobj, k, VMCL_OPENCL_C_1_0, "hello_kernel", workTopology, b);
       }
 
       if (s->download<int>(rgn, a) != VMACCEL_SUCCESS) {
@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
          VMACCEL_LOG("%s: 4*i -> a[%d] = %u\n", __FUNCTION__, i, a[i]);
       }
    }
-
+   exit(1);
    {
       VMAccelSurfaceDesc desc = {
          0,
@@ -167,7 +167,7 @@ int main(int argc, char **argv) {
             ref_object<compute::operation> opobj;
 
             compute::dispatch<ref_object<vmaccel::binding>>(
-               c, 0, opobj, VMCL_OPENCL_C_1_0, k, "hello_kernel", workTopology,
+               c, 0, opobj, k, VMCL_OPENCL_C_1_0, "hello_kernel", workTopology,
                b);
          }
 
@@ -179,7 +179,7 @@ int main(int argc, char **argv) {
             ref_object<compute::operation> opobj;
 
             compute::dispatch<ref_object<vmaccel::binding>>(
-               c, 0, opobj, VMCL_OPENCL_C_1_0, k, "hello_kernel", workTopology,
+               c, 0, opobj, k, VMCL_OPENCL_C_1_0, "hello_kernel", workTopology,
                b);
          }
       }
@@ -213,11 +213,11 @@ int main(int argc, char **argv) {
             ref_object<compute::operation> opobj2;
 
             compute::dispatch<ref_object<vmaccel::binding>>(
-               c, 0, opobj, VMCL_OPENCL_C_1_0, k, "hello_kernel", workTopology,
+               c, 0, opobj, k, VMCL_OPENCL_C_1_0, "hello_kernel", workTopology,
                b);
 
             compute::dispatch<ref_object<vmaccel::binding>>(
-               c, 0, opobj2, VMCL_OPENCL_C_1_0, k, "hello_kernel2",
+               c, 0, opobj2, k, VMCL_OPENCL_C_1_0, "hello_kernel2",
                workTopology, b);
 
             // Overwrite the previous operation.
@@ -258,11 +258,11 @@ int main(int argc, char **argv) {
             ref_object<compute::operation> opobj2;
 
             compute::dispatch<ref_object<vmaccel::binding>>(
-               c, 0, opobj, VMCL_OPENCL_C_1_0, k, "hello_kernel", workTopology,
+               c, 0, opobj, k, VMCL_OPENCL_C_1_0, "hello_kernel", workTopology,
                b);
 
             compute::dispatch<ref_object<vmaccel::binding>>(
-               c, 0, opobj2, VMCL_OPENCL_C_1_0, k, "hello_kernel2",
+               c, 0, opobj2, k, VMCL_OPENCL_C_1_0, "hello_kernel2",
                workTopology, b);
 
             // Force a finish of the operation.

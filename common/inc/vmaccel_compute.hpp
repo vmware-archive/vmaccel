@@ -64,7 +64,6 @@ extern "C" {
 
 namespace vmaccel {
 
-
 /**
  * VMCLContext structure.
  *
@@ -168,11 +167,11 @@ public:
       return true;
    }
 
-   /**
-    * upload_surface
-    *
-    * Update a resident surface.
-    */
+/**
+ * upload_surface
+ *
+ * Update a resident surface.
+ */
 #if ENABLE_VMCL_STREAM_SERVER || DEBUG_SURFACE_CONSISTENCY
    bool upload_surface(ref_object<surface> surf, bool force = false) {
       VMCLSurfaceMapOp vmcl_surfacemap_1_arg;
@@ -186,9 +185,9 @@ public:
       surf->log_consistency();
 #endif
 
-      /*
-       * Detect if there are any updates from the application for this surface.
-       */
+/*
+ * Detect if there are any updates from the application for this surface.
+ */
 #if !DEBUG_FORCE_SURFACE_CONSISTENCY
       if (surf->is_consistent(get_contextId()) && !force) {
          unlock();
@@ -366,6 +365,9 @@ public:
                    vmcl_surfacemap_1_arg.op.size.x);
 
 #if DEBUG_COMPUTE_OPERATION
+            VMACCEL_LOG("%s: sid=%d, gen=%d\n", __FUNCTION__, surf->get_id(),
+                        surf->get_generation());
+
             for (int i = 0;
                  i < vmcl_surfacemap_1_arg.op.size.x / sizeof(unsigned int);
                  i++) {
@@ -520,9 +522,9 @@ public:
       unlock();
    }
 
-   /**
-    * Accessors.
-    */
+/**
+ * Accessors.
+ */
 #if VMACCEL_LOCAL
    struct svc_req *get_client() {
       return NULL;
@@ -756,6 +758,150 @@ private:
 
 typedef unsigned int VMCLKernelArchitecture;
 
+/**
+ * VMAccel compute kernel encapsulating class.
+ *
+ * This class is used to encapsulate the kernel object for the compute
+ * accelerator.
+ */
+
+class clkernel {
+
+public:
+   /**
+    * Default constructor.
+    */
+   clkernel() {}
+
+   /**
+    * Constructor.
+    *
+    * @param type Type of kernel handed to the accelerator.
+    * @param kernelSource Source byte array for the kernel.
+    */
+   clkernel(ref_object<clcontext> &c,
+            std::map<unsigned int, ref_object<char>> &k) {
+      clctx = c;
+      kernels = k;
+
+#if DEBUG_COMPUTE_OPERATION
+      /*
+       * Setup Compute Kernel.
+       */
+      for (auto const &k : kernels) {
+         VMACCEL_LOG("%s: Kernel Architecture - %u\n", __FUNCTION__, k.first);
+         VMACCEL_LOG("%s:\n%s\n", __FUNCTION__, (char *)k.second.get_ptr());
+      }
+#endif
+   }
+
+   /**
+    * Destructor.
+    */
+   ~clkernel() {
+      VMAccelReturnStatus *result_1;
+      VMCLKernelId vmcl_kerneldestroy_1_arg;
+
+      auto it = variants.begin();
+
+      while (it != variants.end()) {
+         int kernelId = it->second;
+
+         /*
+          * Destroy the Compute resources.
+          */
+         vmcl_kerneldestroy_1_arg.cid = clctx->get_contextId();
+         vmcl_kerneldestroy_1_arg.id = kernelId;
+
+         result_1 = vmcl_kerneldestroy_1(&vmcl_kerneldestroy_1_arg,
+                                         clctx->get_client());
+
+         if (result_1 == NULL) {
+            VMACCEL_WARNING("%s: Unable to destroy kernel id = %u\n",
+                            __FUNCTION__, vmcl_kerneldestroy_1_arg.id);
+         } else {
+            vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
+                             (caddr_t)result_1);
+         }
+
+         it++;
+      }
+   }
+
+
+   /**
+    * Accessors.
+    */
+   operator std::map<unsigned int, ref_object<char>> &() { return kernels; }
+
+   unsigned int get_id(const VMCLKernelLanguageType type,
+                       const std::string &func) {
+      auto var = variants.find(std::make_tuple(type, func));
+
+      if (var != variants.end()) {
+         return var->second;
+      } else {
+         prepare(type, func);
+
+         var = variants.find(std::make_tuple(type, func));
+
+         if (var != variants.end()) {
+            return var->second;
+         } else {
+            return VMACCEL_INVALID_ID;
+         }
+      }
+   }
+
+   /**
+    * prepare
+    *
+    * Prepares the kernel's state without taking into consideration the
+    * arguments. This side-steps the stateless nature of dispatch for
+    * the purpose of using cached shaders.
+    */
+   void prepare(const VMCLKernelLanguageType type, const std::string &func) {
+      VMCLKernelAllocateReturnStatus *result_1;
+      VMCLKernelAllocateDesc vmcl_kernelalloc_1_arg;
+      unsigned int kernelId = clctx->get_accel()->alloc_id();
+
+      /*
+       * Allocate a Compute Kernel given the source/binaries provided.
+       */
+      memset(&vmcl_kernelalloc_1_arg, 0, sizeof(vmcl_kernelalloc_1_arg));
+      vmcl_kernelalloc_1_arg.client.cid = clctx->get_contextId();
+      vmcl_kernelalloc_1_arg.client.id = kernelId;
+      vmcl_kernelalloc_1_arg.subDevice = 0;
+      // Include the NULL termination of the string.
+      vmcl_kernelalloc_1_arg.kernelName.kernelName_len = func.length() + 1;
+      vmcl_kernelalloc_1_arg.kernelName.kernelName_val = (char *)func.c_str();
+      vmcl_kernelalloc_1_arg.language = type;
+      vmcl_kernelalloc_1_arg.source.source_len =
+         kernels.find(type)->second.get_size();
+      vmcl_kernelalloc_1_arg.source.source_val =
+         (char *)kernels.find(type)->second.get_ptr();
+
+      result_1 =
+         vmcl_kernelalloc_1(&vmcl_kernelalloc_1_arg, clctx->get_client());
+
+      if (result_1 != NULL) {
+         std::tuple<unsigned int, std::string> key;
+
+         key = std::make_tuple(type, func);
+
+         vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
+                          (caddr_t)result_1);
+
+         variants[key] = kernelId;
+      }
+   }
+
+private:
+   ref_object<clcontext> clctx;
+   std::map<unsigned int, ref_object<char>> kernels;
+   std::map<std::tuple<unsigned int, std::string>, unsigned int> variants;
+};
+
 namespace compute {
 
 /**
@@ -912,6 +1058,8 @@ bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx,
    kernelArgs[argIndex].index = -1;
 
    if (!clctx->alloc_surface(arg)) {
+      VMACCEL_LOG("%s: Unable to allocate surface for argIndex=%d\n",
+                  __FUNCTION__, argIndex);
       return false;
    }
 
@@ -1169,18 +1317,36 @@ public:
    kernel(unsigned int type, const char *kernelSource) {
       char *kernelStr = new char[strlen(kernelSource) + 1];
       strcpy(kernelStr, kernelSource);
-      kernels[VMCL_IR_NATIVE] = ref_object<char>(
-         kernelStr, strlen(kernelStr) + 1, VMACCEL_SURFACE_USAGE_READONLY);
+      kernels[type] = ref_object<char>(kernelStr, strlen(kernelStr) + 1,
+                                       VMACCEL_SURFACE_USAGE_READONLY);
    }
+
+   /**
+    * Destructor.
+    */
+   ~kernel() {}
 
    /**
     * Accessors.
     */
    operator std::map<unsigned int, ref_object<char>> &() { return kernels; }
 
+   /**
+    * Object reference functionality.
+    */
+   ref_object<clkernel> alloc_clkernel(ref_object<clcontext> &c) {
+      std::shared_ptr<clkernel> clkPtr;
+
+      clkPtr = std::shared_ptr<clkernel>(new clkernel(c, kernels));
+
+      return ref_object<vmaccel::clkernel>(clkPtr, sizeof(vmaccel::clkernel), 0,
+                                           0);
+   }
+
 private:
    std::map<unsigned int, ref_object<char>> kernels;
 };
+
 
 /**
  * VMAccel compute_operation object class.
@@ -1215,6 +1381,9 @@ public:
     * Destructor.
     */
    ~operation() {
+      VMAccelReturnStatus *result_1;
+      VMCLKernelId vmcl_kerneldestroy_1_arg;
+
       LOG_ENTRY(("compute::operation::Destructor() prepared=%d, dispatched=%d, "
                  "quiesced=%d {\n",
                  prepared, dispatched, quiesced));
@@ -1237,12 +1406,10 @@ public:
     * Prepares the operation's state.
     */
    template <class... B>
-   void
-   prepare(ref_object<clcontext> &c, const unsigned int subDev,
-           const VMCLKernelLanguageType type,
-           const std::map<VMCLKernelArchitecture, vmaccel::ref_object<char>> &k,
-           const std::string &func, const vmaccel::work_topology &topology,
-           B &... args) {
+   void prepare(ref_object<clcontext> &c, const unsigned int subDev,
+                ref_object<clkernel> &k, const VMCLKernelLanguageType type,
+                const std::string &func, const vmaccel::work_topology &topology,
+                B &... args) {
       if (prepared) {
          VMACCEL_WARNING("%s: Operation already prepared...\n", __FUNCTION__);
          return;
@@ -1252,10 +1419,13 @@ public:
                                         args...);
       clctx = c;
       subDevice = subDev;
-      kernelType = type;
       kernel = k;
-      kernelFunction = func;
+      kernelType = type;
+      kernelFunc = func;
       computeTopology = topology;
+
+      kernel->prepare(kernelType, kernelFunc);
+
       prepared = true;
    }
 
@@ -1264,19 +1434,14 @@ public:
     *
     * Dispatch function.
     */
-   int dispatch() {
-      VMCLKernelAllocateReturnStatus *result_1;
-      VMCLKernelAllocateDesc vmcl_kernelalloc_1_arg;
-      VMAccelReturnStatus *result_2;
+   int dispatch(bool force=true) {
+      VMAccelReturnStatus *result_1;
       VMCLDispatchOp vmcl_dispatch_1_arg;
-      VMAccelReturnStatus *result_3;
+      VMAccelReturnStatus *result_2;
       VMCLQueueId vmcl_queueflush_1_arg;
-      VMAccelReturnStatus *result_4;
-      VMCLKernelId vmcl_kerneldestroy_1_arg;
       unsigned int numArguments = bindings.size();
       unsigned int contextId = clctx->get_contextId();
       unsigned int queueId = subDevice;
-      unsigned int kernelId = 0;
       unsigned int i;
       unsigned int res;
 
@@ -1284,27 +1449,9 @@ public:
          return VMACCEL_FAIL;
       }
 
-      if (dispatched) {
-         return VMACCEL_SUCCESS;
+      if (dispatched && !force) {
+         return VMACCEL_FAIL;
       }
-
-#if DEBUG_COMPUTE_OPERATION
-      /*
-       * Setup Compute Kernel.
-       */
-      for (auto const &k : kernel) {
-         VMACCEL_LOG("%s: Kernel Architecture - %u\n", __FUNCTION__, k.first);
-         VMACCEL_LOG("%s:\n%s\n", __FUNCTION__, (char *)k.second.get_ptr());
-      }
-
-      /*
-       * Setup Compute Kernel arguments up-front, since the memory for surfaces
-       * will be the scarce resource.
-       */
-      VMACCEL_LOG("%s: Function Name = %s\n", __FUNCTION__,
-                  kernelFunction.c_str());
-      VMACCEL_LOG("%s: Number of Arguments = %u\n", __FUNCTION__, numArguments);
-#endif
 
       kernelArgs =
          (VMCLKernelArgDesc *)malloc(sizeof(VMCLKernelArgDesc) * numArguments);
@@ -1333,102 +1480,61 @@ public:
       }
 
       /*
-       * Allocate a Compute Kernel given the source/binaries provided.
+       * Execute the compute kernel
        */
-      memset(&vmcl_kernelalloc_1_arg, 0, sizeof(vmcl_kernelalloc_1_arg));
-      vmcl_kernelalloc_1_arg.client.cid = contextId;
-      vmcl_kernelalloc_1_arg.client.id = kernelId;
-      vmcl_kernelalloc_1_arg.subDevice = subDevice;
-      // Include the NULL termination of the string.
-      vmcl_kernelalloc_1_arg.kernelName.kernelName_len =
-         kernelFunction.length() + 1;
-      vmcl_kernelalloc_1_arg.kernelName.kernelName_val =
-         (char *)kernelFunction.c_str();
-      vmcl_kernelalloc_1_arg.language = kernelType;
-      vmcl_kernelalloc_1_arg.source.source_len =
-         kernel.find(VMCL_IR_NATIVE)->second.get_size();
-      vmcl_kernelalloc_1_arg.source.source_val =
-         (char *)kernel.find(VMCL_IR_NATIVE)->second.get_ptr();
+      memset(&vmcl_dispatch_1_arg, 0, sizeof(vmcl_dispatch_1_arg));
+      vmcl_dispatch_1_arg.queue.cid = contextId;
+      vmcl_dispatch_1_arg.queue.id = subDevice;
+      vmcl_dispatch_1_arg.kernel.id = kernel->get_id(kernelType, kernelFunc);
+      vmcl_dispatch_1_arg.dimension = 1;
+      vmcl_dispatch_1_arg.globalWorkOffset.globalWorkOffset_len =
+         computeTopology.get_num_dimensions();
+      vmcl_dispatch_1_arg.globalWorkOffset.globalWorkOffset_val =
+         (u_int *)computeTopology.get_global_offsets();
+      vmcl_dispatch_1_arg.globalWorkSize.globalWorkSize_len =
+         computeTopology.get_num_dimensions();
+      vmcl_dispatch_1_arg.globalWorkSize.globalWorkSize_val =
+         (u_int *)computeTopology.get_global_sizes();
+      vmcl_dispatch_1_arg.localWorkSize.localWorkSize_len =
+         computeTopology.get_num_dimensions();
+      vmcl_dispatch_1_arg.localWorkSize.localWorkSize_val =
+         (u_int *)computeTopology.get_local_sizes();
+      vmcl_dispatch_1_arg.args.args_len = numArguments;
+      vmcl_dispatch_1_arg.args.args_val = &kernelArgs[0];
 
-      result_1 =
-         vmcl_kernelalloc_1(&vmcl_kernelalloc_1_arg, clctx->get_client());
+      res = VMACCEL_RESOURCE_UNAVAILABLE;
+      while (res == VMACCEL_RESOURCE_UNAVAILABLE) {
+         result_1 =
+            vmcl_dispatch_1(&vmcl_dispatch_1_arg, clctx.get()->get_client());
 
-      if (result_1 != NULL) {
-         /*
-          * Execute the compute kernel
-          */
-         memset(&vmcl_dispatch_1_arg, 0, sizeof(vmcl_dispatch_1_arg));
-         vmcl_dispatch_1_arg.queue.cid = contextId;
-         vmcl_dispatch_1_arg.queue.id = subDevice;
-         vmcl_dispatch_1_arg.kernel.id = kernelId;
-         vmcl_dispatch_1_arg.dimension = 1;
-         vmcl_dispatch_1_arg.globalWorkOffset.globalWorkOffset_len =
-            computeTopology.get_num_dimensions();
-         vmcl_dispatch_1_arg.globalWorkOffset.globalWorkOffset_val =
-            (u_int *)computeTopology.get_global_offsets();
-         vmcl_dispatch_1_arg.globalWorkSize.globalWorkSize_len =
-            computeTopology.get_num_dimensions();
-         vmcl_dispatch_1_arg.globalWorkSize.globalWorkSize_val =
-            (u_int *)computeTopology.get_global_sizes();
-         vmcl_dispatch_1_arg.localWorkSize.localWorkSize_len =
-            computeTopology.get_num_dimensions();
-         vmcl_dispatch_1_arg.localWorkSize.localWorkSize_val =
-            (u_int *)computeTopology.get_local_sizes();
-         vmcl_dispatch_1_arg.args.args_len = numArguments;
-         vmcl_dispatch_1_arg.args.args_val = &kernelArgs[0];
+         if (result_1 != NULL) {
+            vmcl_queueflush_1_arg.cid = contextId;
+            vmcl_queueflush_1_arg.id = subDevice;
 
-         vmaccel_xdr_free((xdrproc_t)xdr_VMCLKernelAllocateReturnStatus,
-                          (caddr_t)result_1);
+            res = result_1->VMAccelReturnStatus_u.ret->status;
 
-         res = VMACCEL_RESOURCE_UNAVAILABLE;
-         while (res == VMACCEL_RESOURCE_UNAVAILABLE) {
-            result_2 =
-               vmcl_dispatch_1(&vmcl_dispatch_1_arg, clctx.get()->get_client());
-
-            if (result_2 != NULL) {
-               vmcl_queueflush_1_arg.cid = contextId;
-               vmcl_queueflush_1_arg.id = subDevice;
-
-               res = result_2->VMAccelReturnStatus_u.ret->status;
-
-               if (res == VMACCEL_RESOURCE_UNAVAILABLE) {
-                  VMACCEL_LOG(
-                     "Dispatch requested resource that is unavailble...\n");
-               }
-
-               vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
-                                (caddr_t)result_2);
+            if (res == VMACCEL_RESOURCE_UNAVAILABLE) {
+               VMACCEL_LOG(
+                  "Dispatch requested resource that is unavailble...\n");
             }
-         }
 
-         if (res == VMACCEL_SUCCESS) {
-            result_3 =
-               vmcl_queueflush_1(&vmcl_queueflush_1_arg, clctx->get_client());
-
-            if (result_3 == NULL) {
-               VMACCEL_WARNING("%s: Unable to flush queue...\n", __FUNCTION__);
-            } else {
-               vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
-                                (caddr_t)result_3);
-            }
+            vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
+                             (caddr_t)result_1);
          }
       }
 
-      /*
-       * Destroy the Compute resources.
-       */
-      vmcl_kerneldestroy_1_arg = vmcl_kernelalloc_1_arg.client;
+      if (res == VMACCEL_SUCCESS) {
+         result_2 =
+            vmcl_queueflush_1(&vmcl_queueflush_1_arg, clctx->get_client());
 
-      result_4 =
-         vmcl_kerneldestroy_1(&vmcl_kerneldestroy_1_arg, clctx->get_client());
-
-      if (result_4 == NULL) {
-         VMACCEL_WARNING("%s: Unable to destroy kernel id = %u\n", __FUNCTION__,
-                         vmcl_kerneldestroy_1_arg.id);
-      } else {
-         vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
-                          (caddr_t)result_4);
+         if (result_2 == NULL) {
+            VMACCEL_WARNING("%s: Unable to flush queue...\n", __FUNCTION__);
+         } else {
+            vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
+                             (caddr_t)result_2);
+         }
       }
+
       dispatched = true;
 
       return VMACCEL_SUCCESS;
@@ -1499,9 +1605,9 @@ private:
 
    ref_object<clcontext> clctx;
    unsigned int subDevice;
+   ref_object<clkernel> kernel;
    VMCLKernelLanguageType kernelType;
-   std::map<VMCLKernelArchitecture, vmaccel::ref_object<char>> kernel;
-   std::string kernelFunction;
+   std::string kernelFunc;
    vmaccel::work_topology computeTopology;
    VMCLKernelArgDesc *kernelArgs;
    unsigned int *surfaceIds;
@@ -1605,13 +1711,12 @@ private:
  */
 
 template <class... ARGTYPES>
-int execute(
-   std::shared_ptr<vmaccel::accelerator> &accel, const unsigned int subDevice,
-   const VMCLKernelLanguageType kernelType,
-   const std::map<VMCLKernelArchitecture, vmaccel::ref_object<char>> &kernel,
-   const std::string &kernelFunction,
-   const vmaccel::work_topology &computeTopology, ARGTYPES... args) {
-   compute::context c;
+int execute(std::shared_ptr<vmaccel::accelerator> &accel,
+            const unsigned int subDevice, compute::kernel &kernel,
+            const VMCLKernelLanguageType kernelType,
+            const std::string &kernelFunction,
+            const vmaccel::work_topology &computeTopology, ARGTYPES... args) {
+   compute::context ctx;
    VMCLKernelAllocateReturnStatus *result_1;
    VMCLKernelAllocateDesc vmcl_kernelalloc_1_arg;
    VMAccelReturnStatus *result_2;
@@ -1630,30 +1735,12 @@ int execute(
     * Query an accelerator manager for the Compute Resource.
     */
    try {
-      c = compute::context(accel, 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
-                           subDevice + 1, 0);
+      ctx = compute::context(accel, 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
+                             subDevice + 1, 0);
    } catch (const exception &) {
       VMACCEL_WARNING("%s: Unable to instantiate VMCL\n", __FUNCTION__);
       return VMACCEL_FAIL;
    }
-
-#if DEBUG_COMPUTE_OPERATION
-   /*
-    * Setup Compute Kernel.
-    */
-   for (auto const &k : kernel) {
-      VMACCEL_LOG("%s: Kernel Architecture - %u\n", __FUNCTION__, k.first);
-      VMACCEL_LOG("%s:\n%s\n", __FUNCTION__, (char *)k.second.get_ptr());
-   }
-
-   /*
-    * Setup Compute Kernel arguments up-front, since the memory for surfaces
-    * will be the scarce resource.
-    */
-   VMACCEL_LOG("%s: Function Name = %s\n", __FUNCTION__,
-               kernelFunction.c_str());
-   VMACCEL_LOG("%s: Number of Arguments = %u\n", __FUNCTION__, numArguments);
-#endif
 
    kernelArgs =
       (VMCLKernelArgDesc *)malloc(sizeof(VMCLKernelArgDesc) * numArguments);
@@ -1676,93 +1763,58 @@ int execute(
       surfaceIds[i] = VMACCEL_INVALID_ID;
    }
 
-   if (prepareComputeArgs(c, kernelArgs, surfaceIds, 0, args...)) {
+   if (prepareComputeArgs(ctx, kernelArgs, surfaceIds, 0, args...)) {
+      clkernel clk(ctx, kernel);
+      clk.prepare(kernelType, kernelFunction);
+
       /*
-       * Allocate a Compute Kernel given the source/binaries provided.
+       * Execute the compute kernel
        */
-      memset(&vmcl_kernelalloc_1_arg, 0, sizeof(vmcl_kernelalloc_1_arg));
-      vmcl_kernelalloc_1_arg.client.cid = c->get_contextId();
-      vmcl_kernelalloc_1_arg.client.id = kernelId;
-      vmcl_kernelalloc_1_arg.subDevice = subDevice;
-      // Include the NULL termination of the string.
-      vmcl_kernelalloc_1_arg.kernelName.kernelName_len =
-         kernelFunction.length() + 1;
-      vmcl_kernelalloc_1_arg.kernelName.kernelName_val =
-         (char *)kernelFunction.c_str();
-      vmcl_kernelalloc_1_arg.language = kernelType;
-      vmcl_kernelalloc_1_arg.source.source_len =
-         kernel.find(VMCL_IR_NATIVE)->second.get_size();
-      vmcl_kernelalloc_1_arg.source.source_val =
-         (char *)kernel.find(VMCL_IR_NATIVE)->second.get_ptr();
+      memset(&vmcl_dispatch_1_arg, 0, sizeof(vmcl_dispatch_1_arg));
+      vmcl_dispatch_1_arg.queue.cid = ctx->get_contextId();
+      vmcl_dispatch_1_arg.queue.id = subDevice;
+      vmcl_dispatch_1_arg.kernel.id = clk.get_id(kernelType, kernelFunction);
+      vmcl_dispatch_1_arg.dimension = 1;
+      vmcl_dispatch_1_arg.globalWorkOffset.globalWorkOffset_len =
+         computeTopology.get_num_dimensions();
+      vmcl_dispatch_1_arg.globalWorkOffset.globalWorkOffset_val =
+         (u_int *)computeTopology.get_global_offsets();
+      vmcl_dispatch_1_arg.globalWorkSize.globalWorkSize_len =
+         computeTopology.get_num_dimensions();
+      vmcl_dispatch_1_arg.globalWorkSize.globalWorkSize_val =
+         (u_int *)computeTopology.get_global_sizes();
+      vmcl_dispatch_1_arg.localWorkSize.localWorkSize_len =
+         computeTopology.get_num_dimensions();
+      vmcl_dispatch_1_arg.localWorkSize.localWorkSize_val =
+         (u_int *)computeTopology.get_local_sizes();
+      vmcl_dispatch_1_arg.args.args_len = numArguments;
+      vmcl_dispatch_1_arg.args.args_val = &kernelArgs[0];
 
-      result_1 = vmcl_kernelalloc_1(&vmcl_kernelalloc_1_arg, c->get_client());
+      result_2 = vmcl_dispatch_1(&vmcl_dispatch_1_arg, ctx->get_client());
 
-      if (result_1 != NULL) {
-         /*
-          * Execute the compute kernel
-          */
-         memset(&vmcl_dispatch_1_arg, 0, sizeof(vmcl_dispatch_1_arg));
-         vmcl_dispatch_1_arg.queue.cid = c->get_contextId();
-         vmcl_dispatch_1_arg.queue.id = subDevice;
-         vmcl_dispatch_1_arg.kernel.id = kernelId;
-         vmcl_dispatch_1_arg.dimension = 1;
-         vmcl_dispatch_1_arg.globalWorkOffset.globalWorkOffset_len =
-            computeTopology.get_num_dimensions();
-         vmcl_dispatch_1_arg.globalWorkOffset.globalWorkOffset_val =
-            (u_int *)computeTopology.get_global_offsets();
-         vmcl_dispatch_1_arg.globalWorkSize.globalWorkSize_len =
-            computeTopology.get_num_dimensions();
-         vmcl_dispatch_1_arg.globalWorkSize.globalWorkSize_val =
-            (u_int *)computeTopology.get_global_sizes();
-         vmcl_dispatch_1_arg.localWorkSize.localWorkSize_len =
-            computeTopology.get_num_dimensions();
-         vmcl_dispatch_1_arg.localWorkSize.localWorkSize_val =
-            (u_int *)computeTopology.get_local_sizes();
-         vmcl_dispatch_1_arg.args.args_len = numArguments;
-         vmcl_dispatch_1_arg.args.args_val = &kernelArgs[0];
+      if (result_2 != NULL) {
+         vmcl_queueflush_1_arg.cid = ctx->get_contextId();
+         vmcl_queueflush_1_arg.id = subDevice;
 
-         vmaccel_xdr_free((xdrproc_t)xdr_VMCLKernelAllocateReturnStatus,
-                          (caddr_t)result_1);
+         vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
+                          (caddr_t)result_2);
 
-         result_2 = vmcl_dispatch_1(&vmcl_dispatch_1_arg, c->get_client());
+         result_3 =
+            vmcl_queueflush_1(&vmcl_queueflush_1_arg, ctx->get_client());
 
-         if (result_2 != NULL) {
-            vmcl_queueflush_1_arg.cid = c->get_contextId();
-            vmcl_queueflush_1_arg.id = subDevice;
-
+         if (result_3 != NULL) {
+            /*
+             * Quiesce the Compute Kernel arguments and retrieve the data.
+             */
+            quiesceComputeArgs(ctx, kernelArgs, surfaceIds, 0, args...);
             vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
-                             (caddr_t)result_2);
-
-            result_3 =
-               vmcl_queueflush_1(&vmcl_queueflush_1_arg, c->get_client());
-
-            if (result_3 != NULL) {
-               /*
-                * Quiesce the Compute Kernel arguments and retrieve the data.
-                */
-               quiesceComputeArgs(c, kernelArgs, surfaceIds, 0, args...);
-               vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
-                                (caddr_t)result_3);
-            }
+                             (caddr_t)result_3);
          }
       }
    }
 
    free(kernelArgs);
    free(surfaceIds);
-
-   /*
-    * Destroy the Compute resources.
-    */
-   vmcl_kerneldestroy_1_arg = vmcl_kernelalloc_1_arg.client;
-
-   result_4 = vmcl_kerneldestroy_1(&vmcl_kerneldestroy_1_arg, c->get_client());
-   if (result_4 == NULL) {
-      VMACCEL_WARNING("%s: Unable to destroy kernel id = %u\n", __FUNCTION__,
-                      vmcl_kerneldestroy_1_arg.id);
-   } else {
-      vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus, (caddr_t)result_4);
-   }
 
    return VMACCEL_SUCCESS;
 }
@@ -1797,18 +1849,17 @@ int execute(
  */
 
 template <class... ARGTYPES>
-int dispatch(
-   compute::context &clctx, const unsigned int subDevice,
-   ref_object<compute::operation> &opobj,
-   const VMCLKernelLanguageType kernelType,
-   const std::map<VMCLKernelArchitecture, vmaccel::ref_object<char>> &kernel,
-   const std::string &kernelFunction,
-   const vmaccel::work_topology &computeTopology, ARGTYPES... args) {
+int dispatch(compute::context &ctx, const unsigned int subDevice,
+             ref_object<compute::operation> &opobj, compute::kernel &kernel,
+             const VMCLKernelLanguageType kernelType,
+             const std::string &kernelFunction,
+             const vmaccel::work_topology &computeTopology, ARGTYPES... args) {
    std::shared_ptr<compute::operation> op(new compute::operation());
+   ref_object<clkernel> clk = kernel.alloc_clkernel(ctx);
 
-   op->prepare<ref_object<vmaccel::binding>>(clctx, subDevice, kernelType,
-                                             kernel, kernelFunction,
-                                             computeTopology, args...);
+   op->prepare<ref_object<vmaccel::binding>>(ctx, subDevice, clk, kernelType,
+                                             kernelFunction, computeTopology,
+                                             args...);
 
    if (opobj.get().get() != NULL) {
 #if DEBUG_COMPUTE_OPERATION

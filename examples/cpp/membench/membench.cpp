@@ -26,7 +26,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ******************************************************************************/
 
-#define DEBUG_COMPUTE_OPERATION
 #include "vmaccel_compute.hpp"
 
 #include "log_level.h"
@@ -189,6 +188,8 @@ enum {
    MEMCPY = -1,
    MATRIX_ADD_2D = 0,
    MATRIX_COPY_2D,
+   UPLOAD_MATRIX_COPY,
+   DOWNLOAD_MATRIX_COPY,
    MATRIX_ADD_TRANSPOSE_2D,
    MATRIX_COPY_TRANSPOSE_2D,
    MATRIX_ADD_2D_SEMAPHORE1U,
@@ -202,6 +203,8 @@ enum {
 
 FunctionTableEntry functionTable[MATRIX_FUNCTION_MAX] = {
    {matrixAdd2DKernel, "MatrixAdd2D"},
+   {matrixCopy2DKernel, "MatrixCopy2D"},
+   {matrixCopy2DKernel, "MatrixCopy2D"},
    {matrixCopy2DKernel, "MatrixCopy2D"},
    {matrixAddTranspose2DKernel, "MatrixAddTranspose2D"},
    {matrixCopyTranspose2DKernel, "MatrixCopyTranspose2D"},
@@ -251,7 +254,7 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
                           int *pNumPasses, int *pNumIterations,
                           int *pMemoryPoolA, int *pMemoryPoolB,
                           int *pMemoryPoolS, int *pKernelFunc,
-                          int *pKernelDevice) {
+                          int *pKernelDevice, int *pDirtyPages) {
    int i = 1;
 
    while (i < argc) {
@@ -318,6 +321,12 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
          }
          *pKernelDevice = atoi(argv[i + 1]);
          i += 2;
+      } else if (strcmp("--dirtyPages", argv[i]) == 0) {
+         if (i == argc) {
+            return 1;
+         }
+         *pDirtyPages = TRUE;
+         i++;
       } else if (strcmp("--help", argv[i]) == 0) {
          printf("Usage: membench <options>\n\n");
          printf("  --help               Help and usage information\n");
@@ -347,6 +356,7 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
             "                            x=65536 + device index + pool\n\n");
          printf("  --memoryPoolB <x>    Output memory pool\n");
          printf("  --memoryPoolS <x>    Semaphore memory pool\n");
+         printf("  --dirtyPages         Dirty pages each iteration\n");
          printf("\n");
          exit(1);
       } else {
@@ -372,12 +382,13 @@ int main(int argc, char **argv) {
    int memoryPoolS = VMACCEL_SURFACE_POOL_AUTO;
    int kernelFunc = MATRIX_ADD_2D;
    int kernelDevice = 0;
+   int dirtyPages = FALSE;
    int numSubDevices = 0;
 
    if (ParseCommandArguments(argc, argv, host, &numRows, &numColumns,
                              &chunkSize, &numPasses, &numIterations,
                              &memoryPoolA, &memoryPoolB, &memoryPoolS,
-                             &kernelFunc, &kernelDevice)) {
+                             &kernelFunc, &kernelDevice, &dirtyPages)) {
       return 1;
    }
 
@@ -409,7 +420,7 @@ int main(int argc, char **argv) {
    /*
     * Initialize the Compute Kernel.
     */
-   compute::kernel k(VMCL_IR_NATIVE, functionTable[kernelFunc].source);
+   compute::kernel k(VMCL_OPENCL_C_1_0, functionTable[kernelFunc].source);
 
    /*
     * Setup the working set.
@@ -548,52 +559,112 @@ int main(int argc, char **argv) {
 
       clock_gettime(CLOCK_REALTIME, &e2eStartTime);
 
-      for (int iter = 0; iter < numIterations; iter++) {
-         if (kernelFunc == UPLOAD_A) {
-            c->upload_surface(bindA->get_surf(), true);
-            uploadBytes += surfBytes;
-         } else if (kernelFunc == DOWNLOAD_A) {
-            c->download_surface(bindA->get_surf(), true);
-            downloadBytes += surfBytes;
-         } else if (kernelFunc == MEMCPY) {
-            VMAccelSurfaceRegion copyRgn = {
-               0, {0, 0, 0}, {surfBytes * chunkSize, 0, 0}};
-            c->copy_surface(0, bindA->get_surf(), copyRgn, bindB->get_surf(),
-                            copyRgn);
+      if (kernelFunc < 0) {
+         for (int iter = 0; iter < numIterations; iter++) {
+            if (dirtyPages) {
+               for (int i = 0; i < numRows; i++) {
+                  for (int j = 0; j < numColumns; j++) {
+                     for (int k = 0; k < chunkSize; k++) {
+                        memA[i * numColumns * chunkSize + j * chunkSize + k] =
+                           iter * (i * numColumns + j);
+                     }
+                  }
+               }
 
-            refBytes += surfBytes;
-            dirtyBytes += surfBytes;
-         } else {
-            ref_object<compute::operation> opobj;
-
-            if (kernelFunc == MATRIX_ADD_2D_SEMAPHORE1U ||
-                kernelFunc == MATRIX_ADD_2D_SEMAPHORENU ||
-                kernelFunc == MATRIX_ADD_2D_EXEC_CHAIN) {
-               // Clear the semaphores
-               if (accelS->upload<int>(rgnSem, memS) != VMACCEL_SUCCESS) {
-                  VMACCEL_LOG("ERROR: Unable to reset semaphores\n");
+               if (accelA->upload<int>(rgn, memA) != VMACCEL_SUCCESS) {
+                  VMACCEL_LOG("ERROR: Unable to upload A\n");
                   return 1;
                }
-               uploadBytes += 4 * sizeof(int);
+               c->upload_surface(bindA->get_surf(), false);
+               uploadBytes += surfBytes;
             }
 
-            compute::dispatch<
-               ref_object<vmaccel::binding>, ref_object<vmaccel::binding>,
-               ref_object<vmaccel::binding>, ref_object<vmaccel::binding>>(
-               c, kernelDevice, opobj, VMCL_OPENCL_C_1_0, k,
-               functionTable[kernelFunc].function, workTopology, bindA, bindB,
-               bindS, bindDims);
+            if (kernelFunc == UPLOAD_A && !dirtyPages) {
+               c->upload_surface(bindA->get_surf(), true);
+               uploadBytes += surfBytes;
+            } else if (kernelFunc == DOWNLOAD_A) {
+               c->download_surface(bindA->get_surf(), true);
+               downloadBytes += surfBytes;
+            } else if (kernelFunc == MEMCPY) {
+               VMAccelSurfaceRegion copyRgn = {
+                  0, {0, 0, 0}, {surfBytes * chunkSize, 0, 0}};
+               c->copy_surface(0, bindA->get_surf(), copyRgn, bindB->get_surf(),
+                               copyRgn);
 
-            if (kernelFunc == MATRIX_COPY_2D ||
-                kernelFunc == MATRIX_COPY_TRANSPOSE_2D) {
-               refBytes += surfBytes * numPasses;
-               dirtyBytes += surfBytes * numPasses;
-            } else {
-               refBytes += 2 * surfBytes * numPasses;
-               dirtyBytes += 2 * surfBytes * numPasses;
+               refBytes += surfBytes;
+               dirtyBytes += surfBytes;
             }
-            computeBytes += surfBytes * numPasses;
          }
+      } else {
+         ref_object<compute::operation> opobj;
+
+         compute::dispatch<
+            ref_object<vmaccel::binding>, ref_object<vmaccel::binding>,
+            ref_object<vmaccel::binding>, ref_object<vmaccel::binding>>(
+            c, kernelDevice, opobj, k, VMCL_OPENCL_C_1_0,
+            functionTable[kernelFunc].function, workTopology, bindA, bindB,
+            bindS, bindDims);
+
+         for (int iter = 0; iter < numIterations; iter++) {
+            if (dirtyPages) {
+               for (int i = 0; i < numRows; i++) {
+                  for (int j = 0; j < numColumns; j++) {
+                     for (int k = 0; k < chunkSize; k++) {
+                        memA[i * numColumns * chunkSize + j * chunkSize + k] =
+                           iter * (i * numColumns + j);
+                     }
+                  }
+               }
+               if (accelA->upload<int>(rgn, memA) != VMACCEL_SUCCESS) {
+                  VMACCEL_LOG("ERROR: Unable to upload A\n");
+                  return 1;
+               }
+               c->upload_surface(bindA->get_surf(), false);
+               uploadBytes += surfBytes;
+            }
+
+            if (kernelFunc == UPLOAD_MATRIX_COPY) {
+               c->upload_surface(bindA->get_surf(), true);
+               opobj->dispatch();
+               refBytes += surfBytes;
+               dirtyBytes += surfBytes;
+               uploadBytes += surfBytes;
+               computeBytes += surfBytes;
+            } else if (kernelFunc == DOWNLOAD_MATRIX_COPY) {
+               opobj->dispatch();
+               opobj->quiesce();
+               c->download_surface(bindB->get_surf(), true);
+               refBytes += surfBytes;
+               dirtyBytes += surfBytes;
+               downloadBytes += surfBytes;
+               computeBytes += surfBytes;
+            } else {
+               if (kernelFunc == MATRIX_ADD_2D_SEMAPHORE1U ||
+                   kernelFunc == MATRIX_ADD_2D_SEMAPHORENU ||
+                   kernelFunc == MATRIX_ADD_2D_EXEC_CHAIN) {
+                  // Clear the semaphores
+                  if (accelS->upload<int>(rgnSem, memS) != VMACCEL_SUCCESS) {
+                     VMACCEL_LOG("ERROR: Unable to reset semaphores\n");
+                     return 1;
+                  }
+                  uploadBytes += 4 * sizeof(int);
+               }
+
+               opobj->dispatch(true);
+
+               if (kernelFunc == MATRIX_COPY_2D ||
+                   kernelFunc == MATRIX_COPY_TRANSPOSE_2D) {
+                  refBytes += surfBytes * numPasses;
+                  dirtyBytes += surfBytes * numPasses;
+               } else {
+                  refBytes += 2 * surfBytes * numPasses;
+                  dirtyBytes += 2 * surfBytes * numPasses;
+               }
+               computeBytes += surfBytes * numPasses;
+            }
+         }
+
+         opobj->quiesce();
       }
 
       if (kernelFunc == MEMCPY) {
@@ -617,12 +688,16 @@ int main(int argc, char **argv) {
 
       VMACCEL_LOG("\n");
       VMACCEL_LOG("End-to-end Time = %lf ms\n", totalRuntimeMS);
-      VMACCEL_LOG("Total Referenced = %ld bytes\n", refBytes);
-      VMACCEL_LOG("Total Dirtied = %ld bytes\n", dirtyBytes);
-      VMACCEL_LOG("Total Uploaded = %ld bytes\n", uploadBytes);
-      VMACCEL_LOG("Total Downloaded = %ld bytes\n", downloadBytes);
-      VMACCEL_LOG("Compute Throughput = %lf bytes/ms\n",
-                  computeBytes / totalRuntimeMS);
+      VMACCEL_LOG("Total Referenced = %ld bytes, %lf bytes/ms\n", refBytes,
+                  refBytes / totalRuntimeMS);
+      VMACCEL_LOG("Total Dirtied = %ld bytes, %lf bytes/ms\n", dirtyBytes,
+                  dirtyBytes / totalRuntimeMS);
+      VMACCEL_LOG("Total Uploaded = %ld bytes, %lf bytes/ms\n", uploadBytes,
+                  uploadBytes / totalRuntimeMS);
+      VMACCEL_LOG("Total Downloaded = %ld bytes, %lf bytes/ms\n", downloadBytes,
+                  downloadBytes / totalRuntimeMS);
+      VMACCEL_LOG("Compute Throughput = %ld bytes, %lf bytes/ms\n",
+                  computeBytes, computeBytes / totalRuntimeMS);
       VMACCEL_LOG("\n");
 
       for (int i = 0; i < numRows; i++) {
@@ -631,7 +706,10 @@ int main(int argc, char **argv) {
                int val = memB[i * numColumns * chunkSize + j * chunkSize + k];
                int exp;
 
-               if (kernelFunc == MATRIX_COPY_2D || kernelFunc == MEMCPY) {
+               if (kernelFunc == UPLOAD_MATRIX_COPY) {
+                  exp = memA[i * numColumns * chunkSize + j * chunkSize + k];
+               } else if (kernelFunc == MATRIX_COPY_2D ||
+                          kernelFunc == MEMCPY) {
                   exp = (i * numColumns + j);
                } else if (kernelFunc == MATRIX_COPY_TRANSPOSE_2D) {
                   exp = (j * numColumns + i);
