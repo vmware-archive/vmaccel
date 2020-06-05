@@ -213,33 +213,6 @@ FunctionTableEntry functionTable[MATRIX_FUNCTION_MAX] = {
    {matrixAdd2DExecChainNUKernel, "MatrixAdd2DExecChain"},
 };
 
-
-/**
- * @brief Takes a difference of two timespec structures per the example
- * shown at:
- *
- * https://www.gnu.org/software/libc/manual/html_node/Elapsed-Time.html
- */
-struct timespec DiffTime(struct timespec *start, struct timespec *end) {
-   struct timespec diff;
-   int numSeconds;
-
-   if (end->tv_nsec < start->tv_nsec) {
-      numSeconds = (start->tv_nsec - end->tv_nsec) / 1000000000 + 1;
-      end->tv_nsec -= 1000000000 * numSeconds;
-      end->tv_sec += numSeconds;
-   }
-   if (end->tv_nsec - start->tv_nsec > 1000000000) {
-      numSeconds = (end->tv_nsec - start->tv_nsec) / 1000000000;
-      start->tv_nsec += 1000000000 * numSeconds;
-      start->tv_sec -= numSeconds;
-   }
-
-   diff.tv_sec = end->tv_sec - start->tv_sec;
-   diff.tv_nsec = end->tv_nsec - start->tv_nsec;
-   return diff;
-}
-
 /**
  * @brief Parses the command line arguments for a C program.
  *
@@ -411,6 +384,8 @@ int main(int argc, char **argv) {
 
 #if VMACCEL_LOCAL
    vmcl_poweron_svc(NULL);
+#elif ENABLE_VMCL_STREAM_SERVER
+   vmaccel_stream_poweron();
 #endif
 
    address mgrAddr(host);
@@ -624,14 +599,16 @@ int main(int argc, char **argv) {
             }
 
             if (kernelFunc == UPLOAD_MATRIX_COPY) {
-               c->upload_surface(bindA->get_surf(), true);
-               opobj->dispatch();
+               if (!dirtyPages) {
+                  c->upload_surface(bindA->get_surf(), true);
+                  uploadBytes += surfBytes;
+               }
+               opobj->dispatch(true);
                refBytes += surfBytes;
                dirtyBytes += surfBytes;
-               uploadBytes += surfBytes;
                computeBytes += surfBytes;
             } else if (kernelFunc == DOWNLOAD_MATRIX_COPY) {
-               opobj->dispatch();
+               opobj->dispatch(true);
                opobj->quiesce();
                c->download_surface(bindB->get_surf(), true);
                refBytes += surfBytes;
@@ -729,6 +706,8 @@ int main(int argc, char **argv) {
 
 #if VMACCEL_LOCAL
    vmcl_poweroff_svc();
+#elif ENABLE_VMCL_STREAM_SERVER
+   vmaccel_stream_poweroff();
 #endif
 
    VMACCEL_LOG("Test PASSED...\n");

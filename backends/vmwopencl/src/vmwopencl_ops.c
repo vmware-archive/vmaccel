@@ -969,6 +969,10 @@ VMAccelStatus *vmwopencl_queueflush_1(VMCLQueueId *argp) {
    unsigned int qid = (unsigned int)argp->id;
    cl_int errNum;
 
+#if DEBUG_SURFACE_CONSISTENCY
+   VMACCEL_LOG("%s: flushing qid=%d\n", __FUNCTION__, qid);
+#endif
+
    memset(&result, 0, sizeof(result));
 
    errNum = clFlush(queues[qid].queue);
@@ -1019,7 +1023,7 @@ VMAccelStatus *vmwopencl_imageupload_1(VMCLImageUploadOp *argp) {
 
    for (int i = 0; i < argp->op.imgRegion.coord.x / 4; i++) {
       VMACCEL_LOG("%s: uint32[%d] = 0x%x\n", __FUNCTION__, i,
-                  ((unsigned int *)ptr)[i]);
+                  ((unsigned int *)argp->op.ptr.ptr_val)[i]);
    }
 #endif
 
@@ -1046,6 +1050,7 @@ VMAccelStatus *vmwopencl_imageupload_1(VMCLImageUploadOp *argp) {
                                     argp->op.ptr.ptr_val, 0, NULL, NULL);
 
       if (errNum != CL_SUCCESS) {
+         VMACCEL_WARNING("%s: Failed to enqueuew update\n", __FUNCTION__);
          result.status = VMACCEL_FAIL;
       } else {
          surfaces[sid].inst[inst].generation = gen;
@@ -1563,15 +1568,17 @@ VMAccelStatus *vmwopencl_dispatch_1(VMCLDispatchOp *argp) {
    size_t *globalWorkOffset = NULL;
    size_t *globalWorkSize = NULL;
    size_t *localWorkSize = NULL;
-   int argIndex, i;
+   int argIndex;
+
+   memset(&result, 0, sizeof(result));
 
 #if DEBUG_COMPUTE_OPERATION
-   VMACCEL_LOG("%s: qid=%d, kid=%d, kernel=%p\n", __FUNCTION__,
-               qid, kid, kernel);
+   VMACCEL_LOG("%s: qid=%d, kid=%d, kernel=%p\n", __FUNCTION__, qid, kid,
+               kernel);
 #endif
 
    for (argIndex = 0; argIndex < argp->args.args_len; argIndex++) {
-      if (argp->args.args_val[i].type == VMCL_ARG_SURFACE) {
+      if (argp->args.args_val[argIndex].type == VMCL_ARG_SURFACE) {
          unsigned int sid = (unsigned int)argp->args.args_val[argIndex].surf.id;
          unsigned int gen =
             (unsigned int)argp->args.args_val[argIndex].surf.generation;
@@ -1597,6 +1604,12 @@ VMAccelStatus *vmwopencl_dispatch_1(VMCLDispatchOp *argp) {
                                " out of sync...\n");
                result.status = VMACCEL_SEMANTIC_ERROR;
             } else {
+#if DEBUG_SURFACE_CONSISTENCY
+               VMACCEL_WARNING(
+                  "%s: arg[%d]: surf[%d].gen=%d, expected gen=%d\n",
+                  __FUNCTION__, argIndex, sid,
+                  surfaces[sid].inst[inst].generation, gen);
+#endif
                result.status = VMACCEL_RESOURCE_UNAVAILABLE;
             }
 
@@ -1628,7 +1641,7 @@ VMAccelStatus *vmwopencl_dispatch_1(VMCLDispatchOp *argp) {
    globalWorkSize = calloc(argp->dimension, sizeof(*globalWorkSize));
    localWorkSize = calloc(argp->dimension, sizeof(*localWorkSize));
 
-   for (i = 0; i < argp->dimension; i++) {
+   for (int i = 0; i < argp->dimension; i++) {
       globalWorkOffset[i] = argp->globalWorkOffset.globalWorkOffset_val[i];
       globalWorkSize[i] = argp->globalWorkSize.globalWorkSize_val[i];
       localWorkSize[i] = argp->localWorkSize.localWorkSize_val[i];

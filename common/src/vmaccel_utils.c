@@ -33,6 +33,32 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmaccel_utils.h"
 #include "log_level.h"
 
+/**
+ * @brief Takes a difference of two timespec structures per the example
+ * shown at:
+ *
+ * https://www.gnu.org/software/libc/manual/html_node/Elapsed-Time.html
+ */
+struct timespec DiffTime(struct timespec *start, struct timespec *end) {
+   struct timespec diff;
+   int numSeconds;
+
+   diff.tv_sec = end->tv_sec - start->tv_sec;
+
+   if (end->tv_nsec < start->tv_nsec) {
+      diff.tv_nsec = 1000000000 - start->tv_nsec + end->tv_nsec;
+   } else if (end->tv_nsec - start->tv_nsec > 1000000000) {
+      numSeconds = (end->tv_nsec - start->tv_nsec) / 1000000000;
+      start->tv_nsec += 1000000000 * numSeconds;
+      diff.tv_sec += numSeconds;
+      diff.tv_nsec = end->tv_nsec - start->tv_nsec;
+   } else {
+      diff.tv_nsec = end->tv_nsec - start->tv_nsec;
+   }
+
+   return diff;
+}
+
 int BitMask_FindFirstZero(unsigned int bitMask) {
    int idx = 0;
    if (bitMask != 0xffffffff) {

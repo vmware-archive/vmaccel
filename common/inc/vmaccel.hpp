@@ -351,7 +351,7 @@ public:
             tv.tv_sec = 60;
             tv.tv_usec = 0;
 
-            VMACCEL_LOG("vmaccel: Setting prototol timeout to %ld seconds",
+            VMACCEL_LOG("vmaccel: Setting protocol timeout to %ld seconds\n",
                         tv.tv_sec);
 
             if (!clnt_control(mgrClnt, CLSET_TIMEOUT, (char *)&tv)) {

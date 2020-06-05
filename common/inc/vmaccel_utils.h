@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _VMACCEL_UTILS_H_ 1
 
 #include <stdbool.h>
+#include <time.h>
 
 #define DEBUG_OBJECT_LIFETIME 0
 #define DEBUG_TEMPLATE_TYPES 0
@@ -39,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DEBUG_SURFACE_CONSISTENCY 0
 #define DEBUG_FORCE_SURFACE_CONSISTENCY 0
 #define DEBUG_STREAMS 0
+#define DEBUG_STATISTICS 0
 
 #if DEBUG_ASYNC_COMPUTE || DEBUG_OBJECT_LIFETIME
 #define LOG_ENTRY(_ARGS) printf _ARGS
@@ -54,6 +56,60 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef MAX
 #define MAX(_A, _B) (_A > _B) ? _A : _B
+#endif
+
+struct timespec DiffTime(struct timespec *start, struct timespec *end);
+
+#if DEBUG_STATISTICS
+#define DECLARE_STAT(_NAME)                                                    \
+   struct timespec min##_NAME##Time;                                           \
+   struct timespec max##_NAME##Time;                                           \
+   float total##_NAME##TimeMS;                                                 \
+   unsigned int num##_NAME##Instances = 0
+
+#define STAT_TO_MS(_STAT)                                                      \
+   _STAT.tv_sec * 1000.0f + (_STAT.tv_nsec != 0)                               \
+      ? (double)_STAT.tv_nsec / 1000000.0f                                     \
+      : 0.0f
+
+#define START_STAT(_NAME)                                                      \
+   struct timespec _NAME##StartTime;                                           \
+   struct timespec _NAME##EndTime;                                             \
+   struct timespec _NAME##DiffTime;                                            \
+   clock_gettime(CLOCK_REALTIME, &_NAME##StartTime)
+
+#define END_STAT(_NAME)                                                        \
+   clock_gettime(CLOCK_REALTIME, &_NAME##EndTime);                             \
+   _NAME##DiffTime = DiffTime(&_NAME##StartTime, &_NAME##EndTime);             \
+   if (num##_NAME##Instances == 0) {                                           \
+      min##_NAME##Time = _NAME##DiffTime;                                      \
+      max##_NAME##Time = _NAME##DiffTime;                                      \
+   } else {                                                                    \
+      if ((_NAME##DiffTime.tv_sec < min##_NAME##Time.tv_sec) ||                \
+          (_NAME##DiffTime.tv_sec == min##_NAME##Time.tv_sec &&                \
+           _NAME##DiffTime.tv_nsec < min##_NAME##Time.tv_nsec)) {              \
+         min##_NAME##Time = _NAME##DiffTime;                                   \
+      }                                                                        \
+      if ((_NAME##DiffTime.tv_sec > max##_NAME##Time.tv_sec) ||                \
+          (_NAME##DiffTime.tv_sec == max##_NAME##Time.tv_sec &&                \
+           _NAME##DiffTime.tv_nsec > max##_NAME##Time.tv_nsec)) {              \
+         max##_NAME##Time = _NAME##DiffTime;                                   \
+      }                                                                        \
+   }                                                                           \
+   total##_NAME##TimeMS += STAT_TO_MS(_NAME##DiffTime);                        \
+   num##_NAME##Instances++
+
+#define PRINT_STAT(_NAME)                                                      \
+   printf("%s: Count=%d, Min=%f ms, Max=%f ms, Avg=%f ms, Total=%f ms\n",      \
+          #_NAME, num##_NAME##Instances, STAT_TO_MS(min##_NAME##Time),         \
+          STAT_TO_MS(max##_NAME##Time),                                        \
+          total##_NAME##TimeMS / num##_NAME##Instances, total##_NAME##TimeMS)
+
+#else
+#define DECLARE_STAT(_NAME)
+#define START_STAT(_NAME)
+#define END_STAT(_NAME)
+#define PRINT_STAT(_NAME)
 #endif
 
 int BitMask_FindFirstZero(unsigned int bitMask);

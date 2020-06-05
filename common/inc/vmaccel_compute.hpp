@@ -56,11 +56,15 @@ extern "C" {
 #include "vmaccel_utils.h"
 }
 
+#include <unistd.h>
+
 #include <cassert>
 #include <map>
 #include <mutex>
 #include <string>
 #include <vector>
+
+#define RETRY_MAX_COUNT 100
 
 namespace vmaccel {
 
@@ -101,6 +105,13 @@ public:
    ~clcontext() {
       LOG_ENTRY(("clcontext::Destructor {\n"));
       destroy();
+
+      PRINT_STAT(alloc_surface);
+      PRINT_STAT(destroy_surface);
+      PRINT_STAT(upload_surface);
+      PRINT_STAT(copy_surface);
+      PRINT_STAT(download_surface);
+
       LOG_EXIT(("} clcontext::Destructor\n"));
    }
 
@@ -131,10 +142,12 @@ public:
       VMAccelSurfaceAllocateReturnStatus *result_1;
       VMCLSurfaceAllocateDesc vmcl_surfacealloc_1_arg;
 
+      START_STAT(alloc_surface);
       lock();
 
       if (is_resident(surf->get_id())) {
          unlock();
+         END_STAT(alloc_surface);
          return true;
       }
 
@@ -154,6 +167,7 @@ public:
          VMACCEL_WARNING("%s: Unable to allocate surface %d for context %d.\n",
                          __FUNCTION__, surf->get_id(), get_contextId());
          unlock();
+         END_STAT(alloc_surface);
          return false;
       }
 
@@ -163,6 +177,7 @@ public:
       set_residency(surf->get_id(), true);
 
       unlock();
+      END_STAT(alloc_surface);
 
       return true;
    }
@@ -179,6 +194,7 @@ public:
       VMCLSurfaceUnmapOp vmcl_surfaceunmap_1_arg;
       VMAccelReturnStatus *result_3;
 
+      START_STAT(upload_surface);
       lock();
 
 #if DEBUG_SURFACE_CONSISTENCY
@@ -191,6 +207,7 @@ public:
 #if !DEBUG_FORCE_SURFACE_CONSISTENCY
       if (surf->is_consistent(get_contextId()) && !force) {
          unlock();
+         END_STAT(upload_surface);
          return true;
       }
 #else
@@ -253,6 +270,7 @@ public:
 
             if (result_3 == NULL) {
                unlock();
+               END_STAT(upload_surface);
                return false;
             }
 
@@ -272,6 +290,7 @@ public:
       }
 
       unlock();
+      END_STAT(upload_surface);
 
       return true;
    }
@@ -280,10 +299,12 @@ public:
       VMCLImageUploadOp vmcl_imgupload_1_arg;
       VMAccelReturnStatus *result_3;
 
+      START_STAT(upload_surface);
       lock();
 
       if (surf->is_consistent(get_contextId()) && !force) {
          unlock();
+         END_STAT(upload_surface);
          return true;
       }
 
@@ -318,6 +339,7 @@ public:
       }
 
       unlock();
+      END_STAT(upload_surface);
 
       return true;
    }
@@ -334,6 +356,7 @@ public:
       VMAccelReturnStatus *result_2;
       VMCLSurfaceUnmapOp vmcl_surfaceunmap_1_arg;
 
+      START_STAT(download_surface);
       lock();
 
 #if DEBUG_SURFACE_CONSISTENCY
@@ -397,6 +420,7 @@ public:
 
             if (result_2 == NULL) {
                unlock();
+               END_STAT(download_surface);
                return false;
             }
 
@@ -412,6 +436,7 @@ public:
 #endif
 
       unlock();
+      END_STAT(download_surface);
 
       return true;
    }
@@ -434,10 +459,12 @@ public:
       VMAccelId dstId = dstSurf->get_id();
       unsigned int dstGen = dstSurf->get_generation();
 
+      START_STAT(copy_surface);
       lock();
 
       if (!is_resident(srcId) || !is_resident(dstId)) {
          unlock();
+         END_STAT(copy_surface);
          return;
       }
 
@@ -482,6 +509,7 @@ public:
       }
 
       unlock();
+      END_STAT(copy_surface);
    }
 
    /**
@@ -491,10 +519,12 @@ public:
       VMAccelReturnStatus *result_1;
       VMCLSurfaceId vmcl_surfacedestroy_1_arg;
 
+      START_STAT(destroy_surface);
       lock();
 
       if (!is_resident(id)) {
          unlock();
+         END_STAT(destroy_surface);
          return;
       }
 
@@ -520,6 +550,7 @@ public:
       set_residency(id, false);
 
       unlock();
+      END_STAT(destroy_surface);
    }
 
 /**
@@ -754,6 +785,12 @@ private:
    VMAccelId contextId;
    unsigned int numSubDevices;
    std::mutex m;
+
+   DECLARE_STAT(alloc_surface);
+   DECLARE_STAT(destroy_surface);
+   DECLARE_STAT(upload_surface);
+   DECLARE_STAT(copy_surface);
+   DECLARE_STAT(download_surface);
 };
 
 typedef unsigned int VMCLKernelArchitecture;
@@ -1068,6 +1105,12 @@ bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx,
       kernelArgs[argIndex].type = VMCL_ARG_SURFACE;
       kernelArgs[argIndex].surf.id = arg->get_id();
       kernelArgs[argIndex].surf.generation = arg->get_generation();
+
+#if DEBUG_SURFACE_CONSISTENCY
+      VMACCEL_LOG("%s: arg[%d]: surf[%d].gen=%d\n", __FUNCTION__, argIndex,
+                  arg->get_id(), arg->get_generation());
+#endif
+
       return true;
    }
 
@@ -1434,9 +1477,9 @@ public:
     *
     * Dispatch function.
     */
-   int dispatch(bool force=true) {
-      VMAccelReturnStatus *result_1;
+   int dispatch(bool force = false) {
       VMCLDispatchOp vmcl_dispatch_1_arg;
+      VMAccelReturnStatus *result_1;
       VMAccelReturnStatus *result_2;
       VMCLQueueId vmcl_queueflush_1_arg;
       unsigned int numArguments = bindings.size();
@@ -1444,6 +1487,8 @@ public:
       unsigned int queueId = subDevice;
       unsigned int i;
       unsigned int res;
+      unsigned int retryCount = 0;
+      unsigned int kid = kernel->get_id(kernelType, kernelFunc);
 
       if (!prepared) {
          return VMACCEL_FAIL;
@@ -1485,7 +1530,7 @@ public:
       memset(&vmcl_dispatch_1_arg, 0, sizeof(vmcl_dispatch_1_arg));
       vmcl_dispatch_1_arg.queue.cid = contextId;
       vmcl_dispatch_1_arg.queue.id = subDevice;
-      vmcl_dispatch_1_arg.kernel.id = kernel->get_id(kernelType, kernelFunc);
+      vmcl_dispatch_1_arg.kernel.id = kid;
       vmcl_dispatch_1_arg.dimension = 1;
       vmcl_dispatch_1_arg.globalWorkOffset.globalWorkOffset_len =
          computeTopology.get_num_dimensions();
@@ -1503,36 +1548,55 @@ public:
       vmcl_dispatch_1_arg.args.args_val = &kernelArgs[0];
 
       res = VMACCEL_RESOURCE_UNAVAILABLE;
-      while (res == VMACCEL_RESOURCE_UNAVAILABLE) {
+      while (retryCount < RETRY_MAX_COUNT &&
+             res == VMACCEL_RESOURCE_UNAVAILABLE) {
+#if DEBUG_COMPUTE_OPERATION || DEBUG_SURFACE_CONSISTENCY
+         VMACCEL_LOG("%s: Dispatching with kernelArgs\n", __FUNCTION__);
+         for (i = 0; i < numArguments; i++) {
+            VMACCEL_LOG("%s:  arg[%d]: type=%d sid=%d gen=%d\n", __FUNCTION__,
+                        i, kernelArgs[i].type, kernelArgs[i].surf.id,
+                        kernelArgs[i].surf.generation);
+         }
+#endif
+
          result_1 =
             vmcl_dispatch_1(&vmcl_dispatch_1_arg, clctx.get()->get_client());
 
          if (result_1 != NULL) {
-            vmcl_queueflush_1_arg.cid = contextId;
-            vmcl_queueflush_1_arg.id = subDevice;
-
             res = result_1->VMAccelReturnStatus_u.ret->status;
-
-            if (res == VMACCEL_RESOURCE_UNAVAILABLE) {
-               VMACCEL_LOG(
-                  "Dispatch requested resource that is unavailble...\n");
-            }
 
             vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
                              (caddr_t)result_1);
-         }
-      }
 
-      if (res == VMACCEL_SUCCESS) {
-         result_2 =
-            vmcl_queueflush_1(&vmcl_queueflush_1_arg, clctx->get_client());
+            result_1 = NULL;
 
-         if (result_2 == NULL) {
-            VMACCEL_WARNING("%s: Unable to flush queue...\n", __FUNCTION__);
-         } else {
-            vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
-                             (caddr_t)result_2);
+            vmcl_queueflush_1_arg.cid = contextId;
+            vmcl_queueflush_1_arg.id = subDevice;
+
+            result_2 =
+               vmcl_queueflush_1(&vmcl_queueflush_1_arg, clctx->get_client());
+
+            if (result_2 == NULL) {
+               VMACCEL_WARNING("%s: Unable to flush queue...\n", __FUNCTION__);
+            } else {
+               vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
+                                (caddr_t)result_2);
+               result_2 = NULL;
+            }
+
+            if (res == VMACCEL_RESOURCE_UNAVAILABLE) {
+               if ((retryCount > 0) &&
+                   (retryCount % (RETRY_MAX_COUNT / 4) == 0)) {
+                  VMACCEL_LOG("Dispatch requested resource that is unavailble, "
+                              "retryCount=%d...\n",
+                              retryCount);
+               }
+               pthread_yield();
+               usleep(retryCount * 1000);
+            }
          }
+
+         retryCount++;
       }
 
       dispatched = true;
