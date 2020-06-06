@@ -61,24 +61,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct timespec DiffTime(struct timespec *start, struct timespec *end);
 
 #if DEBUG_STATISTICS
-#define DECLARE_STAT(_NAME)                                                    \
-   struct timespec min##_NAME##Time;                                           \
-   struct timespec max##_NAME##Time;                                           \
-   float total##_NAME##TimeMS;                                                 \
+#define DECLARE_COUNTER_STAT(_NAME)                                            \
+   unsigned long long min##_NAME = 0xffffffffffffffff;                         \
+   unsigned long long max##_NAME;                                              \
+   unsigned long long total##_NAME = 0;                                        \
    unsigned int num##_NAME##Instances = 0
 
-#define STAT_TO_MS(_STAT)                                                      \
+#define DECLARE_TIME_STAT(_NAME)                                               \
+   struct timespec min##_NAME##Time;                                           \
+   struct timespec max##_NAME##Time;                                           \
+   float total##_NAME##TimeMS = 0.0f;                                          \
+   unsigned int num##_NAME##Instances = 0
+
+#define TIME_STAT_TO_MS(_STAT)                                                 \
    _STAT.tv_sec * 1000.0f + (_STAT.tv_nsec != 0)                               \
       ? (double)_STAT.tv_nsec / 1000000.0f                                     \
       : 0.0f
 
-#define START_STAT(_NAME)                                                      \
+#define START_TIME_STAT(_NAME)                                                 \
    struct timespec _NAME##StartTime;                                           \
    struct timespec _NAME##EndTime;                                             \
    struct timespec _NAME##DiffTime;                                            \
    clock_gettime(CLOCK_REALTIME, &_NAME##StartTime)
 
-#define END_STAT(_NAME)                                                        \
+#define END_TIME_STAT(_NAME)                                                   \
    clock_gettime(CLOCK_REALTIME, &_NAME##EndTime);                             \
    _NAME##DiffTime = DiffTime(&_NAME##StartTime, &_NAME##EndTime);             \
    if (num##_NAME##Instances == 0) {                                           \
@@ -96,20 +102,36 @@ struct timespec DiffTime(struct timespec *start, struct timespec *end);
          max##_NAME##Time = _NAME##DiffTime;                                   \
       }                                                                        \
    }                                                                           \
-   total##_NAME##TimeMS += STAT_TO_MS(_NAME##DiffTime);                        \
+   total##_NAME##TimeMS += TIME_STAT_TO_MS(_NAME##DiffTime);                   \
    num##_NAME##Instances++
 
-#define PRINT_STAT(_NAME)                                                      \
-   printf("%s: Count=%d, Min=%f ms, Max=%f ms, Avg=%f ms, Total=%f ms\n",      \
-          #_NAME, num##_NAME##Instances, STAT_TO_MS(min##_NAME##Time),         \
-          STAT_TO_MS(max##_NAME##Time),                                        \
-          total##_NAME##TimeMS / num##_NAME##Instances, total##_NAME##TimeMS)
+#define INC_COUNTER_STAT(_NAME, _DELTA)                                        \
+   min##_NAME = MIN(min##_NAME, _DELTA);                                       \
+   max##_NAME = MAX(max##_NAME, _DELTA);                                       \
+   total##_NAME += _DELTA;                                                     \
+   num##_NAME##Instances++
+
+#define LOG_TIME_STAT(_NAME)                                                   \
+   VMACCEL_LOG(                                                                \
+      "%s: # Instances=%d, Min=%f ms, Max=%f ms, Avg=%f ms,"                   \
+      " Total=%f ms\n",                                                        \
+      #_NAME, num##_NAME##Instances, TIME_STAT_TO_MS(min##_NAME##Time),        \
+      TIME_STAT_TO_MS(max##_NAME##Time),                                       \
+      total##_NAME##TimeMS / num##_NAME##Instances, total##_NAME##TimeMS)
+
+#define LOG_COUNTER_STAT(_NAME)                                                \
+   VMACCEL_LOG("%s: # Instances=%d, Min=%lld, Max=%lld, Avg=%f, Total=%lld\n", \
+               #_NAME, num##_NAME##Instances, min##_NAME, max##_NAME,          \
+               (float)total##_NAME / num##_NAME##Instances, total##_NAME)
 
 #else
-#define DECLARE_STAT(_NAME)
-#define START_STAT(_NAME)
-#define END_STAT(_NAME)
-#define PRINT_STAT(_NAME)
+#define DECLARE_TIME_STAT(_NAME)
+#define DECLARE_COUNTER_STAT(_NAME)
+#define START_TIME_STAT(_NAME)
+#define END_TIME_STAT(_NAME)
+#define INC_COUNTER_STAT(_NAME, _DELTA)
+#define LOG_TIME_STAT(_NAME)
+#define LOG_COUNTER_STAT(_NAME)
 #endif
 
 int BitMask_FindFirstZero(unsigned int bitMask);

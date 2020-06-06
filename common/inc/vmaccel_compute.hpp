@@ -106,11 +106,11 @@ public:
       LOG_ENTRY(("clcontext::Destructor {\n"));
       destroy();
 
-      PRINT_STAT(alloc_surface);
-      PRINT_STAT(destroy_surface);
-      PRINT_STAT(upload_surface);
-      PRINT_STAT(copy_surface);
-      PRINT_STAT(download_surface);
+      LOG_TIME_STAT(alloc_surface);
+      LOG_TIME_STAT(destroy_surface);
+      LOG_TIME_STAT(upload_surface);
+      LOG_TIME_STAT(copy_surface);
+      LOG_TIME_STAT(download_surface);
 
       LOG_EXIT(("} clcontext::Destructor\n"));
    }
@@ -142,12 +142,12 @@ public:
       VMAccelSurfaceAllocateReturnStatus *result_1;
       VMCLSurfaceAllocateDesc vmcl_surfacealloc_1_arg;
 
-      START_STAT(alloc_surface);
+      START_TIME_STAT(alloc_surface);
       lock();
 
       if (is_resident(surf->get_id())) {
          unlock();
-         END_STAT(alloc_surface);
+         END_TIME_STAT(alloc_surface);
          return true;
       }
 
@@ -167,7 +167,7 @@ public:
          VMACCEL_WARNING("%s: Unable to allocate surface %d for context %d.\n",
                          __FUNCTION__, surf->get_id(), get_contextId());
          unlock();
-         END_STAT(alloc_surface);
+         END_TIME_STAT(alloc_surface);
          return false;
       }
 
@@ -177,7 +177,7 @@ public:
       set_residency(surf->get_id(), true);
 
       unlock();
-      END_STAT(alloc_surface);
+      END_TIME_STAT(alloc_surface);
 
       return true;
    }
@@ -194,7 +194,7 @@ public:
       VMCLSurfaceUnmapOp vmcl_surfaceunmap_1_arg;
       VMAccelReturnStatus *result_3;
 
-      START_STAT(upload_surface);
+      START_TIME_STAT(upload_surface);
       lock();
 
 #if DEBUG_SURFACE_CONSISTENCY
@@ -207,7 +207,7 @@ public:
 #if !DEBUG_FORCE_SURFACE_CONSISTENCY
       if (surf->is_consistent(get_contextId()) && !force) {
          unlock();
-         END_STAT(upload_surface);
+         END_TIME_STAT(upload_surface);
          return true;
       }
 #else
@@ -270,7 +270,7 @@ public:
 
             if (result_3 == NULL) {
                unlock();
-               END_STAT(upload_surface);
+               END_TIME_STAT(upload_surface);
                return false;
             }
 
@@ -290,7 +290,7 @@ public:
       }
 
       unlock();
-      END_STAT(upload_surface);
+      END_TIME_STAT(upload_surface);
 
       return true;
    }
@@ -299,12 +299,12 @@ public:
       VMCLImageUploadOp vmcl_imgupload_1_arg;
       VMAccelReturnStatus *result_3;
 
-      START_STAT(upload_surface);
+      START_TIME_STAT(upload_surface);
       lock();
 
       if (surf->is_consistent(get_contextId()) && !force) {
          unlock();
-         END_STAT(upload_surface);
+         END_TIME_STAT(upload_surface);
          return true;
       }
 
@@ -339,7 +339,7 @@ public:
       }
 
       unlock();
-      END_STAT(upload_surface);
+      END_TIME_STAT(upload_surface);
 
       return true;
    }
@@ -356,7 +356,7 @@ public:
       VMAccelReturnStatus *result_2;
       VMCLSurfaceUnmapOp vmcl_surfaceunmap_1_arg;
 
-      START_STAT(download_surface);
+      START_TIME_STAT(download_surface);
       lock();
 
 #if DEBUG_SURFACE_CONSISTENCY
@@ -420,7 +420,7 @@ public:
 
             if (result_2 == NULL) {
                unlock();
-               END_STAT(download_surface);
+               END_TIME_STAT(download_surface);
                return false;
             }
 
@@ -436,7 +436,7 @@ public:
 #endif
 
       unlock();
-      END_STAT(download_surface);
+      END_TIME_STAT(download_surface);
 
       return true;
    }
@@ -459,12 +459,12 @@ public:
       VMAccelId dstId = dstSurf->get_id();
       unsigned int dstGen = dstSurf->get_generation();
 
-      START_STAT(copy_surface);
+      START_TIME_STAT(copy_surface);
       lock();
 
       if (!is_resident(srcId) || !is_resident(dstId)) {
          unlock();
-         END_STAT(copy_surface);
+         END_TIME_STAT(copy_surface);
          return;
       }
 
@@ -509,7 +509,7 @@ public:
       }
 
       unlock();
-      END_STAT(copy_surface);
+      END_TIME_STAT(copy_surface);
    }
 
    /**
@@ -519,12 +519,12 @@ public:
       VMAccelReturnStatus *result_1;
       VMCLSurfaceId vmcl_surfacedestroy_1_arg;
 
-      START_STAT(destroy_surface);
+      START_TIME_STAT(destroy_surface);
       lock();
 
       if (!is_resident(id)) {
          unlock();
-         END_STAT(destroy_surface);
+         END_TIME_STAT(destroy_surface);
          return;
       }
 
@@ -550,7 +550,7 @@ public:
       set_residency(id, false);
 
       unlock();
-      END_STAT(destroy_surface);
+      END_TIME_STAT(destroy_surface);
    }
 
 /**
@@ -786,11 +786,11 @@ private:
    unsigned int numSubDevices;
    std::mutex m;
 
-   DECLARE_STAT(alloc_surface);
-   DECLARE_STAT(destroy_surface);
-   DECLARE_STAT(upload_surface);
-   DECLARE_STAT(copy_surface);
-   DECLARE_STAT(download_surface);
+   DECLARE_TIME_STAT(alloc_surface);
+   DECLARE_TIME_STAT(destroy_surface);
+   DECLARE_TIME_STAT(upload_surface);
+   DECLARE_TIME_STAT(copy_surface);
+   DECLARE_TIME_STAT(download_surface);
 };
 
 typedef unsigned int VMCLKernelArchitecture;
@@ -1438,6 +1438,12 @@ public:
       if (surfaceIds) {
          free(surfaceIds);
       }
+
+      LOG_TIME_STAT(dispatch);
+      LOG_TIME_STAT(finish);
+      LOG_TIME_STAT(quiesce);
+      LOG_COUNTER_STAT(resource_unavailable_per_dispatch);
+
       LOG_EXIT(("} prepared=%d, dispatched=%d, quiesced=%d "
                 "compute::operation::Destructor\n",
                 prepared, dispatched, quiesced));
@@ -1489,12 +1495,15 @@ public:
       unsigned int res;
       unsigned int retryCount = 0;
       unsigned int kid = kernel->get_id(kernelType, kernelFunc);
+      START_TIME_STAT(dispatch);
 
       if (!prepared) {
+         END_TIME_STAT(dispatch);
          return VMACCEL_FAIL;
       }
 
       if (dispatched && !force) {
+         END_TIME_STAT(dispatch);
          return VMACCEL_FAIL;
       }
 
@@ -1506,6 +1515,7 @@ public:
          VMACCEL_WARNING(
             "%s: Unable to create a kernel arguments and surface ids\n",
             __FUNCTION__);
+         END_TIME_STAT(dispatch);
          return VMACCEL_FAIL;
       }
 
@@ -1601,6 +1611,12 @@ public:
 
       dispatched = true;
 
+      if (retryCount > 1) {
+         INC_COUNTER_STAT(resource_unavailable_per_dispatch, retryCount - 1);
+      }
+
+      END_TIME_STAT(dispatch);
+
       return VMACCEL_SUCCESS;
    }
 
@@ -1611,18 +1627,22 @@ public:
     */
    int quiesce() {
       int i;
+      START_TIME_STAT(quiesce);
 
       if (quiesced) {
+         END_TIME_STAT(quiesce);
          return VMACCEL_SUCCESS;
       }
 
       if (!prepared || !dispatched) {
+         END_TIME_STAT(quiesce);
          return VMACCEL_FAIL;
       }
 
       if (!VMAccel_IsLocal()) {
          if (clctx.get()->get_client() == NULL) {
             VMACCEL_WARNING("%s: Context not initialized...\n", __FUNCTION__);
+            END_TIME_STAT(quiesce);
             return VMACCEL_RESOURCE_UNAVAILABLE;
          }
       }
@@ -1635,11 +1655,14 @@ public:
                 clctx, kernelArgs, surfaceIds, i, bindings[i]->get_surf())) {
             VMACCEL_WARNING("%s: Unable to prepare compute argument %d\n",
                             __FUNCTION__, i);
+            END_TIME_STAT(quiesce);
             return VMACCEL_FAIL;
          }
       }
 
       quiesced = true;
+
+      END_TIME_STAT(quiesce);
 
       return VMACCEL_SUCCESS;
    }
@@ -1650,6 +1673,8 @@ public:
     * Finish the operation.
     */
    int finish() {
+      START_TIME_STAT(finish);
+
       if (prepared) {
          if (!dispatched) {
             dispatch();
@@ -1658,6 +1683,8 @@ public:
             quiesce();
          }
       }
+
+      END_TIME_STAT(finish);
 
       return VMACCEL_SUCCESS;
    }
@@ -1675,6 +1702,11 @@ private:
    vmaccel::work_topology computeTopology;
    VMCLKernelArgDesc *kernelArgs;
    unsigned int *surfaceIds;
+
+   DECLARE_TIME_STAT(dispatch);
+   DECLARE_TIME_STAT(finish);
+   DECLARE_TIME_STAT(quiesce);
+   DECLARE_COUNTER_STAT(resource_unavailable_per_dispatch);
 };
 
 /**
