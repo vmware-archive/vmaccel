@@ -1,0 +1,29 @@
+- hosts: drivers
+  become: yes
+  tasks:
+    - name: Install ipmitool
+      apt:
+        name: ipmitool
+        state: present
+        force: yes
+
+    - name: Install sshfs
+      apt:
+        name: sshfs
+        state: present
+        force: yes
+
+    - name: Install sshpass
+      apt:
+        name: sshpass
+        state: present
+        force: yes
+
+- hosts: all
+  become: yes
+  tasks:
+    - name: Install Java
+      apt:
+        name: openjdk-8-jdk 
+        state: present
+        force: yes

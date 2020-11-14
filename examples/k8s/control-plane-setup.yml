@@ -1,0 +1,41 @@
+- hosts: control-plane
+  tasks:
+    - name: Initialize the cluster
+      become: yes
+      command: kubeadm init --pod-network-cidr=10.244.0.0/16
+
+    - name: Create .kube directory
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: 0755
+
+    - name: Copy admin.conf to user's kube config
+      become: yes
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/{{ ansible_user }}/.kube/config
+        remote_src: yes
+        owner: "{{ ansible_user }}"
+
+    #
+    # ???: Wait for /etc/cni/net.d/10-flannel.conflist
+    #
+    - name: Install Pod network
+      shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.12.0/Documentation/kube-flannel.yml
+
+    #
+    # Install Helm
+    #
+    - name: Download Helm
+      command: curl -o install-helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get
+
+    - name: Install Helm
+      become: yes
+      command: bash install-helm.sh
+
+    - name: Creating Helm service account
+      shell: kubectl create serviceaccount tiller --namespace kube-system
+
+    - name: Create Helm cluster role
+      shell: kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller

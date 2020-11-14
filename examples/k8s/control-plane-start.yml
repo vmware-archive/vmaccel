@@ -1,0 +1,4 @@
+- hosts: control-plane
+  tasks:
+    - name: Initialize Helm
+      command: helm init --service-account tiller
