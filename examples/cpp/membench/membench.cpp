@@ -164,13 +164,39 @@ const char *matrixAdd2DExecChainNUKernel =
    "   int j = get_global_id(1);\n"
    "   int m = dims[0];\n"
    "   int n = dims[1];\n"
-   "   int k, l;\n"
+   "   int k = 0, l = 0;\n"
    "   int chunkSize = dims[2];\n"
    "   int numPasses = dims[3];\n"
-   "   while (semaphores[n * i + j] == 0);\n"
+   "   while (semaphores[n * i + j] == 0) {\n"
+   "      k = k + 1;\n"
+   "   }\n"
    "   semaphores[n * i + j + 1] = 1;\n"
    "   for (l = 0; l < numPasses; l++) {\n"
    "      for (k = 0; k < chunkSize; k++) {\n"
+   "         b[n * chunkSize * i + chunkSize * j + k] +=\n"
+   "            a[n * chunkSize * i + chunkSize * j + k];\n"
+   "      }\n"
+   "   }\n"
+   "}\n";
+
+const char *matrixAdd2DEpsilonJumpNUKernel =
+   "__kernel void MatrixAdd2DEpsilonJumpNU(__global int *a, __global int *b,\n"
+   "                                       __global int *semaphores,\n"
+   "                                       __global int *dims)\n"
+   "{\n"
+   "   int i = get_global_id(0);\n"
+   "   int j = get_global_id(1);\n"
+   "   int m = dims[0];\n"
+   "   int n = dims[1];\n"
+   "   int k, l;\n"
+   "   int chunkSize = dims[2];\n"
+   "   int numPasses = dims[3];\n"
+   "   for (l = 0; ; l++) {\n"
+   "      for (k = 0; k < chunkSize; k++) {\n"
+   "         if (semaphores[n * i + j] == 1) {\n"
+   "            semaphores[n * i + j] = l;\n"
+   "            return;\n"
+   "         }\n"
    "         b[n * chunkSize * i + chunkSize * j + k] +=\n"
    "            a[n * chunkSize * i + chunkSize * j + k];\n"
    "      }\n"
@@ -195,11 +221,13 @@ enum {
    MATRIX_ADD_2D_SEMAPHORE1U,
    MATRIX_ADD_2D_SEMAPHORENU,
    MATRIX_ADD_2D_EXEC_CHAIN,
+   MATRIX_ADD_2D_EPSILON_JUMPNU,
    MATRIX_FUNCTION_MAX
 } FunctionEnum;
 
-#define MEMPOOL(_LOC) ((_LOC)&0xffff)
+#define MEMPOOL(_LOC) ((_LOC)&0xff)
 #define MEMDEVICE(_LOC) (((_LOC) >> 16) & 0xffff)
+#define MEMQUEUE(_LOC) (((_LOC) >> 8) & 0xff)
 
 FunctionTableEntry functionTable[MATRIX_FUNCTION_MAX] = {
    {matrixAdd2DKernel, "MatrixAdd2D"},
@@ -208,9 +236,10 @@ FunctionTableEntry functionTable[MATRIX_FUNCTION_MAX] = {
    {matrixCopy2DKernel, "MatrixCopy2D"},
    {matrixAddTranspose2DKernel, "MatrixAddTranspose2D"},
    {matrixCopyTranspose2DKernel, "MatrixCopyTranspose2D"},
-   {matrixAdd2DSemaphore1UKernel, "MatrixAddSemaphore1U"},
-   {matrixAdd2DSemaphoreNUKernel, "MatrixAddSemaphoreNU"},
-   {matrixAdd2DExecChainNUKernel, "MatrixAdd2DExecChain"},
+   {matrixAdd2DSemaphore1UKernel, "MatrixAdd2DSemaphore1U"},
+   {matrixAdd2DSemaphoreNUKernel, "MatrixAdd2DSemaphoreNU"},
+   {matrixAdd2DExecChainNUKernel, "MatrixAdd2DExecChainNU"},
+   {matrixAdd2DEpsilonJumpNUKernel, "MatrixAdd2DEpsilonJumpNU"},
 };
 
 /**
@@ -227,7 +256,8 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
                           int *pNumPasses, int *pNumIterations,
                           int *pMemoryPoolA, int *pMemoryPoolB,
                           int *pMemoryPoolS, int *pKernelFunc,
-                          int *pKernelDevice, int *pDirtyPages) {
+                          int *pKernelDevice, int *pDirtyPages,
+                          int *pEpsilonDelayMS) {
    int i = 1;
 
    while (i < argc) {
@@ -294,6 +324,12 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
          }
          *pKernelDevice = atoi(argv[i + 1]);
          i += 2;
+      } else if (strcmp("--epsilonDelayMS", argv[i]) == 0) {
+         if (i + 1 == argc) {
+            return 1;
+         }
+         *pEpsilonDelayMS = atoi(argv[i + 1]);
+         i += 2;
       } else if (strcmp("--dirtyPages", argv[i]) == 0) {
          if (i == argc) {
             return 1;
@@ -329,6 +365,8 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
             "                            x=65536 + device index + pool\n\n");
          printf("  --memoryPoolB <x>    Output memory pool\n");
          printf("  --memoryPoolS <x>    Semaphore memory pool\n");
+         printf("  --epsilonDelayMS <x> Delay in milliseconds before semaphore"
+                " update\n");
          printf("  --dirtyPages         Dirty pages each iteration\n");
          printf("\n");
          exit(1);
@@ -343,7 +381,10 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
 
 int main(int argc, char **argv) {
    struct timespec e2eDiffTime, e2eStartTime, e2eEndTime;
+   struct timespec quiesceDiffTime, quiesceStartTime, quiesceEndTime;
    float totalRuntimeMS = 0.0f;
+   float quiesceTimeMS = 0.0f;
+   int epsilonDelayMS = 0;
    std::string host = "127.0.0.1";
    int numRows = 8192;
    int numColumns = 1;
@@ -357,30 +398,62 @@ int main(int argc, char **argv) {
    int kernelDevice = 0;
    int dirtyPages = FALSE;
    int numSubDevices = 0;
+   int numQueues = 0;
 
-   if (ParseCommandArguments(argc, argv, host, &numRows, &numColumns,
-                             &chunkSize, &numPasses, &numIterations,
-                             &memoryPoolA, &memoryPoolB, &memoryPoolS,
-                             &kernelFunc, &kernelDevice, &dirtyPages)) {
+   if (ParseCommandArguments(
+          argc, argv, host, &numRows, &numColumns, &chunkSize, &numPasses,
+          &numIterations, &memoryPoolA, &memoryPoolB, &memoryPoolS, &kernelFunc,
+          &kernelDevice, &dirtyPages, &epsilonDelayMS)) {
       return 1;
    }
 
    VMACCEL_LOG("\n");
    VMACCEL_LOG("== VMCL Memory Benchmark ==\n");
-   VMACCEL_LOG("  Kernel Function:             %d\n", kernelFunc);
-   VMACCEL_LOG("  Kernel Device:               %d\n", kernelDevice);
-   VMACCEL_LOG("  Rows, Columns, Chunk Size:   %d, %d, %d\n", numRows,
-               numColumns, chunkSize);
-   VMACCEL_LOG("  Number of Kernel Passes:     %d\n", numPasses);
-   VMACCEL_LOG("  Source Memory Pool:          %d\n", memoryPoolA);
-   VMACCEL_LOG("  Destination Memory Pool:     %d\n", memoryPoolB);
-   VMACCEL_LOG("  Semaphore Memory Pool:       %d\n", memoryPoolS);
-   VMACCEL_LOG("  Number of Iterations:        %d\n", numIterations);
+   VMACCEL_LOG("  Kernel Function:                        %d\n", kernelFunc);
+   VMACCEL_LOG("  Kernel Device:                          %d\n", kernelDevice);
+   VMACCEL_LOG("  Rows, Columns, Chunk Size:              %d, %d, %d\n",
+               numRows, numColumns, chunkSize);
+   VMACCEL_LOG("  Number of Kernel Passes:                %d\n", numPasses);
+   VMACCEL_LOG("  Source Memory (Device,Queue,Pool):      %d,%d,%d\n",
+               MEMDEVICE(memoryPoolA), MEMQUEUE(memoryPoolA),
+               MEMPOOL(memoryPoolA));
+   VMACCEL_LOG("  Destination Memory (Device,Queue,Pool): %d,%d,%d\n",
+               MEMDEVICE(memoryPoolB), MEMQUEUE(memoryPoolB),
+               MEMPOOL(memoryPoolB));
+   VMACCEL_LOG("  Semaphore Memory (Device,Queue,Pool):   %d,%d,%d\n",
+               MEMDEVICE(memoryPoolS), MEMQUEUE(memoryPoolS),
+               MEMPOOL(memoryPoolS));
+   VMACCEL_LOG("  Epsilon Semaphore Update Delay:         %d ms\n",
+               epsilonDelayMS);
+   VMACCEL_LOG("  Number of Iterations:                   %d\n", numIterations);
    VMACCEL_LOG("\n");
 
    numSubDevices = MAX(kernelDevice + 1, MEMDEVICE(memoryPoolA) + 1);
    numSubDevices = MAX(numSubDevices, MEMDEVICE(memoryPoolB) + 1);
    numSubDevices = MAX(numSubDevices, MEMDEVICE(memoryPoolS) + 1);
+
+   numQueues = MAX(1, MEMQUEUE(memoryPoolA) + 1);
+   numQueues = MAX(numQueues, MEMQUEUE(memoryPoolB) + 1);
+   numQueues = MAX(numQueues, MEMQUEUE(memoryPoolS) + 1);
+
+   VMACCEL_LOG("  Number of Sub-devices:                  %d\n", numSubDevices);
+   VMACCEL_LOG("  Number of Queues:                       %d\n", numQueues);
+
+   if ((kernelFunc == MATRIX_ADD_2D_SEMAPHORE1U ||
+        kernelFunc == MATRIX_ADD_2D_SEMAPHORENU ||
+        kernelFunc == MATRIX_ADD_2D_EXEC_CHAIN ||
+        kernelFunc == MATRIX_ADD_2D_EPSILON_JUMPNU) &&
+       ((numQueues < 2) || (MEMQUEUE(memoryPoolS) == 0))) {
+      VMACCEL_LOG("Semaphore device queue must be non-zero to run"
+                  " concurrently with kernel\n");
+      return 1;
+   }
+
+   if ((kernelFunc == MATRIX_ADD_2D_EPSILON_JUMPNU) && (numIterations != 1)) {
+      VMACCEL_LOG("Epsilon jump quiesce time measurements require single"
+                  " iteration\n");
+      return 1;
+   }
 
 #if VMACCEL_LOCAL
    vmcl_poweron_svc(NULL);
@@ -440,7 +513,7 @@ int main(int argc, char **argv) {
     */
    {
       compute::context c(accel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
-                         numSubDevices, 0);
+                         numSubDevices, numQueues, 0);
       size_t surfBytes = (size_t)numRows * numColumns * chunkSize * sizeof(int);
       size_t uploadBytes = 0;
       size_t downloadBytes = 0;
@@ -476,9 +549,15 @@ int main(int argc, char **argv) {
       semDesc = descA;
       semDesc.width = sizeof(int) * numRows * numColumns;
       semDesc.pool = MEMPOOL(memoryPoolS);
-      accelerator_surface accelA(accel.get(), MEMDEVICE(memoryPoolA), descA);
-      accelerator_surface accelB(accel.get(), MEMDEVICE(memoryPoolB), descB);
-      accelerator_surface accelS(accel.get(), MEMDEVICE(memoryPoolS), semDesc);
+      accelerator_surface accelA(
+         accel.get(),
+         MEMDEVICE(memoryPoolA) * numQueues + MEMQUEUE(memoryPoolA), descA);
+      accelerator_surface accelB(
+         accel.get(),
+         MEMDEVICE(memoryPoolB) * numQueues + MEMQUEUE(memoryPoolB), descB);
+      accelerator_surface accelS(
+         accel.get(),
+         MEMDEVICE(memoryPoolS) * numQueues + MEMQUEUE(memoryPoolS), semDesc);
       accelerator_surface accelDims(accel.get(), kernelDevice, descDims);
 
       VMAccelSurfaceRegion rgn = {
@@ -618,17 +697,66 @@ int main(int argc, char **argv) {
             } else {
                if (kernelFunc == MATRIX_ADD_2D_SEMAPHORE1U ||
                    kernelFunc == MATRIX_ADD_2D_SEMAPHORENU ||
-                   kernelFunc == MATRIX_ADD_2D_EXEC_CHAIN) {
+                   kernelFunc == MATRIX_ADD_2D_EXEC_CHAIN ||
+                   kernelFunc == MATRIX_ADD_2D_EPSILON_JUMPNU) {
                   // Clear the semaphores
+                  for (int i = 0; i < numRows; i++) {
+                     for (int j = 0; j < numColumns; j++) {
+                        memS[i * numColumns + j] = 0;
+                        uploadBytes += 4 * sizeof(int);
+                     }
+                  }
+                  VMACCEL_LOG("Reset semaphores\n");
                   if (accelS->upload<int>(rgnSem, memS) != VMACCEL_SUCCESS) {
                      VMACCEL_LOG("ERROR: Unable to reset semaphores\n");
                      return 1;
                   }
-                  uploadBytes += 4 * sizeof(int);
                }
 
                opobj->dispatch(true);
 
+               if (kernelFunc == MATRIX_ADD_2D_SEMAPHORE1U ||
+                   kernelFunc == MATRIX_ADD_2D_SEMAPHORENU ||
+                   kernelFunc == MATRIX_ADD_2D_EXEC_CHAIN ||
+                   kernelFunc == MATRIX_ADD_2D_EPSILON_JUMPNU) {
+                  VMACCEL_LOG("Workload started...\n");
+                  usleep(epsilonDelayMS * 1000);
+                  VMACCEL_LOG("Update epsilon semaphore\n");
+                  for (int i = 0; i < numRows; i++) {
+                     for (int j = 0; j < numColumns; j++) {
+                        memS[i * numColumns + j] = 1;
+                        uploadBytes += 4 * sizeof(int);
+                     }
+                  }
+                  if (kernelFunc != MATRIX_ADD_2D_EPSILON_JUMPNU) {
+                     if (accelS->upload<int>(rgnSem, memS) != VMACCEL_SUCCESS) {
+                        VMACCEL_LOG("ERROR: Unable to update semaphores\n");
+                        return 1;
+                     }
+                     c->upload_surface(bindS->get_surf());
+                  } else {
+                     clock_gettime(CLOCK_REALTIME, &quiesceStartTime);
+                     if (accelS->upload<int>(rgnSem, memS) != VMACCEL_SUCCESS) {
+                        VMACCEL_LOG("ERROR: Unable to update semaphores\n");
+                        return 1;
+                     }
+                     c->upload_surface(bindS->get_surf());
+
+                     VMACCEL_LOG("Quiescing operation object...\n");
+                     opobj->quiesce();
+
+                     downloadBytes +=
+                        2 * surfBytes + 2 * numRows * numColumns * sizeof(int);
+
+                     if (accelS->download<int>(rgnSem, memS) !=
+                         VMACCEL_SUCCESS) {
+                        VMACCEL_LOG("ERROR: Unable to update semaphores\n");
+                        return 1;
+                     }
+                     VMACCEL_LOG("Operation object quiesced...\n");
+                     clock_gettime(CLOCK_REALTIME, &quiesceEndTime);
+                  }
+               }
                if (kernelFunc == MATRIX_COPY_2D ||
                    kernelFunc == MATRIX_COPY_TRANSPOSE_2D) {
                   refBytes += surfBytes * numPasses;
@@ -640,8 +768,11 @@ int main(int argc, char **argv) {
                computeBytes += surfBytes * numPasses;
             }
          }
-
-         opobj->quiesce();
+         if (kernelFunc != MATRIX_ADD_2D_EPSILON_JUMPNU) {
+            opobj->quiesce();
+            downloadBytes +=
+               2 * surfBytes + 2 * numRows * numColumns * sizeof(int);
+         }
       }
 
       if (kernelFunc == MEMCPY) {
@@ -658,6 +789,7 @@ int main(int argc, char **argv) {
 
       clock_gettime(CLOCK_REALTIME, &e2eEndTime);
       e2eDiffTime = DiffTime(&e2eStartTime, &e2eEndTime);
+
       totalRuntimeMS =
          e2eDiffTime.tv_sec * 1000.0f +
          ((e2eDiffTime.tv_nsec != 0) ? (double)e2eDiffTime.tv_nsec / 1000000.0f
@@ -665,16 +797,39 @@ int main(int argc, char **argv) {
 
       VMACCEL_LOG("\n");
       VMACCEL_LOG("End-to-end Time = %lf ms\n", totalRuntimeMS);
-      VMACCEL_LOG("Total Referenced = %ld bytes, %lf bytes/ms\n", refBytes,
-                  refBytes / totalRuntimeMS);
-      VMACCEL_LOG("Total Dirtied = %ld bytes, %lf bytes/ms\n", dirtyBytes,
-                  dirtyBytes / totalRuntimeMS);
+      if (kernelFunc == MATRIX_ADD_2D_EPSILON_JUMPNU) {
+         int minThreadPassCount = 1 << 30;
+         int maxThreadPassCount = 0;
+         quiesceDiffTime = DiffTime(&quiesceStartTime, &quiesceEndTime);
+         quiesceTimeMS = quiesceDiffTime.tv_sec * 1000.0f +
+                         ((quiesceDiffTime.tv_nsec != 0)
+                             ? (double)quiesceDiffTime.tv_nsec / 1000000.0f
+                             : 0.0f);
+         VMACCEL_LOG("Quiesce Time = %lf ms\n", quiesceTimeMS);
+         for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < numColumns; j++) {
+               minThreadPassCount =
+                  MIN(minThreadPassCount, memS[i * numColumns + j]);
+               maxThreadPassCount =
+                  MAX(maxThreadPassCount, memS[i * numColumns + j]);
+            }
+         }
+         VMACCEL_LOG("Min compute kernel thread pass count = %d\n",
+                     minThreadPassCount);
+         VMACCEL_LOG("Max compute kernel thread pass count = %d\n",
+                     maxThreadPassCount);
+      } else {
+         VMACCEL_LOG("Total Referenced = %ld bytes, %lf bytes/ms\n", refBytes,
+                     refBytes / totalRuntimeMS);
+         VMACCEL_LOG("Total Dirtied = %ld bytes, %lf bytes/ms\n", dirtyBytes,
+                     dirtyBytes / totalRuntimeMS);
+         VMACCEL_LOG("Compute Throughput = %ld bytes, %lf bytes/ms\n",
+                     computeBytes, computeBytes / totalRuntimeMS);
+      }
       VMACCEL_LOG("Total Uploaded = %ld bytes, %lf bytes/ms\n", uploadBytes,
                   uploadBytes / totalRuntimeMS);
       VMACCEL_LOG("Total Downloaded = %ld bytes, %lf bytes/ms\n", downloadBytes,
                   downloadBytes / totalRuntimeMS);
-      VMACCEL_LOG("Compute Throughput = %ld bytes, %lf bytes/ms\n",
-                  computeBytes, computeBytes / totalRuntimeMS);
       VMACCEL_LOG("\n");
 
       for (int i = 0; i < numRows; i++) {

@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2019 VMware, Inc.
+Copyright (c) 2019-2020 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
        * Query an accelerator manager for the Compute Resource.
        */
       compute::context c(accel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK, 0,
-                         0);
+                         1, 0);
 
       VMAccelSurfaceDesc desc = {
          0,
@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
 
       {
          compute::context c(accel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
-                            0, 0);
+                            0, 1, 0);
 
          /*
           * Discard contents of the first compute operation and re-upload
@@ -194,7 +194,7 @@ int main(int argc, char **argv) {
 
       {
          compute::context c(accel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
-                            0, 0);
+                            0, 1, 0);
 
          /*
           * Discard contents of the first compute operation and re-upload
@@ -239,7 +239,7 @@ int main(int argc, char **argv) {
 
       {
          compute::context c(accel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
-                            0, 0);
+                            0, 1, 0);
 
          /*
           * Discard contents of the first compute operation and re-upload

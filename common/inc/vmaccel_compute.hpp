@@ -82,7 +82,7 @@ public:
     */
    clcontext(std::shared_ptr<accelerator> &a, unsigned int megaFlops,
              unsigned int selectionMask, unsigned int numSubDevices,
-             unsigned int requiredCaps)
+             unsigned int numQueues, unsigned int requiredCaps)
       : vmaccel::context(a, VMACCEL_COMPUTE_ACCELERATOR_MASK,
                          a->get_max_ref_objects()) {
       LOG_ENTRY(("clcontext::Constructor(a=%p) {\n", a.get()));
@@ -90,7 +90,7 @@ public:
       contextId = VMACCEL_INVALID_ID;
 
       VMAccelStatusCodeEnum ret = (VMAccelStatusCodeEnum)alloc(
-         megaFlops, selectionMask, numSubDevices, requiredCaps);
+         megaFlops, selectionMask, numSubDevices, numQueues, requiredCaps);
 
       if (ret != VMACCEL_SUCCESS) {
          throw exception(ret, "Unable to allocate context...\n");
@@ -129,6 +129,7 @@ public:
       clnt = obj.clnt;
       accelId = obj.accelId;
       contextId = obj.contextId;
+      numQueues = obj.numQueues;
       unlock();
       LOG_EXIT(("} clcontext::CopyConstructor\n"));
    }
@@ -188,7 +189,8 @@ public:
  * Update a resident surface.
  */
 #if ENABLE_VMCL_STREAM_SERVER || DEBUG_SURFACE_CONSISTENCY
-   bool upload_surface(ref_object<surface> surf, bool force = false) {
+   bool upload_surface(ref_object<surface> surf, bool force = false,
+                       VMAccelId qid = VMACCEL_INVALID_ID) {
       VMCLSurfaceMapOp vmcl_surfacemap_1_arg;
       VMAccelSurfaceMapReturnStatus *result_2;
       VMCLSurfaceUnmapOp vmcl_surfaceunmap_1_arg;
@@ -215,9 +217,12 @@ public:
                   surf->get_id());
 #endif
 
+      if (qid == VMACCEL_INVALID_ID) {
+         qid = surf->get_queue_id();
+      }
       memset(&vmcl_surfacemap_1_arg, 0, sizeof(vmcl_surfacemap_1_arg));
       vmcl_surfacemap_1_arg.queue.cid = get_contextId();
-      vmcl_surfacemap_1_arg.queue.id = surf->get_queue_id();
+      vmcl_surfacemap_1_arg.queue.id = qid;
       vmcl_surfacemap_1_arg.op.surf.id = surf->get_id();
       vmcl_surfacemap_1_arg.op.surf.generation = surf->get_generation();
       vmcl_surfacemap_1_arg.op.size.x = surf->get_desc().width;
@@ -255,7 +260,7 @@ public:
             memset(&vmcl_surfaceunmap_1_arg, 0,
                    sizeof(vmcl_surfaceunmap_1_arg));
             vmcl_surfaceunmap_1_arg.queue.cid = get_contextId();
-            vmcl_surfaceunmap_1_arg.queue.id = surf->get_queue_id();
+            vmcl_surfaceunmap_1_arg.queue.id = qid;
             vmcl_surfaceunmap_1_arg.op.surf.id = surf->get_id();
             vmcl_surfaceunmap_1_arg.op.surf.generation = surf->get_generation();
             vmcl_surfaceunmap_1_arg.op.ptr.ptr_len =
@@ -279,7 +284,9 @@ public:
 
             surf->set_consistency(get_contextId(), true);
          }
-      } else {
+      }
+#if ENABLE_VMCL_STREAM_SERVER
+      else {
          VMAccelAddress a = *(get_accel()->get_manager_addr());
          a.port = VMACCEL_VMCL_BASE_PORT;
          vmaccel_stream_send_async(
@@ -288,6 +295,7 @@ public:
 
          surf->set_consistency(get_contextId(), true);
       }
+#endif
 
       unlock();
       END_TIME_STAT(upload_surface);
@@ -295,7 +303,8 @@ public:
       return true;
    }
 #else
-   bool upload_surface(ref_object<surface> surf, bool force = false) {
+   bool upload_surface(ref_object<surface> surf, bool force = false,
+                       VMAccelId qid = VMACCEL_INVALID_ID) {
       VMCLImageUploadOp vmcl_imgupload_1_arg;
       VMAccelReturnStatus *result_3;
 
@@ -310,7 +319,11 @@ public:
 
       memset(&vmcl_imgupload_1_arg, 0, sizeof(vmcl_imgupload_1_arg));
       vmcl_imgupload_1_arg.queue.cid = get_contextId();
-      vmcl_imgupload_1_arg.queue.id = surf->get_queue_id();
+      if (qid == VMACCEL_INVALID_ID) {
+         vmcl_imgupload_1_arg.queue.id = surf->get_queue_id();
+      } else {
+         vmcl_imgupload_1_arg.queue.id = qid;
+      }
       vmcl_imgupload_1_arg.img.cid = get_contextId();
       vmcl_imgupload_1_arg.img.accel.type = surf->get_desc().type;
       vmcl_imgupload_1_arg.img.accel.handleType = VMACCEL_HANDLE_ID;
@@ -350,7 +363,8 @@ public:
     *
     * Evict a surface from the context.
     */
-   bool download_surface(ref_object<surface> surf, bool force = false) {
+   bool download_surface(ref_object<surface> surf, bool force = false,
+                         VMAccelId qid = VMACCEL_INVALID_ID) {
       VMAccelSurfaceMapReturnStatus *result_1;
       VMCLSurfaceMapOp vmcl_surfacemap_1_arg;
       VMAccelReturnStatus *result_2;
@@ -366,7 +380,11 @@ public:
       if (surf->get_desc().usage != VMACCEL_SURFACE_USAGE_READONLY || force) {
          memset(&vmcl_surfacemap_1_arg, 0, sizeof(vmcl_surfacemap_1_arg));
          vmcl_surfacemap_1_arg.queue.cid = get_contextId();
-         vmcl_surfacemap_1_arg.queue.id = surf->get_queue_id();
+         if (qid == VMACCEL_INVALID_ID) {
+            vmcl_surfacemap_1_arg.queue.id = surf->get_queue_id();
+         } else {
+            vmcl_surfacemap_1_arg.queue.id = qid;
+         }
          vmcl_surfacemap_1_arg.op.surf.id = surf->get_id();
          vmcl_surfacemap_1_arg.op.surf.generation = surf->get_generation();
          vmcl_surfacemap_1_arg.op.size.x = surf->get_desc().width;
@@ -568,6 +586,8 @@ public:
 
    VMAccelId get_contextId() { return contextId; }
 
+   int get_num_queues() { return numQueues; }
+
    /**
     * Thread safety
     */
@@ -580,7 +600,8 @@ private:
     * Reservation of a context and an associated queue.
     */
    int alloc(unsigned int megaFlops, unsigned int selectionMask,
-             unsigned int numSubDevices, unsigned int requiredCaps) {
+             unsigned int numSubDevices, unsigned int numQueues,
+             unsigned int requiredCaps) {
       VMAccelAllocateReturnStatus *result_1;
       VMAccelDesc vmaccelmgr_alloc_1_arg;
       VMCLContextAllocateReturnStatus *result_2;
@@ -588,10 +609,11 @@ private:
       VMAccelQueueReturnStatus *result_3;
       VMCLQueueAllocateDesc vmcl_queuealloc_1_arg;
       char host[4 * VMACCEL_MAX_LOCATION_SIZE];
-      unsigned int i = 0;
+      unsigned int i = 0, j = 0;
 
       // Allocate at least one queue
       numSubDevices = MAX(1, numSubDevices);
+      numQueues = MAX(1, numQueues);
 
       strcpy(&host[0], "127.0.0.1");
       accelId = VMACCEL_INVALID_ID;
@@ -683,25 +705,28 @@ private:
        * Allocate a queue from the Compute Accelerator.
        */
       for (i = 0; i < numSubDevices; i++) {
-         memset(&vmcl_queuealloc_1_arg, 0, sizeof(vmcl_queuealloc_1_arg));
-         vmcl_queuealloc_1_arg.client.cid = contextId;
-         vmcl_queuealloc_1_arg.client.id = i;
-         vmcl_queuealloc_1_arg.subDevice = i;
-         vmcl_queuealloc_1_arg.desc.flags = VMACCEL_QUEUE_ON_DEVICE_FLAG;
-         vmcl_queuealloc_1_arg.desc.size = -1; /* Unbounded? */
+         for (j = 0; j < numQueues; j++) {
+            memset(&vmcl_queuealloc_1_arg, 0, sizeof(vmcl_queuealloc_1_arg));
+            vmcl_queuealloc_1_arg.client.cid = contextId;
+            vmcl_queuealloc_1_arg.client.id = i * numQueues + j;
+            vmcl_queuealloc_1_arg.subDevice = i;
+            vmcl_queuealloc_1_arg.desc.flags = VMACCEL_QUEUE_ON_DEVICE_FLAG;
+            vmcl_queuealloc_1_arg.desc.size = -1; /* Unbounded? */
 
-         result_3 = vmcl_queuealloc_1(&vmcl_queuealloc_1_arg, get_client());
+            result_3 = vmcl_queuealloc_1(&vmcl_queuealloc_1_arg, get_client());
 
-         if (result_3 == NULL) {
-            VMACCEL_WARNING("%s: Unable to create a VMCL queue\n",
-                            __FUNCTION__);
-            accel->release_id(vmcl_queuealloc_1_arg.client.id);
-            destroy();
-            return VMACCEL_FAIL;
+            if (result_3 == NULL) {
+               VMACCEL_WARNING("%s: Unable to create a VMCL queue\n",
+                               __FUNCTION__);
+               accel->release_id(vmcl_queuealloc_1_arg.client.id);
+               destroy();
+               return VMACCEL_FAIL;
+            }
          }
       }
 
       this->numSubDevices = numSubDevices;
+      this->numQueues = numQueues;
 
       vmaccel_xdr_free((xdrproc_t)xdr_VMAccelQueueReturnStatus,
                        (caddr_t)result_3);
@@ -784,6 +809,7 @@ private:
    VMAccelId accelId;
    VMAccelId contextId;
    unsigned int numSubDevices;
+   unsigned int numQueues;
    std::mutex m;
 
    DECLARE_TIME_STAT(alloc_surface);
@@ -950,8 +976,8 @@ namespace compute {
  */
 template <typename T>
 bool prepareComputeArgs(ref_object<clcontext> &clctx,
-                        VMCLKernelArgDesc *kernelArgs, unsigned int *surfaceIds,
-                        unsigned int argIndex, T arg) {
+                        VMCLKernelArgDesc *kernelArgs, unsigned int argIndex,
+                        T arg) {
    VMAccelSurfaceAllocateReturnStatus *result_1;
    VMCLSurfaceAllocateDesc vmcl_surfacealloc_1_arg;
    VMAccelSurfaceMapReturnStatus *result_2;
@@ -1063,13 +1089,12 @@ bool prepareComputeArgs(ref_object<clcontext> &clctx,
 
 template <typename T, typename... R>
 bool prepareComputeArgs(ref_object<clcontext> &clctx,
-                        VMCLKernelArgDesc *kernelArgs, unsigned int *surfaceIds,
-                        unsigned int argIndex, T arg, R... args) {
-   if (!prepareComputeArgs(clctx, kernelArgs, surfaceIds, argIndex, arg)) {
+                        VMCLKernelArgDesc *kernelArgs, unsigned int argIndex,
+                        T arg, R... args) {
+   if (!prepareComputeArgs(clctx, kernelArgs, argIndex, arg)) {
       return false;
    }
-   return prepareComputeArgs(clctx, kernelArgs, surfaceIds, ++argIndex,
-                             args...);
+   return prepareComputeArgs(clctx, kernelArgs, ++argIndex, args...);
 }
 
 /**
@@ -1080,10 +1105,9 @@ bool prepareComputeArgs(ref_object<clcontext> &clctx,
  * declared in the Compute Kernel.
  */
 template <typename... R>
-bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx,
+bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx, VMAccelId qid,
                                VMCLKernelArgDesc *kernelArgs,
-                               unsigned int *surfaceIds, unsigned int argIndex,
-                               ref_object<surface> arg) {
+                               unsigned int argIndex, ref_object<surface> arg) {
 #if DEBUG_COMPUTE_OPERATION
    VMACCEL_LOG(
       "%s: argIndex=%u, type=ref_object<surface>, id=%d, contextId=%d, "
@@ -1100,7 +1124,7 @@ bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx,
       return false;
    }
 
-   if (clctx->upload_surface(arg)) {
+   if (clctx->upload_surface(arg, true, qid)) {
       kernelArgs[argIndex].index = argIndex;
       kernelArgs[argIndex].type = VMCL_ARG_SURFACE;
       kernelArgs[argIndex].surf.id = arg->get_id();
@@ -1124,15 +1148,14 @@ bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx,
 }
 
 template <typename... R>
-bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx,
+bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx, VMAccelId qid,
                                VMCLKernelArgDesc *kernelArgs,
-                               unsigned int *surfaceIds, unsigned int argIndex,
-                               ref_object<surface> arg, R... args) {
-   if (!prepareComputeSurfaceArgs(clctx, kernelArgs, surfaceIds, argIndex,
-                                  arg)) {
+                               unsigned int argIndex, ref_object<surface> arg,
+                               R... args) {
+   if (!prepareComputeSurfaceArgs(clctx, qid, kernelArgs, argIndex, arg)) {
       return false;
    }
-   return prepareComputeSurfaceArgs(clctx, kernelArgs, surfaceIds, ++argIndex,
+   return prepareComputeSurfaceArgs(clctx, qid, kernelArgs, ++argIndex,
                                     args...);
 }
 
@@ -1145,8 +1168,8 @@ bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx,
  */
 template <typename T>
 bool quiesceComputeArgs(ref_object<clcontext> &clctx,
-                        VMCLKernelArgDesc *kernelArgs, unsigned int *surfaceIds,
-                        unsigned int argIndex, T arg) {
+                        VMCLKernelArgDesc *kernelArgs, unsigned int argIndex,
+                        T arg) {
    VMAccelSurfaceMapReturnStatus *result_1;
    VMCLSurfaceMapOp vmcl_surfacemap_1_arg;
    VMAccelReturnStatus *result_2;
@@ -1239,13 +1262,12 @@ bool quiesceComputeArgs(ref_object<clcontext> &clctx,
 
 template <typename T, typename... R>
 bool quiesceComputeArgs(ref_object<clcontext> &clctx,
-                        VMCLKernelArgDesc *kernelArgs, unsigned int *surfaceIds,
-                        unsigned int argIndex, T arg, R... args) {
-   if (!quiesceComputeArgs(clctx, kernelArgs, surfaceIds, argIndex, arg)) {
+                        VMCLKernelArgDesc *kernelArgs, unsigned int argIndex,
+                        T arg, R... args) {
+   if (!quiesceComputeArgs(clctx, kernelArgs, argIndex, arg)) {
       return false;
    }
-   return quiesceComputeArgs(clctx, kernelArgs, surfaceIds, ++argIndex,
-                             args...);
+   return quiesceComputeArgs(clctx, kernelArgs, ++argIndex, args...);
 }
 
 /**
@@ -1256,10 +1278,9 @@ bool quiesceComputeArgs(ref_object<clcontext> &clctx,
  * in the Compute Kernel.
  */
 template <typename T>
-bool quiesceComputeSurfaceArgs(ref_object<clcontext> &clctx,
+bool quiesceComputeSurfaceArgs(ref_object<clcontext> &clctx, VMAccelId qid,
                                VMCLKernelArgDesc *kernelArgs,
-                               unsigned int *surfaceIds, unsigned int argIndex,
-                               ref_object<surface> arg) {
+                               unsigned int argIndex, ref_object<surface> arg) {
 #if DEBUG_COMPUTE_OPERATION
    VMACCEL_LOG("%s: argIndex=%u, type=ref_object<surface>, id=%d\n",
                __FUNCTION__, argIndex, kernelArgs[argIndex].surf.id);
@@ -1272,7 +1293,7 @@ bool quiesceComputeSurfaceArgs(ref_object<clcontext> &clctx,
       return true;
    }
 
-   clctx->download_surface(arg);
+   clctx->download_surface(arg, false, qid);
 
 #if DEBUG_PERSISTENT_SURFACES
    VMACCEL_LOG("%s: Detroying server side persistent surface\n", __FUNCTION__);
@@ -1284,16 +1305,14 @@ bool quiesceComputeSurfaceArgs(ref_object<clcontext> &clctx,
 }
 
 template <typename T, typename... R>
-bool quiesceComputeSurfaceArgs(ref_object<clcontext> &clctx,
+bool quiesceComputeSurfaceArgs(ref_object<clcontext> &clctx, VMAccelId qid,
                                VMCLKernelArgDesc *kernelArgs,
-                               unsigned int *surfaceIds, unsigned int argIndex,
-                               T arg, R... args) {
+                               unsigned int argIndex, T arg, R... args) {
    VMACCEL_LOG("%s: Quiescing surface arg index %d\n", __FUNCTION__, argIndex);
-   if (!quiesceComputeSurfaceArgs(clctx, kernelArgs, surfaceIds, argIndex,
-                                  arg)) {
+   if (!quiesceComputeSurfaceArgs(clctx, qid, kernelArgs, argIndex, arg)) {
       return false;
    }
-   return quiesceComputeSurfaceArgs(clctx, kernelArgs, surfaceIds, ++argIndex,
+   return quiesceComputeSurfaceArgs(clctx, qid, kernelArgs, ++argIndex,
                                     args...);
 }
 
@@ -1416,7 +1435,7 @@ public:
       quiesced = false;
 
       kernelArgs = NULL;
-      surfaceIds = NULL;
+
       LOG_EXIT(("} compute::operation::Constructor\n"));
    }
 
@@ -1434,9 +1453,6 @@ public:
 
       if (kernelArgs) {
          free(kernelArgs);
-      }
-      if (surfaceIds) {
-         free(surfaceIds);
       }
 
       LOG_TIME_STAT(dispatch);
@@ -1490,7 +1506,7 @@ public:
       VMCLQueueId vmcl_queueflush_1_arg;
       unsigned int numArguments = bindings.size();
       unsigned int contextId = clctx->get_contextId();
-      unsigned int queueId = subDevice;
+      unsigned int queueId = subDevice * clctx->get_num_queues();
       unsigned int i;
       unsigned int res;
       unsigned int retryCount = 0;
@@ -1509,9 +1525,8 @@ public:
 
       kernelArgs =
          (VMCLKernelArgDesc *)malloc(sizeof(VMCLKernelArgDesc) * numArguments);
-      surfaceIds = (unsigned int *)malloc(sizeof(unsigned int) * numArguments);
 
-      if (kernelArgs == NULL || surfaceIds == NULL) {
+      if (kernelArgs == NULL) {
          VMACCEL_WARNING(
             "%s: Unable to create a kernel arguments and surface ids\n",
             __FUNCTION__);
@@ -1526,9 +1541,10 @@ public:
       memset(&kernelArgs[0], 0, sizeof(VMCLKernelArgDesc) * numArguments);
 
       for (i = 0; i < numArguments; i++) {
-         surfaceIds[i] = VMACCEL_INVALID_ID;
+         // Enqueue surface update on compute kernel queue.
          if (!prepareComputeSurfaceArgs<ref_object<surface>>(
-                clctx, kernelArgs, surfaceIds, i, bindings[i]->get_surf())) {
+                clctx, subDevice * clctx->get_num_queues(), kernelArgs, i,
+                bindings[i]->get_surf())) {
             VMACCEL_WARNING("%s: Unable to prepare compute argument %d\n",
                             __FUNCTION__, i);
          }
@@ -1539,7 +1555,7 @@ public:
        */
       memset(&vmcl_dispatch_1_arg, 0, sizeof(vmcl_dispatch_1_arg));
       vmcl_dispatch_1_arg.queue.cid = contextId;
-      vmcl_dispatch_1_arg.queue.id = subDevice;
+      vmcl_dispatch_1_arg.queue.id = subDevice * clctx->get_num_queues();
       vmcl_dispatch_1_arg.kernel.id = kid;
       vmcl_dispatch_1_arg.dimension = 1;
       vmcl_dispatch_1_arg.globalWorkOffset.globalWorkOffset_len =
@@ -1609,7 +1625,9 @@ public:
          retryCount++;
       }
 
-      dispatched = true;
+      if (res == VMACCEL_SUCCESS) {
+         dispatched = true;
+      }
 
       if (retryCount > 1) {
          INC_COUNTER_STAT(resource_unavailable_per_dispatch, retryCount - 1);
@@ -1617,7 +1635,7 @@ public:
 
       END_TIME_STAT(dispatch);
 
-      return VMACCEL_SUCCESS;
+      return res;
    }
 
    /**
@@ -1647,12 +1665,12 @@ public:
          }
       }
 
-      /*
-       * Quiesce the Compute Kernel arguments and retrieve the data.
-       */
       for (i = 0; i < bindings.size(); i++) {
+         // Download surfaces after workload completion, enqueue download
+         // on the compute kernel dispatch queue.
          if (!quiesceComputeSurfaceArgs<ref_object<surface>>(
-                clctx, kernelArgs, surfaceIds, i, bindings[i]->get_surf())) {
+                clctx, subDevice * clctx->get_num_queues(), kernelArgs, i,
+                bindings[i]->get_surf())) {
             VMACCEL_WARNING("%s: Unable to prepare compute argument %d\n",
                             __FUNCTION__, i);
             END_TIME_STAT(quiesce);
@@ -1701,7 +1719,6 @@ private:
    std::string kernelFunc;
    vmaccel::work_topology computeTopology;
    VMCLKernelArgDesc *kernelArgs;
-   unsigned int *surfaceIds;
 
    DECLARE_TIME_STAT(dispatch);
    DECLARE_TIME_STAT(finish);
@@ -1738,10 +1755,10 @@ public:
     */
    context(std::shared_ptr<vmaccel::accelerator> &a, unsigned int megaFlops,
            unsigned int selectionMask, unsigned int numSubDevices,
-           unsigned int requiredCaps) {
+           unsigned int numQueues, unsigned int requiredCaps) {
       std::shared_ptr<vmaccel::clcontext> clctxPtr;
       clctxPtr = std::shared_ptr<clcontext>(new clcontext(
-         a, megaFlops, selectionMask, numSubDevices, requiredCaps));
+         a, megaFlops, selectionMask, numSubDevices, numQueues, requiredCaps));
       /*
        * Downcast the clcontext for tracking in the accelerator. Tracking in the
        * accelerator class is required for a surface to destroy its remote
@@ -1822,7 +1839,6 @@ int execute(std::shared_ptr<vmaccel::accelerator> &accel,
    VMAccelReturnStatus *result_4;
    VMCLKernelId vmcl_kerneldestroy_1_arg;
    VMCLKernelArgDesc *kernelArgs = NULL;
-   unsigned int *surfaceIds = NULL;
    unsigned int numArguments = sizeof...(args);
    unsigned int kernelId = 0;
    unsigned int i;
@@ -1832,7 +1848,7 @@ int execute(std::shared_ptr<vmaccel::accelerator> &accel,
     */
    try {
       ctx = compute::context(accel, 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
-                             subDevice + 1, 0);
+                             subDevice + 1, 1, 0);
    } catch (const exception &) {
       VMACCEL_WARNING("%s: Unable to instantiate VMCL\n", __FUNCTION__);
       return VMACCEL_FAIL;
@@ -1840,9 +1856,8 @@ int execute(std::shared_ptr<vmaccel::accelerator> &accel,
 
    kernelArgs =
       (VMCLKernelArgDesc *)malloc(sizeof(VMCLKernelArgDesc) * numArguments);
-   surfaceIds = (unsigned int *)malloc(sizeof(unsigned int) * numArguments);
 
-   if (kernelArgs == NULL || surfaceIds == NULL) {
+   if (kernelArgs == NULL) {
       VMACCEL_WARNING(
          "%s: Unable to create a kernel arguments and surface ids\n",
          __FUNCTION__);
@@ -1855,11 +1870,7 @@ int execute(std::shared_ptr<vmaccel::accelerator> &accel,
     */
    memset(&kernelArgs[0], 0, sizeof(VMCLKernelArgDesc) * numArguments);
 
-   for (i = 0; i < numArguments; i++) {
-      surfaceIds[i] = VMACCEL_INVALID_ID;
-   }
-
-   if (prepareComputeArgs(ctx, kernelArgs, surfaceIds, 0, args...)) {
+   if (prepareComputeArgs(ctx, kernelArgs, 0, args...)) {
       clkernel clk(ctx, kernel);
       clk.prepare(kernelType, kernelFunction);
 
@@ -1902,7 +1913,7 @@ int execute(std::shared_ptr<vmaccel::accelerator> &accel,
             /*
              * Quiesce the Compute Kernel arguments and retrieve the data.
              */
-            quiesceComputeArgs(ctx, kernelArgs, surfaceIds, 0, args...);
+            quiesceComputeArgs(ctx, kernelArgs, 0, args...);
             vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
                              (caddr_t)result_3);
          }
@@ -1910,7 +1921,6 @@ int execute(std::shared_ptr<vmaccel::accelerator> &accel,
    }
 
    free(kernelArgs);
-   free(surfaceIds);
 
    return VMACCEL_SUCCESS;
 }

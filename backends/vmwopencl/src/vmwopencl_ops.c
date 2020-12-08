@@ -854,7 +854,7 @@ VMAccelQueueStatus *vmwopencl_queuealloc_1(VMCLQueueAllocateDesc *argp) {
    // the highest performance device based on OpenCL device queries
    commandQueue =
       clCreateCommandQueueWithProperties(context, devices[subDevice], 0, NULL);
-
+   VMACCEL_WARNING("Allocating queue %d\n", qid);
    if (commandQueue == NULL) {
       VMACCEL_WARNING("Failed to create commandQueue for device 0");
       free(devices);
@@ -1020,6 +1020,7 @@ VMAccelStatus *vmwopencl_imageupload_1(VMCLImageUploadOp *argp) {
 
 #if DEBUG_SURFACE_CONSISTENCY
    VMACCEL_LOG("%s: sid=%d, gen=%d, inst=%d\n", __FUNCTION__, sid, gen, inst);
+   VMACCEL_LOG("%s: cid=%d, qid=%d\n", __FUNCTION__, cid, qid);
 
    for (int i = 0; i < argp->op.imgRegion.coord.x / 4; i++) {
       VMACCEL_LOG("%s: uint32[%d] = 0x%x\n", __FUNCTION__, i,
