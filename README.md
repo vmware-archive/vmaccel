@@ -38,11 +38,16 @@ server as possible.
 
 The following steps assume paths relative to the project's root directory.
 
-1. Setup the external modules
+1. Setup the external modules (optional)
 
 ``` shell
     $ git submodule init
     $ git submodule update
+```
+
+SPIR-V for VMXC module:
+
+``` shell
     $ cd external/spirv-llvm/tools
     $ git clone -b spirv-1.1 https://github.com/KhronosGroup/SPIR clang
 ```
