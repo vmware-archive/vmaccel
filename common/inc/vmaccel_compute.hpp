@@ -135,6 +135,31 @@ public:
    }
 
    /**
+    * flush_queue
+    *
+    * Flushes the pending work for a given queue to the Accelerator.
+    */
+   bool flush_queue(VMAccelId qid) {
+      VMCLQueueId vmcl_queueflush_1_arg;
+      VMAccelReturnStatus *result_1;
+
+      memset(&vmcl_queueflush_1_arg, 0, sizeof(vmcl_queueflush_1_arg));
+
+      vmcl_queueflush_1_arg.cid = get_contextId();
+      vmcl_queueflush_1_arg.id = qid;
+
+      result_1 = vmcl_queueflush_1(&vmcl_queueflush_1_arg, get_client());
+
+      if (result_1 == NULL) {
+         VMACCEL_WARNING("%s: Unable to flush context %d\n", __FUNCTION__,
+                         get_contextId());
+         return FALSE;
+      }
+
+      return TRUE;
+   }
+
+   /**
     * alloc_surface
     *
     * Makes a surface resident for the context.
@@ -190,7 +215,7 @@ public:
  */
 #if ENABLE_VMCL_STREAM_SERVER || DEBUG_SURFACE_CONSISTENCY
    bool upload_surface(ref_object<surface> surf, bool force = false,
-                       VMAccelId qid = VMACCEL_INVALID_ID) {
+                       bool flush = false, VMAccelId qid = VMACCEL_INVALID_ID) {
       VMCLSurfaceMapOp vmcl_surfacemap_1_arg;
       VMAccelSurfaceMapReturnStatus *result_2;
       VMCLSurfaceUnmapOp vmcl_surfaceunmap_1_arg;
@@ -304,7 +329,7 @@ public:
    }
 #else
    bool upload_surface(ref_object<surface> surf, bool force = false,
-                       VMAccelId qid = VMACCEL_INVALID_ID) {
+                       bool flush = false, VMAccelId qid = VMACCEL_INVALID_ID) {
       VMCLImageUploadOp vmcl_imgupload_1_arg;
       VMAccelReturnStatus *result_3;
 
@@ -320,10 +345,9 @@ public:
       memset(&vmcl_imgupload_1_arg, 0, sizeof(vmcl_imgupload_1_arg));
       vmcl_imgupload_1_arg.queue.cid = get_contextId();
       if (qid == VMACCEL_INVALID_ID) {
-         vmcl_imgupload_1_arg.queue.id = surf->get_queue_id();
-      } else {
-         vmcl_imgupload_1_arg.queue.id = qid;
+         qid = surf->get_queue_id();
       }
+      vmcl_imgupload_1_arg.queue.id = qid;
       vmcl_imgupload_1_arg.img.cid = get_contextId();
       vmcl_imgupload_1_arg.img.accel.type = surf->get_desc().type;
       vmcl_imgupload_1_arg.img.accel.handleType = VMACCEL_HANDLE_ID;
@@ -349,6 +373,10 @@ public:
                           (caddr_t)result_3);
 
          surf->set_consistency(get_contextId(), true);
+      }
+
+      if (flush) {
+         flush_queue(qid);
       }
 
       unlock();
@@ -381,10 +409,9 @@ public:
          memset(&vmcl_surfacemap_1_arg, 0, sizeof(vmcl_surfacemap_1_arg));
          vmcl_surfacemap_1_arg.queue.cid = get_contextId();
          if (qid == VMACCEL_INVALID_ID) {
-            vmcl_surfacemap_1_arg.queue.id = surf->get_queue_id();
-         } else {
-            vmcl_surfacemap_1_arg.queue.id = qid;
+            qid = surf->get_queue_id();
          }
+         vmcl_surfacemap_1_arg.queue.id = qid;
          vmcl_surfacemap_1_arg.op.surf.id = surf->get_id();
          vmcl_surfacemap_1_arg.op.surf.generation = surf->get_generation();
          vmcl_surfacemap_1_arg.op.size.x = surf->get_desc().width;
@@ -470,8 +497,6 @@ public:
                      VMAccelSurfaceRegion dstRegion) {
       VMAccelReturnStatus *result_1;
       VMCLSurfaceCopyOp vmcl_surfacecopy_1_arg;
-      VMAccelReturnStatus *result_2;
-      VMCLQueueId vmcl_queueflush_1_arg;
       VMAccelId srcId = srcSurf->get_id();
       unsigned int srcGen = srcSurf->get_generation();
       VMAccelId dstId = dstSurf->get_id();
@@ -512,15 +537,7 @@ public:
                           (caddr_t)result_1);
       }
 
-      vmcl_queueflush_1_arg.cid = get_contextId();
-      vmcl_queueflush_1_arg.id = qid;
-
-      result_2 = vmcl_queueflush_1(&vmcl_queueflush_1_arg, get_client());
-
-      if (result_2 == NULL) {
-         VMACCEL_WARNING("%s: Unable to flush context %d\n", __FUNCTION__,
-                         get_contextId());
-      }
+      flush_queue(qid);
 
       if (dstSurf->is_consistent(get_contextId())) {
          dstSurf->set_consistency(get_contextId(), false);
@@ -1555,7 +1572,7 @@ public:
        */
       memset(&vmcl_dispatch_1_arg, 0, sizeof(vmcl_dispatch_1_arg));
       vmcl_dispatch_1_arg.queue.cid = contextId;
-      vmcl_dispatch_1_arg.queue.id = subDevice * clctx->get_num_queues();
+      vmcl_dispatch_1_arg.queue.id = queueId;
       vmcl_dispatch_1_arg.kernel.id = kid;
       vmcl_dispatch_1_arg.dimension = 1;
       vmcl_dispatch_1_arg.globalWorkOffset.globalWorkOffset_len =
@@ -1596,19 +1613,7 @@ public:
 
             result_1 = NULL;
 
-            vmcl_queueflush_1_arg.cid = contextId;
-            vmcl_queueflush_1_arg.id = subDevice;
-
-            result_2 =
-               vmcl_queueflush_1(&vmcl_queueflush_1_arg, clctx->get_client());
-
-            if (result_2 == NULL) {
-               VMACCEL_WARNING("%s: Unable to flush queue...\n", __FUNCTION__);
-            } else {
-               vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
-                                (caddr_t)result_2);
-               result_2 = NULL;
-            }
+            clctx->flush_queue(queueId);
 
             if (res == VMACCEL_RESOURCE_UNAVAILABLE) {
                if ((retryCount > 0) &&
@@ -1987,7 +1992,7 @@ int dispatch(compute::context &ctx, const unsigned int subDevice,
 
    return VMACCEL_SUCCESS;
 }
-};
-};
+}; // namespace compute
+}; // namespace vmaccel
 
 #endif /* defined _VMACCEL_COMPUTE_HPP_ */

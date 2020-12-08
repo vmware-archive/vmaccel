@@ -733,14 +733,14 @@ int main(int argc, char **argv) {
                         VMACCEL_LOG("ERROR: Unable to update semaphores\n");
                         return 1;
                      }
-                     c->upload_surface(bindS->get_surf());
+                     c->upload_surface(bindS->get_surf(), true, true);
                   } else {
                      clock_gettime(CLOCK_REALTIME, &quiesceStartTime);
                      if (accelS->upload<int>(rgnSem, memS) != VMACCEL_SUCCESS) {
                         VMACCEL_LOG("ERROR: Unable to update semaphores\n");
                         return 1;
                      }
-                     c->upload_surface(bindS->get_surf());
+                     c->upload_surface(bindS->get_surf(), true, true);
 
                      VMACCEL_LOG("Quiescing operation object...\n");
                      opobj->quiesce();
