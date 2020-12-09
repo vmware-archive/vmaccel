@@ -190,7 +190,6 @@ const char *matrixAdd2DEpsilonJumpNUKernel =
    "   int n = dims[1];\n"
    "   int k, l;\n"
    "   int chunkSize = dims[2];\n"
-   "   int numPasses = dims[3];\n"
    "   for (l = 0; ; l++) {\n"
    "      for (k = 0; k < chunkSize; k++) {\n"
    "         if (semaphores[n * i + j] == 1) {\n"
@@ -257,13 +256,16 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
                           int *pMemoryPoolA, int *pMemoryPoolB,
                           int *pMemoryPoolS, int *pKernelFunc,
                           int *pKernelDevice, int *pDirtyPages,
-                          int *pEpsilonDelayMS) {
+                          int *pEpsilonDelayMS, int *pVerbose) {
    int i = 1;
 
    while (i < argc) {
       if (strcmp("-h", argv[i]) == 0) {
          host = argv[i + 1];
          i += 2;
+      } else if (strcmp("-v", argv[i]) == 0) {
+         *pVerbose = TRUE;
+         i++;
       } else if (strcmp("-m", argv[i]) == 0) {
          if (i + 1 == argc) {
             return 1;
@@ -339,6 +341,7 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
       } else if (strcmp("--help", argv[i]) == 0) {
          printf("Usage: membench <options>\n\n");
          printf("  --help               Help and usage information\n");
+         printf("  -v                   Verbose output\n");
          printf("  -h <IP>              Host to execute workload on\n");
          printf("  -i <num iterations>  Number of iterations\n");
          printf("  -l <num passes>      Number of passes within each thread\n");
@@ -397,13 +400,14 @@ int main(int argc, char **argv) {
    int kernelFunc = MATRIX_ADD_2D;
    int kernelDevice = 0;
    int dirtyPages = FALSE;
+   int verbose = FALSE;
    int numSubDevices = 0;
    int numQueues = 0;
 
    if (ParseCommandArguments(
           argc, argv, host, &numRows, &numColumns, &chunkSize, &numPasses,
           &numIterations, &memoryPoolA, &memoryPoolB, &memoryPoolS, &kernelFunc,
-          &kernelDevice, &dirtyPages, &epsilonDelayMS)) {
+          &kernelDevice, &dirtyPages, &epsilonDelayMS, &verbose)) {
       return 1;
    }
 
@@ -812,6 +816,10 @@ int main(int argc, char **argv) {
                   MIN(minThreadPassCount, memS[i * numColumns + j]);
                maxThreadPassCount =
                   MAX(maxThreadPassCount, memS[i * numColumns + j]);
+               if (verbose) {
+                  VMACCEL_LOG("Compute Kernel Passes (Thread %d) = %d\n",
+                              i * numColumns + j, memS[i * numColumns + j]);
+               }
             }
          }
          VMACCEL_LOG("Min compute kernel thread pass count = %d\n",
