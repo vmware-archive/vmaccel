@@ -51,6 +51,7 @@ typedef struct VMWOpenCLContext {
    cl_device_id deviceIds[VMCL_MAX_SUBDEVICES];
    int majorVersion;
    int minorVersion;
+   VMWOpenCLCaps *caps;
 } VMWOpenCLContext;
 
 typedef struct VMWOpenCLMapping {
@@ -60,12 +61,14 @@ typedef struct VMWOpenCLMapping {
 
 typedef struct VMWOpenCLSurfaceInstance {
    cl_mem mem;
+   void *svm_ptr;
    unsigned int generation;
    VMWOpenCLMapping mapping;
    pthread_mutex_t mutex;
 } VMWOpenCLSurfaceInstance;
 
 typedef struct VMWOpenCLSurface {
+   unsigned int cid;
    VMAccelSurfaceDesc desc;
    VMWOpenCLSurfaceInstance inst[VMACCEL_MAX_SURFACE_INSTANCE];
    pthread_mutex_t mutex;
@@ -464,6 +467,7 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
    char platformVersion[128] = {'\0'};
    int majorVersion;
    int minorVersion;
+   VMWOpenCLCaps *ctxCaps = NULL;
    int i = 0, j = 0, k = 0;
 
    memset(&result, 0, sizeof(result));
@@ -577,6 +581,7 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
          if (errNum != CL_SUCCESS) {
             VMACCEL_WARNING("Unable to create context, errNum=%d\n", errNum);
          } else if (context != NULL) {
+            ctxCaps = &caps[j];
             break;
          }
       }
@@ -598,6 +603,7 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
       memcpy(contexts[cid].deviceIds, deviceIds, sizeof(deviceIds));
       contexts[cid].majorVersion = majorVersion;
       contexts[cid].minorVersion = minorVersion;
+      contexts[cid].caps = ctxCaps;
    } else {
       assert(0);
       result.status = VMACCEL_RESOURCE_UNAVAILABLE;
@@ -678,6 +684,9 @@ vmwopencl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp) {
    cl_mem memObject[VMACCEL_MAX_SURFACE_INSTANCE] = {
       NULL,
    };
+   void *svmPtr[VMACCEL_MAX_SURFACE_INSTANCE] = {
+      NULL,
+   };
    unsigned int clMemFlags = 0;
 
    memset(&result, 0, sizeof(result));
@@ -689,14 +698,24 @@ vmwopencl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp) {
       return (&result);
    }
 
-   if (argp->desc.type == VMACCEL_SURFACE_BUFFER) {
-      if (argp->desc.usage == VMACCEL_SURFACE_USAGE_READONLY) {
-         clMemFlags |= CL_MEM_READ_ONLY;
-      } else if (argp->desc.usage == VMACCEL_SURFACE_USAGE_WRITEONLY) {
-         clMemFlags |= CL_MEM_WRITE_ONLY;
-      } else if (argp->desc.usage == VMACCEL_SURFACE_USAGE_READWRITE) {
-         clMemFlags |= CL_MEM_READ_WRITE;
+   if (argp->desc.usage == VMACCEL_SURFACE_USAGE_READONLY) {
+      clMemFlags |= CL_MEM_READ_ONLY;
+   } else if (argp->desc.usage == VMACCEL_SURFACE_USAGE_WRITEONLY) {
+      clMemFlags |= CL_MEM_WRITE_ONLY;
+   } else if (argp->desc.usage == VMACCEL_SURFACE_USAGE_READWRITE) {
+      clMemFlags |= CL_MEM_READ_WRITE;
+   }
+
+#if CL_VERSION_2_0
+   if ((argp->desc.type == VMACCEL_SURFACE_BUFFER) &&
+       (argp->desc.pool == VMACCEL_SURFACE_POOL_SYSTEM_MEMORY) &&
+       (contexts[cid].majorVersion >= 2) && (contexts[cid].minorVersion >= 0)) {
+      for (int i = 0; i < VMACCEL_MAX_SURFACE_INSTANCE; i++) {
+         svmPtr[i] = clSVMAlloc(context, clMemFlags, argp->desc.width, 0);
       }
+   } else
+#endif
+      if (argp->desc.type == VMACCEL_SURFACE_BUFFER) {
       assert(argp->desc.format == VMACCEL_FORMAT_R8_TYPELESS);
 
       for (int i = 0; i < VMACCEL_MAX_SURFACE_INSTANCE; i++) {
@@ -705,7 +724,6 @@ vmwopencl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp) {
       }
    } else {
       assert(argp->desc.usage == VMACCEL_SURFACE_USAGE_READWRITE);
-      clMemFlags |= CL_MEM_READ_WRITE;
 
       /* Image from buffer? */
 
@@ -729,9 +747,11 @@ vmwopencl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp) {
    pthread_mutex_init(&surfaces[sid].mutex, &attr);
    if (IdentifierDB_AcquireId(surfaceIds, sid)) {
       pthread_mutex_lock(&surfaces[sid].mutex);
+      surfaces[sid].cid = cid;
       surfaces[sid].desc = argp->desc;
       for (int i = 0; i < VMACCEL_MAX_SURFACE_INSTANCE; i++) {
          surfaces[sid].inst[i].mem = memObject[i];
+         surfaces[sid].inst[i].svm_ptr = svmPtr[i];
          surfaces[sid].inst[i].mapping.refCount = 0;
          pthread_mutex_init(&surfaces[sid].inst[i].mutex, &attr);
       }
@@ -756,7 +776,16 @@ VMAccelStatus *vmwopencl_surfacedestroy_1(VMCLSurfaceId *argp) {
 
    for (int i = 0; i < VMACCEL_MAX_SURFACE_INSTANCE; i++) {
       pthread_mutex_lock(&surfaces[sid].inst[i].mutex);
-      clReleaseMemObject(surfaces[sid].inst[i].mem);
+#if CL_VERSION_2_0
+      if (surfaces[sid].inst[i].svm_ptr) {
+         unsigned int cid = (unsigned int)surfaces[sid].cid;
+         cl_context context = contexts[cid].context;
+         clSVMFree(context, surfaces[sid].inst[i].svm_ptr);
+      } else
+#endif
+      {
+         clReleaseMemObject(surfaces[sid].inst[i].mem);
+      }
       surfaces[sid].inst[i].mem = NULL;
       pthread_mutex_unlock(&surfaces[sid].inst[i].mutex);
       pthread_mutex_destroy(&surfaces[sid].inst[i].mutex);
@@ -1044,7 +1073,8 @@ VMAccelStatus *vmwopencl_imageupload_1(VMCLImageUploadOp *argp) {
 
    assert(cid == argp->img.cid);
 
-   if (surfaces[sid].desc.type == VMACCEL_SURFACE_BUFFER) {
+   if (surfaces[sid].desc.type == VMACCEL_SURFACE_BUFFER &&
+       surfaces[sid].inst[inst].svm_ptr == NULL) {
       errNum = clEnqueueWriteBuffer(queue, surfaces[sid].inst[inst].mem,
                                     CL_TRUE, argp->op.imgRegion.coord.x,
                                     argp->op.imgRegion.size.x,
@@ -1101,7 +1131,8 @@ VMAccelDownloadStatus *vmwopencl_imagedownload_1(VMCLImageDownloadOp *argp) {
 
    assert(cid == argp->img.cid);
 
-   if (surfaces[sid].desc.type == VMACCEL_SURFACE_BUFFER) {
+   if (surfaces[sid].desc.type == VMACCEL_SURFACE_BUFFER &&
+       surfaces[sid].inst[inst].svm_ptr == NULL) {
       unsigned int blocking = 0;
 
       ptr = calloc(1, argp->op.imgRegion.size.x);
@@ -1138,10 +1169,11 @@ VMAccelSurfaceMapStatus *vmwopencl_surfacemap_1(VMCLSurfaceMapOp *argp) {
    unsigned int sid = (unsigned int)argp->op.surf.id;
    unsigned int gen = (unsigned int)argp->op.surf.generation;
    unsigned int inst = (unsigned int)argp->op.surf.instance;
+   unsigned int blocking = TRUE;
    cl_command_queue queue = queues[qid].queue;
    void *ptr;
    cl_map_flags flags = 0;
-   cl_int errNum;
+   cl_int errNum = CL_SUCCESS;
 
    memset(&result, 0, sizeof(result));
 
@@ -1169,15 +1201,28 @@ VMAccelSurfaceMapStatus *vmwopencl_surfacemap_1(VMCLSurfaceMapOp *argp) {
       flags |= CL_MAP_WRITE_INVALIDATE_REGION;
    }
 
+   if (argp->op.mapFlags & VMACCEL_MAP_ASYNC_FLAG) {
+      blocking = FALSE;
+   }
+
 #if DEBUG_SURFACE_CONSISTENCY
    VMACCEL_LOG("%s: sid=%d, gen=%d, inst=%d\n", __FUNCTION__, sid, gen, inst);
 #endif
 
    if (surfaces[sid].desc.type == VMACCEL_SURFACE_BUFFER) {
       if (++surfaces[sid].inst[inst].mapping.refCount == 1) {
-         ptr = clEnqueueMapBuffer(queue, surfaces[sid].inst[inst].mem, TRUE,
-                                  flags, argp->op.coord.x, argp->op.size.x, 0,
-                                  NULL, NULL, &errNum);
+         if (surfaces[sid].inst[inst].svm_ptr) {
+            if (blocking) {
+               errNum = clFinish(queues[qid].queue);
+            }
+            if (errNum == CL_SUCCESS) {
+               ptr = surfaces[sid].inst[inst].svm_ptr;
+            }
+         } else {
+            ptr = clEnqueueMapBuffer(queue, surfaces[sid].inst[inst].mem,
+                                     blocking, flags, argp->op.coord.x,
+                                     argp->op.size.x, 0, NULL, NULL, &errNum);
+         }
       } else {
          errNum = CL_SUCCESS;
          ptr = surfaces[sid].inst[inst].mapping.ptr;
@@ -1251,9 +1296,12 @@ VMAccelStatus *vmwopencl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp) {
    }
 
    if (--surfaces[sid].inst[inst].mapping.refCount == 0) {
-      errNum = clEnqueueUnmapMemObject(queue, surfaces[sid].inst[inst].mem, ptr,
-                                       0, NULL, NULL);
-
+      if (surfaces[sid].desc.type == VMACCEL_SURFACE_BUFFER) {
+         if (surfaces[sid].inst[inst].svm_ptr == NULL) {
+            errNum = clEnqueueUnmapMemObject(
+               queue, surfaces[sid].inst[inst].mem, ptr, 0, NULL, NULL);
+         }
+      }
       surfaces[sid].inst[inst].mapping.ptr = NULL;
    }
 
@@ -1338,8 +1386,12 @@ VMAccelStatus *vmwopencl_surfacecopy_1(VMCLSurfaceCopyOp *argp) {
                srcSid, srcGen, dstSid, dstGen);
 #endif
 
-   if ((surfaces[dstSid].desc.type == VMACCEL_SURFACE_BUFFER) &&
-       (surfaces[srcSid].desc.type == VMACCEL_SURFACE_BUFFER)) {
+   if (surfaces[srcSid].inst[srcInst].svm_ptr ||
+       surfaces[dstSid].inst[dstInst].svm_ptr) {
+      VMACCEL_WARNING("%s: Copy with SVM unsupported.\n", __FUNCTION__);
+      result.status = VMACCEL_FAIL;
+   } else if ((surfaces[dstSid].desc.type == VMACCEL_SURFACE_BUFFER) &&
+              (surfaces[srcSid].desc.type == VMACCEL_SURFACE_BUFFER)) {
       errNum = clEnqueueCopyBuffer(
          queue, surfaces[srcSid].inst[srcInst].mem,
          surfaces[dstSid].inst[dstInst].mem, argp->op.srcRegion.coord.x,
@@ -1585,12 +1637,9 @@ VMAccelStatus *vmwopencl_dispatch_1(VMCLDispatchOp *argp) {
             (unsigned int)argp->args.args_val[argIndex].surf.generation;
          unsigned int inst =
             (unsigned int)argp->args.args_val[argIndex].surf.instance;
-         cl_mem mem = NULL;
 
          pthread_mutex_lock(&surfaces[sid].mutex);
          pthread_mutex_lock(&surfaces[sid].inst[inst].mutex);
-
-         mem = surfaces[sid].inst[inst].mem;
 
 #if DEBUG_COMPUTE_OPERATION
          VMACCEL_LOG("%s: arg[%d]: index=%d, sid=%d, gen=%d, inst=%d,"
@@ -1617,8 +1666,26 @@ VMAccelStatus *vmwopencl_dispatch_1(VMCLDispatchOp *argp) {
             goto cleanup;
          }
 
-         errNum = clSetKernelArg(kernel, argp->args.args_val[argIndex].index,
-                                 sizeof(cl_mem), &mem);
+#if CL_VERSION_2_0
+         if (surfaces[sid].inst[inst].svm_ptr != NULL) {
+            errNum = clSetKernelArgSVMPointer(
+               kernel, argp->args.args_val[argIndex].index,
+               surfaces[sid].inst[inst].svm_ptr);
+            if (errNum == CL_SUCCESS) {
+               errNum = clSetKernelExecInfo(
+                  kernel, CL_KERNEL_EXEC_INFO_SVM_PTRS, sizeof(void *),
+                  &surfaces[sid].inst[inst].svm_ptr);
+            }
+         } else 
+#endif
+	 {
+            cl_mem mem = NULL;
+
+            mem = surfaces[sid].inst[inst].mem;
+
+            errNum = clSetKernelArg(kernel, argp->args.args_val[argIndex].index,
+                                    sizeof(cl_mem), &mem);
+         }
 
          if (errNum != CL_SUCCESS) {
             VMACCEL_WARNING("Unable to set kernel argument, errNum=%d\n",
