@@ -712,7 +712,15 @@ vmwopencl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp) {
        (contexts[cid].majorVersion >= 2) && (contexts[cid].minorVersion >= 0)) {
       for (int i = 0; i < VMACCEL_MAX_SURFACE_INSTANCE; i++) {
          svmPtr[i] = clSVMAlloc(context, clMemFlags, argp->desc.width, 0);
+         if (svmPtr[i] == NULL) {
+            result.status = VMACCEL_FAIL;
+            for (i; i > 0; i--) {
+               clSVMFree(context, svmPtr[i - 1]);
+            }
+            return (&result);
+         }
       }
+
    } else
 #endif
       if (argp->desc.type == VMACCEL_SURFACE_BUFFER) {
@@ -721,6 +729,13 @@ vmwopencl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp) {
       for (int i = 0; i < VMACCEL_MAX_SURFACE_INSTANCE; i++) {
          memObject[i] =
             clCreateBuffer(context, clMemFlags, argp->desc.width, NULL, NULL);
+         if (memObject[i] == NULL) {
+            result.status = VMACCEL_FAIL;
+            for (i; i > 0; i--) {
+               clReleaseMemObject(memObject[i - 1]);
+            }
+            return (&result);
+         }
       }
    } else {
       assert(argp->desc.usage == VMACCEL_SURFACE_USAGE_READWRITE);
@@ -1676,9 +1691,9 @@ VMAccelStatus *vmwopencl_dispatch_1(VMCLDispatchOp *argp) {
                   kernel, CL_KERNEL_EXEC_INFO_SVM_PTRS, sizeof(void *),
                   &surfaces[sid].inst[inst].svm_ptr);
             }
-         } else 
+         } else
 #endif
-	 {
+         {
             cl_mem mem = NULL;
 
             mem = surfaces[sid].inst[inst].mem;
