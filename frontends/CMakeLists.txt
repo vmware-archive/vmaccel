@@ -32,4 +32,4 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unknown-pragmas -Wno-attributes")
 
 add_subdirectory(vmaccel)
 add_subdirectory(vmcl)
-add_subdirectory(vmcodec)
+#add_subdirectory(vmcodec)

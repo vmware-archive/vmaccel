@@ -51,8 +51,8 @@ ENDIF()
 #
 # Build external dependencies first
 #
-add_subdirectory(external/spirv-llvm)
-set(CLANG_BINARY_DIR ${CMAKE_BINARY_DIR}/external/spirv-llvm/bin)
+#add_subdirectory(external/spirv-llvm)
+#set(CLANG_BINARY_DIR ${CMAKE_BINARY_DIR}/external/spirv-llvm/bin)
 
 add_subdirectory(cmake/developer)
 
