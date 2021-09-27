@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2020 VMware, Inc.
+Copyright (c) 2016-2021 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -281,7 +281,8 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
 
    if ((strstr(platformVersion, "OpenCL 1.2") == NULL) &&
        (strstr(platformVersion, "OpenCL 2.0") == NULL) &&
-       (strstr(platformVersion, "OpenCL 2.") == NULL)) {
+       (strstr(platformVersion, "OpenCL 2.") == NULL) &&
+       (strstr(platformVersion, "OpenCL 3.") == NULL)) {
       VMACCEL_WARNING("Unknown version detected: %s\n", platformVersion);
    }
 
@@ -513,9 +514,13 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
       } else if (strstr(platformVersion, "OpenCL 2.") != NULL) {
          majorVersion = 2;
          minorVersion = 1;
+      } else if (strstr(platformVersion, "OpenCL 3.") != NULL) {
+         majorVersion = 3;
+         minorVersion = 0;
       } else {
+         majorVersion = 3;
+         minorVersion = 0;
          VMACCEL_WARNING("Unknown version detected: %s\n", platformVersion);
-         continue;
       }
 
       // SPIR-V 1.0 requires OpenCL 2.1
@@ -1431,12 +1436,75 @@ VMAccelStatus *vmwopencl_surfacecopy_1(VMCLSurfaceCopyOp *argp) {
 
 VMAccelStatus *vmwopencl_imagefill_1(VMCLImageFillOp *argp) {
    static VMAccelStatus result;
+   unsigned int qid = (unsigned int)argp->queue.id;
+   unsigned int sid = (unsigned int)argp->img.accel.id;
+   unsigned int gen = (unsigned int)argp->img.accel.generation;
+   unsigned int inst = 0; //(unsigned int)argp->img.accel.instance;
+   cl_command_queue queue = queues[qid].queue;
+   cl_int errNum;
 
    memset(&result, 0, sizeof(result));
 
-   assert(0);
+   /*
+    * Cross context surface copy is not currently supported.
+    */
+   pthread_mutex_lock(&surfaces[sid].mutex);
 
-   result.status = VMACCEL_FAIL;
+   pthread_mutex_lock(&surfaces[sid].inst[inst].mutex);
+
+   if (surfaces[sid].inst[inst].generation < gen) {
+      VMACCEL_LOG("%s: generation %d < %d\n", __FUNCTION__,
+                  surfaces[sid].inst[inst].generation, gen);
+
+      result.status = VMACCEL_RESOURCE_UNAVAILABLE;
+
+      pthread_mutex_unlock(&surfaces[sid].inst[inst].mutex);
+
+      pthread_mutex_unlock(&surfaces[sid].mutex);
+
+      return (&result);
+   }
+
+   if (surfaces[sid].inst[inst].generation > gen) {
+      VMACCEL_LOG("%s: semantic error backend.gen=%d gen=%d",
+                  __FUNCTION__, surfaces[sid].inst[inst].generation, gen);
+
+      result.status = VMACCEL_SEMANTIC_ERROR;
+
+      pthread_mutex_unlock(&surfaces[sid].inst[inst].mutex);
+
+      pthread_mutex_unlock(&surfaces[sid].mutex);
+
+      return (&result);
+   }
+
+#if DEBUG_SURFACE_CONSISTENCY
+   VMACCEL_LOG("%s: sid=%d, gen=%d\n", __FUNCTION__, sid, gen);
+#endif
+
+   if (surfaces[sid].inst[inst].svm_ptr) {
+      VMACCEL_WARNING("%s: Fill with SVM unsupported.\n", __FUNCTION__);
+      result.status = VMACCEL_FAIL;
+   } else if (surfaces[sid].desc.type == VMACCEL_SURFACE_BUFFER) {
+      errNum = clEnqueueFillBuffer(
+         queue, surfaces[sid].inst[inst].mem, (const void *)&argp->op.u,
+         sizeof(argp->op.u), argp->op.dstRegion.coord.x,
+         argp->op.dstRegion.size.x, 0, NULL, NULL);
+
+      if (errNum != CL_SUCCESS) {
+         VMACCEL_WARNING("%s: Fill failed errNum=%d\n", __FUNCTION__, errNum);
+         result.status = VMACCEL_FAIL;
+      } else {
+         surfaces[sid].inst[inst].generation = gen;
+      }
+   } else {
+      assert(0);
+      result.status = VMACCEL_FAIL;
+   }
+
+   pthread_mutex_unlock(&surfaces[sid].inst[inst].mutex);
+
+   pthread_mutex_unlock(&surfaces[sid].mutex);
 
    return (&result);
 }

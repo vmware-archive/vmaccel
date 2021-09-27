@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2019-2020 VMware, Inc.
+Copyright (c) 2019-2021 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -473,6 +473,75 @@ public:
 
       return true;
    }
+
+   /**
+    * fill_surface
+    *
+    * Fills the contents of the surface.
+    */
+   void fill_surface(VMAccelId qid, ref_object<surface> surf,
+                     VMAccelSurfaceRegion region,
+                     const void * element,
+                     unsigned int elementFormat) {
+      VMAccelReturnStatus *result_1;
+      VMCLImageFillOp vmcl_imagefill_1_arg;
+      VMAccelId sid = surf->get_id();
+      unsigned int gen = surf->get_generation();
+
+      START_TIME_STAT(fill_surface);
+      lock();
+
+      if (!is_resident(sid)) {
+         unlock();
+         END_TIME_STAT(fill_surface);
+         return;
+      }
+
+      vmcl_imagefill_1_arg.queue.cid = get_contextId();
+      vmcl_imagefill_1_arg.queue.id = qid;
+      vmcl_imagefill_1_arg.img.cid = get_contextId();
+      vmcl_imagefill_1_arg.img.accel.id = sid;
+      vmcl_imagefill_1_arg.img.accel.generation = gen;
+      vmcl_imagefill_1_arg.op.dstRegion = region;
+
+      if (elementFormat == VMACCEL_FORMAT_UINT) {
+         vmcl_imagefill_1_arg.op.u.r = *((unsigned int *)element);
+         vmcl_imagefill_1_arg.op.u.g = *((unsigned int *)element);
+         vmcl_imagefill_1_arg.op.u.b = *((unsigned int *)element);
+         vmcl_imagefill_1_arg.op.u.a = *((unsigned int *)element);
+      } else {
+         VMACCEL_WARNING("%s: Unsupported fill format %d\n",
+                         __FUNCTION__, elementFormat);
+         unlock();
+         END_TIME_STAT(fill_surface);
+         return;
+      }
+
+      result_1 = vmcl_imagefill_1(&vmcl_imagefill_1_arg, get_client());
+
+      if (result_1 == NULL) {
+         VMACCEL_WARNING("%s: Unable to fill surface %d using context %d\n",
+                         __FUNCTION__, sid, get_contextId());
+      } else {
+         if (result_1->VMAccelReturnStatus_u.ret->status != VMACCEL_SUCCESS) {
+            VMACCEL_WARNING(
+               "%s: Unable to fill surface %d using context %d\n",
+               __FUNCTION__, sid, get_contextId());
+         }
+         vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
+                          (caddr_t)result_1);
+      }
+
+      flush_queue(qid);
+
+      if (surf->is_consistent(get_contextId())) {
+         surf->set_consistency(get_contextId(), false);
+      }
+
+      unlock();
+      END_TIME_STAT(fill_surface);
+   }
+
 
    /**
     * copy_surface

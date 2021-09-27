@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2020 VMware, Inc.
+Copyright (c) 2020-2021 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -208,6 +208,7 @@ typedef struct FunctionTableEntry {
 } FunctionTableEntry;
 
 enum {
+   MEMSET = -4,
    UPLOAD_A = -3,
    DOWNLOAD_A = -2,
    MEMCPY = -1,
@@ -637,7 +638,15 @@ int main(int argc, char **argv) {
                uploadBytes += surfBytes;
             }
 
-            if (kernelFunc == UPLOAD_A && !dirtyPages) {
+            if (kernelFunc == MEMSET) {
+               VMAccelSurfaceRegion fillRgn = {
+                  0, {0, 0, 0}, {surfBytes, 0, 0}};
+               unsigned int element = iter;
+               // Hard code qid==0
+               c->fill_surface(0, bindB->get_surf(), fillRgn, &element,
+                               VMACCEL_FORMAT_UINT);
+               dirtyBytes += surfBytes;
+            } else if (kernelFunc == UPLOAD_A && !dirtyPages) {
                c->upload_surface(bindA->get_surf(), true);
                uploadBytes += surfBytes;
             } else if (kernelFunc == DOWNLOAD_A) {
@@ -645,7 +654,8 @@ int main(int argc, char **argv) {
                downloadBytes += surfBytes;
             } else if (kernelFunc == MEMCPY) {
                VMAccelSurfaceRegion copyRgn = {
-                  0, {0, 0, 0}, {surfBytes * chunkSize, 0, 0}};
+                  0, {0, 0, 0}, {surfBytes, 0, 0}};
+               // Hard code qid==0
                c->copy_surface(0, bindA->get_surf(), copyRgn, bindB->get_surf(),
                                copyRgn);
 
@@ -779,7 +789,7 @@ int main(int argc, char **argv) {
          }
       }
 
-      if (kernelFunc == MEMCPY) {
+      if (kernelFunc == MEMSET || kernelFunc == MEMCPY) {
          // Manually download the surface from the context
          c->download_surface(bindB->get_surf());
       }
@@ -848,6 +858,8 @@ int main(int argc, char **argv) {
 
                if (kernelFunc == UPLOAD_MATRIX_COPY) {
                   exp = memA[i * numColumns * chunkSize + j * chunkSize + k];
+               } else if (kernelFunc == MEMSET) {
+                  exp = numIterations - 1;
                } else if (kernelFunc == MATRIX_COPY_2D ||
                           kernelFunc == MEMCPY) {
                   exp = (i * numColumns + j);
