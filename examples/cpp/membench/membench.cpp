@@ -366,7 +366,7 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
          printf("                            x=pool\n");
          printf("                          else\n");
          printf(
-            "                            x=65536 + device index + pool\n\n");
+            "                            x=65536 * device index + pool\n\n");
          printf("  --memoryPoolB <x>    Output memory pool\n");
          printf("  --memoryPoolS <x>    Semaphore memory pool\n");
          printf("  --epsilonDelayMS <x> Delay in milliseconds before semaphore"
