@@ -478,22 +478,27 @@ int main(int argc, char **argv) {
    /*
     * Setup the working set.
     */
+   size_t matBytes = sizeof(int) * numRows *numColumns *chunkSize;
+   size_t semBytes = sizeof(int) * (numRows * numColumns + 1);
+   size_t dimBytes = sizeof(int) * 4;
+
    ref_object<int> memA(new int[numRows * numColumns * chunkSize],
-                        sizeof(int) * numRows *numColumns *chunkSize,
-                        VMACCEL_SURFACE_USAGE_READWRITE);
+                        matBytes, VMACCEL_SURFACE_USAGE_READWRITE);
    ref_object<int> memB(new int[numRows * numColumns * chunkSize],
-                        sizeof(int) * numRows *numColumns *chunkSize,
-                        VMACCEL_SURFACE_USAGE_READWRITE);
+                        matBytes, VMACCEL_SURFACE_USAGE_READWRITE);
    ref_object<int> memS(new int[numRows * numColumns],
-                        sizeof(int) * (numRows * numColumns + 1),
-                        VMACCEL_SURFACE_USAGE_READWRITE);
-   ref_object<int> memDims(new int[4], sizeof(int) * 4,
+                        semBytes, VMACCEL_SURFACE_USAGE_READWRITE);
+   ref_object<int> memDims(new int[4], dimBytes,
                            VMACCEL_SURFACE_USAGE_READWRITE);
 
    memDims[0] = numRows;
    memDims[1] = numColumns;
    memDims[2] = chunkSize;
    memDims[3] = numPasses;
+
+   VMACCEL_LOG("Allocating Working Set: A=%zu bytes, B=%zu bytes"
+               " S=%zu bytes, Dims=%zu bytes\n",
+               matBytes, matBytes, semBytes, dimBytes);
 
    /*
     * Initialize the array with default values.
@@ -777,7 +782,7 @@ int main(int argc, char **argv) {
                   dirtyBytes += surfBytes * numPasses;
                } else {
                   refBytes += 2 * surfBytes * numPasses;
-                  dirtyBytes += 2 * surfBytes * numPasses;
+                  dirtyBytes += surfBytes * numPasses;
                }
                computeBytes += surfBytes * numPasses;
             }
@@ -837,6 +842,8 @@ int main(int argc, char **argv) {
          VMACCEL_LOG("Max compute kernel thread pass count = %d\n",
                      maxThreadPassCount);
       } else {
+         VMACCEL_LOG("Working Set Total = %zu bytes, A = %zu bytes, B = %zu bytes\n",
+                     2*matBytes + semBytes + dimBytes, matBytes, matBytes);
          VMACCEL_LOG("Total Referenced = %ld bytes, %lf bytes/ms\n", refBytes,
                      refBytes / totalRuntimeMS);
          VMACCEL_LOG("Total Dirtied = %ld bytes, %lf bytes/ms\n", dirtyBytes,
@@ -844,10 +851,12 @@ int main(int argc, char **argv) {
          VMACCEL_LOG("Compute Throughput = %ld bytes, %lf bytes/ms\n",
                      computeBytes, computeBytes / totalRuntimeMS);
       }
-      VMACCEL_LOG("Total Uploaded = %ld bytes, %lf bytes/ms\n", uploadBytes,
-                  uploadBytes / totalRuntimeMS);
-      VMACCEL_LOG("Total Downloaded = %ld bytes, %lf bytes/ms\n", downloadBytes,
-                  downloadBytes / totalRuntimeMS);
+      if (kernelFunc < 0) {
+         VMACCEL_LOG("Total Uploaded = %ld bytes, %lf bytes/ms\n", uploadBytes,
+                     uploadBytes / totalRuntimeMS);
+         VMACCEL_LOG("Total Downloaded = %ld bytes, %lf bytes/ms\n", downloadBytes,
+                     downloadBytes / totalRuntimeMS);
+      }
       VMACCEL_LOG("\n");
 
       for (int i = 0; i < numRows; i++) {
