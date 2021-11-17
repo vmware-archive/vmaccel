@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020 VMware, Inc.
+# Copyright (c) 2020-2021 VMware, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,16 +36,16 @@ set(GLOBAL_INC ../../../common/inc)
 
 include_directories(${GLOBAL_INC})
 
-add_executable(membench ${SOURCES})
-target_link_libraries(membench vmaccel)
-set_target_properties(membench
+add_executable(vmcl_rpc_membench ${SOURCES})
+target_link_libraries(vmcl_rpc_membench vmaccel)
+set_target_properties(vmcl_rpc_membench
    PROPERTIES
    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_EXAMPLES_OUTPUT_DIRECTORY}")
 
-add_executable(membench_local ${SOURCES} ${LOCAL_SOURCES})
-target_link_libraries(membench_local vmaccel_local)
-target_compile_definitions(membench_local PUBLIC VMACCEL_LOCAL=1)
-set_target_properties(membench_local
+add_executable(vmcl_membench ${SOURCES} ${LOCAL_SOURCES})
+target_link_libraries(vmcl_membench vmaccel_local)
+target_compile_definitions(vmcl_membench PUBLIC VMACCEL_LOCAL=1)
+set_target_properties(vmcl_membench
    PROPERTIES
    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_EXAMPLES_OUTPUT_DIRECTORY}")
 
