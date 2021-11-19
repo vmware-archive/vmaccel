@@ -398,7 +398,7 @@ int main(int argc, char **argv) {
    int memoryPoolA = VMACCEL_SURFACE_POOL_AUTO;
    int memoryPoolB = VMACCEL_SURFACE_POOL_AUTO;
    int memoryPoolS = VMACCEL_SURFACE_POOL_AUTO;
-   int kernelFunc = MATRIX_ADD_2D;
+   int kernelFunc = MEMCPY;
    int kernelDevice = 0;
    int dirtyPages = FALSE;
    int verbose = FALSE;

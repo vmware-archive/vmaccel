@@ -27,12 +27,18 @@ server as possible.
 * Linux
   * Ubuntu 16.04 or newer
     * Developer tools, gcc/g++ (e.g. build-essential g++)
-    * OpenCL Libraries and Headers (Intel OpenCL 2.1+ SDK recommended)
-    * FFmpeg (Optional libavcodec-dev libavdevice-dev libavformat-dev libavswscale-dev)
+    * OpenCL Libraries and Headers (e.g. Intel OpenCL 2.1+ SDK recommended)
     * python with distutils package (e.g. python-distutils-extra)
     * rpcgen 2.23+
     * rpcbind (for server/client communication)
       * ```systemctl add-wants multi-user.target rpcbind```
+
+### Setup Examples
+#### Ubuntu 20.04 (NVIDIA GPU)
+''' shell
+    $ sudo apt install build-essential cmake python python-distutils-extra rpcbind
+    $ sudo apt install nvidia-opencl-dev clinfo
+'''
 
 ### Build & Run
 
@@ -92,6 +98,19 @@ Example:
   Shell 1 $ build/bin/vmcl_svr
   Shell 2 $ build/bin/vmcl_clnt 127.0.0.1
 ```
+
+Example:
+''' shell
+  Shell 1 $ build/bin/vmcl_svr
+  Shell 2 $ build/examples/vmcl_rpc_membench
+''''
+
+Standalone Example:
+
+''' shell
+  $ build/examples/vmcl_membench
+'''
+
 
 ## Documentation
 
