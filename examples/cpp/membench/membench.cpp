@@ -398,7 +398,7 @@ int main(int argc, char **argv) {
    int memoryPoolA = VMACCEL_SURFACE_POOL_AUTO;
    int memoryPoolB = VMACCEL_SURFACE_POOL_AUTO;
    int memoryPoolS = VMACCEL_SURFACE_POOL_AUTO;
-   int kernelFunc = MEMCPY;
+   int kernelFunc = MATRIX_ADD_2D;
    int kernelDevice = 0;
    int dirtyPages = FALSE;
    int verbose = FALSE;
@@ -875,7 +875,7 @@ int main(int argc, char **argv) {
                } else if (kernelFunc == MATRIX_COPY_TRANSPOSE_2D) {
                   exp = (j * numColumns + i);
                } else if (kernelFunc == MATRIX_ADD_2D) {
-                  exp = numIterations * numPasses * (i * numColumns + j);
+                  exp = numPasses * (i * numColumns + j);
                } else {
                   continue;
                }
