@@ -27,7 +27,7 @@ server as possible.
 * Linux
   * Ubuntu 16.04 or newer
     * Developer tools, gcc/g++ (e.g. build-essential g++)
-    * OpenCL Libraries and Headers (e.g. Intel OpenCL 2.1+ SDK recommended)
+    * OpenCL Libraries and Headers (e.g. Intel OpenCL 2.1+ SDK, nvidia-opencl-dev)
     * python with distutils package (e.g. python-distutils-extra)
     * rpcgen 2.23+
     * rpcbind (for server/client communication)
@@ -100,7 +100,7 @@ Example:
 ```
 
 Example:
-```` shell
+``` shell
   Shell 1 $ build/bin/vmcl_svr
   Shell 2 $ build/examples/vmcl_rpc_membench
 ```
