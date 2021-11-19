@@ -35,10 +35,10 @@ server as possible.
 
 ### Setup Examples
 #### Ubuntu 20.04 (NVIDIA GPU)
-''' shell
+``` shell
     $ sudo apt install build-essential cmake python python-distutils-extra rpcbind
     $ sudo apt install nvidia-opencl-dev clinfo
-'''
+```
 
 ### Build & Run
 
@@ -100,16 +100,16 @@ Example:
 ```
 
 Example:
-''' shell
+```` shell
   Shell 1 $ build/bin/vmcl_svr
   Shell 2 $ build/examples/vmcl_rpc_membench
-''''
+```
 
 Standalone Example:
 
-''' shell
+``` shell
   $ build/examples/vmcl_membench
-'''
+```
 
 
 ## Documentation
