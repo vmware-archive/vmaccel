@@ -1,4 +1,11 @@
 - hosts: control-plane
+  gather_facts: false
   tasks:
-    - name: Initialize Helm
-      command: helm init --service-account tiller
+    - name: Deploy AMD GPU plugin
+      shell: kubectl apply -f https://raw.githubusercontent.com/RadeonOpenCompute/k8s-device-plugin/master/k8s-ds-amdgpu-dp.yaml
+
+    - name: Deploy Intel GPU plugin
+      shell: kubectl apply -k https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/gpu_plugin?ref=v0.23.0
+
+    - name: Deploy NVIDIA GPU plugin
+      shell: kubectl apply -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.10.0/nvidia-device-plugin.yml

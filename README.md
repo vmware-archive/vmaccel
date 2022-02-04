@@ -25,19 +25,32 @@ server as possible.
   * macOS 10.13.4 or newer (note: OpenCL is deprecated as of 10.14)
   * XCode Version 9.3 or newer (w/command line tools)
 * Linux
-  * Ubuntu 16.04 or newer
+  * Ubuntu 20.04 or newer
     * Developer tools, gcc/g++ (e.g. build-essential g++)
-    * OpenCL Libraries and Headers (e.g. Intel OpenCL 2.1+ SDK, nvidia-opencl-dev)
+    * OpenCL Libraries and Headers (e.g. ocl-icd-opencl-dev)
     * python with distutils package (e.g. python-distutils-extra)
     * rpcgen 2.23+
     * rpcbind (for server/client communication)
-      * ```systemctl add-wants multi-user.target rpcbind```
+      * ```systemctl add-wants rpcbind```
 
 ### Setup Examples
+
+#### Ubuntu 20.04 (Intel GPU)
+``` shell
+    $ sudo apt install build-essential cmake python python-distutils-extra rpcbind
+    $ sudo apt install ocl-icd-opencl-dev intel-opencl-icd clinfo
+    $ sudo systemctl add-wants rpcbind
+    $ sudo usermod -a -G render $LOGNAME
+    $ sudo usermod -a -G video $LOGNAME
+```
+
 #### Ubuntu 20.04 (NVIDIA GPU)
 ``` shell
     $ sudo apt install build-essential cmake python python-distutils-extra rpcbind
     $ sudo apt install nvidia-opencl-dev clinfo
+    $ sudo systemctl add-wants rpcbind
+    $ sudo usermod -a -G render $LOGNAME
+    $ sudo usermod -a -G video $LOGNAME
 ```
 
 ### Build & Run

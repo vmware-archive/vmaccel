@@ -13,8 +13,11 @@
 - hosts: nodes
   become: yes
   tasks:
+    - name: Disabling swap
+      shell: swapoff -a
+
     - name: Join cluster
-      command: "{{ hostvars['control-plane'].join_command }}"
+      shell: "{{ hostvars['control-plane'].join_command }}"
 
 - hosts: control-plane
   gather_facts: false

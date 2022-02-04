@@ -1,0 +1,31 @@
+- hosts: control-plane
+  tasks:
+    - name: Setup Kubelet service
+      become: yes
+      command: systemctl enable kubelet
+
+    - name: Pulling container images
+      become: yes
+      command: kubeadm config images pull --cri-socket=/var/run/crio/crio.sock
+
+    - name: Initialize the cluster
+      become: yes
+      command: kubeadm init --pod-network-cidr=10.244.0.0/16 --cri-socket=/var/run/crio/crio.sock --upload-certs
+
+    - name: Create .kube directory
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: 0755
+
+    - name: Copy admin.conf to user's kube config
+      become: yes
+      copy:
+         src: /etc/kubernetes/admin.conf
+         dest: /home/{{ ansible_user }}/.kube/config
+         remote_src: yes
+         owner: "{{ ansible_user }}"
+
+    - name: Install Pod network
+      shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.16.0/Documentation/kube-flannel.yml
+      shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.16.0/Documentation/k8s-manifests/kube-flannel-rbac.yml

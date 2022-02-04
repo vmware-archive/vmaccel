@@ -1,0 +1,147 @@
+- hosts: nodes
+  become: yes
+  tasks:
+   - name: Disabling swap
+      shell: swapoff -a
+
+
+- hosts: all
+  become: yes
+  tasks:
+    - name: Install gnupg
+      apt:
+        name: gnupg2
+        state: present
+
+    - name: Install APT Transport HTTPS
+      apt:
+        name: apt-transport-https
+        state: present
+
+    - name: Install CA Certificates
+      apt:
+        name: ca-certificates
+        state: present
+
+    - name: Install Software Properties Common
+      apt:
+        name: software-properties-common
+        state: present
+
+    - name: Install bridge-utils
+      apt:
+        name: bridge-utils
+        state: present
+
+    - name: Starting overlay module
+      command: modprobe overlay
+
+    - name: Starting br_netfilter
+      command: modprobe br_netfilter
+
+    - name: Create Kubernetes Config
+      copy:
+        dest: "/etc/sysctl.d/kubernetes.conf"
+        content: |
+          net.bridge.bridge-nf-call-ip6tables = 1
+          net.bridge.bridge-nf-call-iptables = 1
+          net.ipv4.ip_forward = 1
+
+    - name: Restarting sysctl
+      command: sysctl --system
+
+    - name: Add Kubernetes apt-key
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: Add Kubernetes APT repository
+      apt_repository:
+        repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+        state: present
+        filename: 'kubernetes'
+
+    - name: Install kubernetes-cni
+      apt:
+        name: kubernetes-cni=0.8.7-00
+        state: present
+        update_cache: true
+
+    - name: Install kubelet
+      apt:
+        name: kubelet=1.23.2-00
+        state: present
+        update_cache: true
+
+    - name: Install kubeadm
+      apt:
+        name: kubeadm=1.23.2-00
+        state: present
+
+    - name: Install kubectl
+      apt:
+        name: kubectl=1.23.2-00
+        state: present
+        force: yes
+
+    - name: Setup CRI-O APT https repository
+      shell: echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /" | tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+
+    - name: Setup CRI-O APT http repository
+      shell: echo "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/1.23/xUbuntu_20.04/ /" | tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:1.23.list
+
+    - name: Get CRI-O release key
+      shell: curl -L https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:1.23/xUbuntu_20.04/Release.key | apt-key add -
+      args:
+        warn: no
+
+    - name: Get CRI-O release key
+      shell: curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key | apt-key add -
+      args:
+        warn: no
+
+    - name: Update APT
+      apt:
+        update_cache: true
+
+    #- name: Setup CRI-O subnet
+    #  command: sed -i 's/10.85.0.0/192.168.0.0/g' /etc/cni/net.d/100-crio-bridge.conf
+
+    - name: Install cri-o
+      apt:
+        name: cri-o
+        state: present
+        update_cache: true
+
+    - name: Install cri-o-runc
+      apt:
+        name: cri-o-runc
+        state: present
+        update_cache: true
+
+    - name: Setup crio service, daemon reload
+      command: systemctl daemon-reload
+
+    - name: Setup crio service, restart
+      command: systemctl restart crio
+
+    - name: Setup crio service, enable
+      command: systemctl enable crio
+
+
+- hosts: devel
+  become: yes
+  tasks:
+    - name: Add Docker apt-key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: true
+
+    - name: Setup Docker service
+      command: systemctl enable docker.service
