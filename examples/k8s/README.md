@@ -41,7 +41,7 @@ iv) Reboot
 Setup the Kubernetes cluster, control plane, and core compute nodes.
 
   devel-machine $ ansible-playbook -i hosts k8s-setup-<cri>-xenial.yml -e "ansible_user=<host username>"
-  devel-machine $ ansible-playbook -i hosts control-plane-<cri>-setup.yml -e "ansible_user=<host username>"
+  devel-machine $ ansible-playbook -i hosts control-plane-setup-<cri>.yml -e "ansible_user=<host username>"
 
 Verify the Kubernetes Control Plane node is healthy:
 
@@ -53,7 +53,7 @@ Verify the Kubernetes Control Plane node is healthy:
 
 Setup the compute nodes:
 
-  devel-machine $ ansible-playbook -i hosts node-setup.yml -e "ansible_user=<host username>"
+  devel-machine $ ansible-playbook -i hosts node-setup-<cri>.yml -e "ansible_user=<host username>"
 
 Verify the worker nodes are active:
 

@@ -17,7 +17,7 @@
       shell: swapoff -a
 
     - name: Join cluster
-      shell: "{{ hostvars['control-plane'].join_command }}"
+      shell: "{{ hostvars['control-plane'].join_command }} --cri-socket=/run/containerd/containerd.sock"
 
 - hosts: control-plane
   gather_facts: false

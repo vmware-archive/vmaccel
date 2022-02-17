@@ -1,14 +1,10 @@
-- hosts: nodes
-  become: yes
-  tasks:
-   - name: Disabling swap
-      shell: swapoff -a
-
-
 - hosts: all
   become: yes
   tasks:
-   - name: Install gnupg
+    - name: Disabling swap
+      shell: swapoff -a
+
+    - name: Install gnupg
       apt:
         name: gnupg2
         state: present

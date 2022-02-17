@@ -6,7 +6,7 @@ control-plane ansible_host=<control plane ip>
 [drivers]
 
 [nodes]
-#node-001 ansible_host=<node id>
+#node-001 ansible_host=<node ip>
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
