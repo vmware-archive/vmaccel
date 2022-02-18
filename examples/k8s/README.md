@@ -100,12 +100,20 @@ To start the VMCL service, start the control plane:
   devel-machine $ ansible-playbook -i hosts control-plane-start.yml -e "ansible_user=test"
 
 Vendor specific containers for VMCL can be built by uncommenting their respective lines in
-control-plane-setup-<cri>.yml. Below is a list of the image names:
+control-plane-setup-<cri>.yml.
 
-  AMD - vmaccel/vmcl_server-amd
-  Intel - vmaccel/vmcl_server-intel
-  Mesa - vmaccel/vmcl_server-mesa
-  NVIDIA - vmaccel/vmcl_server-nvidia
+  devel-machine $ cd <gpu vendor>
+  devel-machine $ cp ../../../build/bin/vmcl_svr
+  devel-machine $ sudo docker build --network=host -t <image name> .
+  devel-machine $ sudo docker tag <image name> <my repository>/<image name>
+  devel-machine $ sudo docker push <my repository>/<image name>
+
+Below is a list of the image names:
+
+  AMD - vmcl_server:amd-gpu-<distro and version>
+  Intel - vmcl_server:intel-gpu-<distro and version>
+  Mesa - vmcl_server:mesa-<distro and version>
+  NVIDIA - vmcl_server:nvidia-gpu-<distro and version>
 
 == Troubleshooting ==
 

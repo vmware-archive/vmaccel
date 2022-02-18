@@ -1,0 +1,15 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vmcl_server-intel-gpu
+spec:
+  template:
+    metadata:
+      name: vmcl_server-intel-gpu
+    spec:
+      containers:
+        - name: vmcl_server-intel-gpu
+          image: <my repository>/vmcl_server:intel-gpu-ubuntu-20.04
+          resources:
+            limits:
+              gpu.intel.com/i915: 1

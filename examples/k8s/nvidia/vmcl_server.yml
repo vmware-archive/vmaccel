@@ -1,0 +1,15 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vmcl_server-nvidia-gpu
+spec:
+  template:
+    metadata:
+      name: vmcl_server-nvidia-gpu
+    spec:
+      containers:
+        - name: vmcl_server-nvidia-gpu
+          image: <my repository>/vmcl_server:nvidia-gpu-ubuntu-20.04
+          resources:
+            limits:
+              nvidia.com/gpu: 1
