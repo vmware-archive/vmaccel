@@ -92,7 +92,7 @@ Verify the <b>vk8s-storage</b> tag and <b>vk8s-storage-policy</b> policy are cre
     $ ansible-playbook -i hosts network-setup.yml -e "@deploy.json"
 ```
 
-![](documents/esx-7.0u3c/vmaccel-tkg.networking.png)
+![](documents/esx-7.0u3c/vmaccel-tkg-networking.png)
 
 7. Add the Workload hosts to the Workload Cluster and configure any GPU and Passthrough devices with Hardware Label
 
