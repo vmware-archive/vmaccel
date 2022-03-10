@@ -1,0 +1,26 @@
+#
+# Management hosts (optional)
+#
+[management]
+#<FQDN for management hosts> ansible_host=<host ip>
+
+#
+# Hosts used for bootstrapping hosts if nesting ESXi or storage (optional)
+#
+[bootstrap-hosts]
+#<FQDN for bootstrap hosts> ansible_host=<host ip>
+
+#
+# Hosts used exclusively for vSAN (optional)
+#
+[storage-hosts]
+#<FQDN for storage hosts> ansible_host=<host ip>
+
+#
+# Hosts used for Workload VMs
+#
+[workload-hosts]
+#<FQDN for compute hosts> ansible_host=<host ip>
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3

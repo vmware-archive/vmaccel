@@ -1,0 +1,48 @@
+- name: Setting up host
+  debug:
+    msg: "ESXi Host: {{ item }}"
+
+- name: Add host to the cluster
+  shell: govc cluster.add -cluster {{ cluster }} -hostname {{ item }} -username {{ esx_username }} -password {{ esx_password }} -noverify
+  ignore_errors: yes
+
+- name: Reconnect host to cluster
+  shell: govc host.reconnect -sync-state true -host {{ item }}
+  ignore_errors: yes
+
+- name: Assign license to host
+  shell: govc license.assign -host {{ item }} {{ esx_license }}
+  when: (esx_license is defined)
+  ignore_errors: yes
+
+- name: Host enter maintenance mode
+  shell: govc host.maintenance.enter {{ item }}
+  ignore_errors: yes
+
+- name: Setup NTP
+  shell: govc host.date.change -host {{ item }} -server time.vmware.com && govc host.service -host {{ item }} enable ntpd && govc host.service -host {{ item }} start ntpd
+
+- name: Add VMkernel portgroup for host
+  shell: govc host.portgroup.add -host {{ item }} -vswitch {{ vswitch }} -vlan {{ vmk_vlan }} {{ vmk_portgroup }}
+  when: (vmk_vlan is defined)
+
+- name: Add VMkernel portgroup for host
+  shell: govc host.portgroup.add -host {{ item }} -vswitch {{ vswitch }} {{ vmk_portgroup }}
+  when: (vmk_vlan is not defined)
+
+- name: Setup VMkernel adapter
+  shell: govc host.esxcli -host {{ item }} network ip interface add -i {{ vmk_adapter }} -p {{ vmk_portgroup }} && govc host.esxcli -host {{ item }} network ip interface ipv4 set -i {{ vmk_adapter }} --type=dhcp
+
+- name: Enable vMotion and vSAN services
+  shell: govc host.vnic.service -host {{ item }} -enable vmotion {{ vmk_adapter }} && govc host.vnic.service -host {{ item }} -enable vsan {{ vmk_adapter }}
+
+- name: Add host to DSwitch
+  shell: govc dvs.add -dvs {{ dvs_switch }} -pnic {{ dvs_vmnic }} {{ item }}
+  when: (dvs_switch is defined)
+
+- name: Turning on managed object browser
+  shell: govc host.option.set -host {{ item }} Config.HostAgent.plugins.solo.enableMob true
+
+- name: Host exit maintenance mode
+  shell: govc host.maintenance.exit {{ item }}
+  ignore_errors: yes

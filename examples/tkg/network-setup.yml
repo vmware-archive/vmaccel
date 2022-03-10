@@ -1,0 +1,43 @@
+- hosts: localhost
+  environment:
+    GOVC_INSECURE: "1"
+    GOVC_PASSWORD: "{{ vc_password }}"
+    GOVC_USERNAME: "{{ vc_username }}"
+    GOVC_URL: "{{ vc_url }}"
+  tasks:
+    - name: Creating distributed switch
+      shell: govc dvs.create -mtu 9000 {{ dvs_switch }}
+      ignore_errors: yes
+      when: (dvs_switch is defined)
+
+    - name: Creating Management network
+      shell: govc dvs.portgroup.add -dvs {{ dvs_switch }} -type earlyBinding -vlan {{ management_vlan }} '{{ dvs_switch }}-Management Network'
+      when: (dvs_switch is defined) and (management_vlan is defined)
+
+    - name: Creating Management network
+      shell: govc dvs.portgroup.add -dvs {{ dvs_switch }} -type earlyBinding '{{ dvs_switch }}-Management Network'
+      when: (dvs_switch is defined) and (management_vlan is not defined)
+
+    - name: Creating VM network
+      shell: govc dvs.portgroup.add -dvs {{ dvs_switch }} -type earlyBinding -vlan {{ vm_vlan }} '{{ dvs_switch }}-VM Network'
+      when: (dvs_switch is defined) and (vm_vlan is defined)
+
+    - name: Creating VM network
+      shell: govc dvs.portgroup.add -dvs {{ dvs_switch }} -type earlyBinding '{{ dvs_switch }}-VM Network'
+      when: (dvs_switch is defined) and (vm_vlan is not defined)
+
+    - name: Creating Workload network
+      shell: govc dvs.portgroup.add -dvs {{ dvs_switch }} -type earlyBinding -vlan {{ workload_vlan }} '{{ dvs_switch }}-Workload Network'
+      when: (dvs_switch is defined) and (workload_vlan is defined)
+
+    - name: Creating Workload network
+      shell: govc dvs.portgroup.add -dvs {{ dvs_switch }} -type earlyBinding '{{ dvs_switch }}-Workload Network'
+      when: (dvs_switch is defined) and (workload_vlan is not defined)
+
+    - name: Creating Workload network
+      shell: govc dvs.portgroup.add -dvs {{ dvs_switch }} -type earlyBinding -vlan {{ frontend_vlan }} '{{ dvs_switch }}-Frontend Network'
+      when: (dvs_switch is defined) and (frontend_vlan is defined)
+
+    - name: Creating Workload network
+      shell: govc dvs.portgroup.add -dvs {{ dvs_switch }} -type earlyBinding '{{ dvs_switch }}-Frontend Network'
+      when: (dvs_switch is defined) and (frontend_vlan is not defined)

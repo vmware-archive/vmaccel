@@ -1,0 +1,22 @@
+- hosts: localhost
+  environment:
+    GOVC_INSECURE: "1"
+    GOVC_PASSWORD: "{{ vc_password }}"
+    GOVC_USERNAME: "{{ vc_username }}"
+    GOVC_URL: "{{ vc_url }}"
+  tasks:
+    - name: Enabling VSAN Bootstrap cluster
+      shell: govc cluster.change -vsan-enabled -vsan-autoclaim {{ bootstrap_cluster }}
+      when: (vsan_license is defined) and (vsan_license|length > 0)
+
+    - name: Apply VSAN license
+      shell: govc license.assign -cluster {{ bootstrap_cluster }} {{ vsan_license }}
+      when: (vsan_license is defined) and (vsan_license|length > 0)
+
+    - name: Enabling VSAN cluster
+      shell: govc cluster.change -drs-enabled -ha-enabled -vsan-enabled -vsan-autoclaim {{ workload_cluster }}
+      when: (vsan_license is defined) and (vsan_license|length > 0)
+
+    - name: Apply VSAN license
+      shell: govc license.assign -cluster {{ workload_cluster }} {{ vsan_license }}
+      when: (vsan_license is defined) and (vsan_license|length > 0)

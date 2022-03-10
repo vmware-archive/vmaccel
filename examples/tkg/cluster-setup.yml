@@ -1,0 +1,42 @@
+- hosts: localhost
+  environment:
+    GOVC_INSECURE: "1"
+    GOVC_PASSWORD: "{{ vc_password }}"
+    GOVC_USERNAME: "{{ vc_username }}"
+    GOVC_URL: "{{ vc_url }}"
+  tasks:
+    - name: Apply the VCSA license
+      shell: govc license.add {{ vcsa_license }}
+      when: (vcsa_license is defined) and (vcsa_license|length > 0)
+
+    - name: Apply the VSAN license
+      shell: govc license.add {{ vsan_license }}
+      when: (vsan_license is defined) and (vsan_license|length > 0)
+
+    - name: Apply the ESX license
+      shell: govc license.add {{ esx_license }}
+      when: (esx_license is defined) and (esx_license|length > 0)
+
+    - name: Create the Datacenter
+      shell: govc datacenter.create {{ datacenter }}
+      ignore_errors: yes
+
+    - name: Create the Bootstrap cluster
+      shell: govc cluster.create -dc {{ datacenter }} {{ bootstrap_cluster }}
+      ignore_errors: yes
+
+    - name: Create the Workload cluster
+      shell: govc cluster.create -dc {{ datacenter }} {{ workload_cluster }}
+      ignore_errors: yes
+
+    - name: Creating TKG storage category
+      shell: govc tags.category.create -d "TKG storage category" -t Datastore vk8s-storage-category
+      ignore_errors: yes
+
+    - name: Creating TKG storage tag
+      shell: govc tags.create -d "TKG storage tag" -c vk8s-storage-category vk8s-storage
+      ignore_errors: yes
+
+    - name: Creating TKG storage policy
+      shell: govc storage.policy.create -d "TKG storage policy" -category vk8s-storage-category -tag vk8s-storage vk8s-storage-policy
+      ignore_errors: yes

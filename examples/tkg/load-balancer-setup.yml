@@ -1,0 +1,13 @@
+- hosts: localhost
+  environment:
+    GOVC_INSECURE: "1"
+    GOVC_PASSWORD: "{{ vc_password }}"
+    GOVC_USERNAME: "{{ vc_username }}"
+    GOVC_URL: "{{ vc_url }}"
+  tasks:
+    - name: Importing HAProxy OVA
+      shell: govc library.import ova downloads/{{ haproxy_ova }}.ova
+      ignore_errors: yes
+
+    - name: Deploying HAProxy OVA
+      shell: govc library.deploy -ds {{ content_library_ds }} -host {{ management_host }} -options specs/{{ haproxy_spec }} /ova/{{ haproxy_ova }} {{ haproxy_ova }}

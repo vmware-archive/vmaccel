@@ -1,0 +1,15 @@
+- hosts: localhost
+  environment:
+    GOVC_INSECURE: "1"
+    GOVC_PASSWORD: "{{ vc_password }}"
+    GOVC_USERNAME: "{{ vc_username }}"
+    GOVC_URL: "{{ vc_url }}"
+  tasks:
+    - name: Create ISO content library
+      shell: govc library.create -ds {{ content_library_ds }} iso
+
+    - name: Create OVA content library
+      shell: govc library.create -ds {{ content_library_ds }} ova
+
+    - name: Create TKG content library
+      shell: govc library.create -ds {{ content_library_ds }} -sub {{ tkg_subscription_url }} tanzu

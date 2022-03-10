@@ -1,0 +1,91 @@
+{
+    "Annotation": "HAProxy for the Load Balancer API (v0.1.9)",
+    "Deployment": "default",
+    "IPAllocationPolicy": "dhcpPolicy",
+    "IPProtocol": "IPv4",
+    "InjectOvfEnv": false,
+    "MarkAsTemplate": false,
+    "Name": null,
+    "NetworkMapping": [
+        {
+            "Name": "Management",
+            "Network": "DSwitch/DSwitch-Management Network"
+        },
+        {
+            "Name": "Workload",
+            "Network": "DSwitch/DSwitch-Workload Network"
+        },
+        {
+            "Name": "Frontend",
+            "Network": "DSwitch/DSwitch-Frontend Network"
+        }
+    ],
+    "PowerOn": false,
+    "PropertyMapping": [
+        {
+            "Key": "appliance.root_pwd",
+            "Value": ""
+        },
+        {
+            "Key": "appliance.permit_root_login",
+            "Value": "True"
+        },
+        {
+            "Key": "appliance.ca_cert",
+            "Value": ""
+        },
+        {
+            "Key": "appliance.ca_cert_key",
+            "Value": ""
+        },
+        {
+            "Key": "network.hostname",
+            "Value": "haproxy.local"
+        },
+        {
+            "Key": "network.nameservers",
+            "Value": "1.1.1.1, 1.0.0.1"
+        },
+        {
+            "Key": "network.management_ip",
+            "Value": "192.168.10.1/25"
+        },
+        {
+            "Key": "network.management_gateway",
+            "Value": "192.168.10.125"
+        },
+        {
+            "Key": "network.workload_ip",
+            "Value": "192.168.10.133/25"
+        },
+        {
+            "Key": "network.workload_gateway",
+            "Value": "192.168.10.253"
+        },
+        {
+            "Key": "network.frontend_ip",
+            "Value": "192.168.10.133/25"
+        },
+        {
+            "Key": "network.frontend_gateway",
+            "Value": "192.168.10.253"
+        },
+        {
+            "Key": "loadbalance.service_ip_range",
+            "Value": "192.168.10.144/28"
+        },
+        {
+            "Key": "loadbalance.dataplane_port",
+            "Value": "5556"
+        },
+        {
+            "Key": "loadbalance.haproxy_user",
+            "Value": "admin"
+        },
+        {
+            "Key": "loadbalance.haproxy_pwd",
+            "Value": "abcd123"
+        }
+    ],
+    "WaitForIP": false
+}

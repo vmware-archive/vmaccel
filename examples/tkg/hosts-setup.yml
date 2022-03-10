@@ -1,0 +1,29 @@
+- hosts: localhost
+  connection: local
+  environment:
+    GOVC_INSECURE: "1"
+    GOVC_PASSWORD: "{{ vc_password }}"
+    GOVC_USERNAME: "{{ vc_username }}"
+    GOVC_URL: "{{ vc_url }}"
+  tasks:
+    - name: Configuring VC server
+      debug:
+        msg: "VC Server: {{ vc_url }}"
+
+    - name: Deploying management hosts
+      vars:
+        cluster: "{{ bootstrap_cluster }}"
+      include_tasks: host-setup.yml
+      with_items: "{{ groups['bootstrap-hosts'] }}"
+
+    - name: Deploying storage hosts
+      vars:
+        cluster: "{{ bootstrap_cluster }}"
+      include_tasks: host-setup.yml
+      with_items: "{{ groups['storage-hosts'] }}"
+
+    - name: Deploying workload hosts
+      vars:
+        cluster: "{{ workload_cluster }}"
+      include_tasks: host-setup.yml
+      with_items: "{{ groups['workload-hosts'] }}"
