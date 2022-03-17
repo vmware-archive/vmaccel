@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2019 VMware, Inc.
+Copyright (c) 2016-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -27,20 +27,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #include <memory.h>
-#include "vmaccel_callback_rpc.h"
+#include "vmcl_callback_rpc.h"
 
+#if ENABLE_VMACCEL_RPC
 /* Default timeout can be changed using clnt_control() */
 static struct timeval TIMEOUT = {25, 0};
+#endif
 
-VMAccelReturnStatus *vmaccel_callbackop_1(VMAccelCallbackOp *argp,
-                                          CLIENT *clnt) {
+VMAccelReturnStatus *vmcl_callbackop_1(VMCLCallbackOp *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_callbackop_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
-   if (clnt_call(clnt, VMACCEL_CALLBACKOP, (xdrproc_t)xdr_VMAccelCallbackOp,
+   if (clnt_call(clnt, VMCL_CALLBACKOP, (xdrproc_t)xdr_VMCLCallbackOp,
                  (caddr_t)argp, (xdrproc_t)xdr_VMAccelReturnStatus,
                  (caddr_t)&clnt_res, TIMEOUT) != RPC_SUCCESS) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }

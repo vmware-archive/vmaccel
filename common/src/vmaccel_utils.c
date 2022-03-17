@@ -274,7 +274,7 @@ bool VMAccel_AddressStringToOpaqueAddr(const char *addr, char *out, int len) {
 }
 
 bool VMAccel_IsLocal() {
-#if VMACCEL_LOCAL
+#if ENABLE_VMACCEL_LOCAL
    return TRUE;
 #else
    return FALSE;

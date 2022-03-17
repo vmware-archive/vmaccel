@@ -26,7 +26,7 @@
 
 set(CLIENT_SOURCES
    ../../src/vmaccel_callback_rpc_server.c
-   ../../src/vmaccel_rpc_clnt.c)
+   ../../src/vmaccel_clnt.c)
 
 add_library(vmaccel_local_client ${CLIENT_SOURCES})
 target_link_libraries(vmaccel_local_client vmaccel_server)

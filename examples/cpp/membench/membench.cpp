@@ -460,7 +460,7 @@ int main(int argc, char **argv) {
       return 1;
    }
 
-#if VMACCEL_LOCAL
+#if ENABLE_VMACCEL_LOCAL
    vmcl_poweron_svc(NULL);
 #elif ENABLE_VMCL_STREAM_SERVER
    vmaccel_stream_poweron();
@@ -888,7 +888,7 @@ int main(int argc, char **argv) {
       }
    }
 
-#if VMACCEL_LOCAL
+#if ENABLE_VMACCEL_LOCAL
    vmcl_poweroff_svc();
 #elif ENABLE_VMCL_STREAM_SERVER
    vmaccel_stream_poweroff();

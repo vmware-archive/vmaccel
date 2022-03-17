@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2019 VMware, Inc.
+Copyright (c) 2016-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -29,11 +29,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory.h>
 #include "vmcl_rpc.h"
 
+#if ENABLE_VMACCEL_RPC
 /* Default timeout can be changed using clnt_control() */
 static struct timeval TIMEOUT = {25, 0};
+#endif
 
 VMCLContextAllocateReturnStatus *
 vmcl_contextalloc_1(VMCLContextAllocateDesc *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_contextalloc_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMCLContextAllocateReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -44,9 +52,18 @@ vmcl_contextalloc_1(VMCLContextAllocateDesc *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelReturnStatus *vmcl_contextdestroy_1(VMCLContextId *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_contextdestroy_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -56,10 +73,19 @@ VMAccelReturnStatus *vmcl_contextdestroy_1(VMCLContextId *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelSurfaceAllocateReturnStatus *
 vmcl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_surfacealloc_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelSurfaceAllocateReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -70,9 +96,18 @@ vmcl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelReturnStatus *vmcl_surfacedestroy_1(VMCLSurfaceId *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_surfacedestroy_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -82,10 +117,19 @@ VMAccelReturnStatus *vmcl_surfacedestroy_1(VMCLSurfaceId *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelSharedHandleReturnStatus *
 vmcl_surfacegetsharedhandle_1(VMCLSurfaceId *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_surfacegetsharedhandle_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelSharedHandleReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -96,10 +140,19 @@ vmcl_surfacegetsharedhandle_1(VMCLSurfaceId *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelReturnStatus *vmcl_surfacereleasesharedhandle_1(VMCLSharedHandle *argp,
                                                        CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_surfacereleasesharedhandle_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -110,10 +163,19 @@ VMAccelReturnStatus *vmcl_surfacereleasesharedhandle_1(VMCLSharedHandle *argp,
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelQueueReturnStatus *vmcl_queuealloc_1(VMCLQueueAllocateDesc *argp,
                                             CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_queuealloc_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelQueueReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -123,9 +185,18 @@ VMAccelQueueReturnStatus *vmcl_queuealloc_1(VMCLQueueAllocateDesc *argp,
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelReturnStatus *vmcl_queuedestroy_1(VMCLQueueId *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_queuedestroy_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -135,10 +206,19 @@ VMAccelReturnStatus *vmcl_queuedestroy_1(VMCLQueueId *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelEventReturnStatus *vmcl_eventalloc_1(VMCLEventAllocateDesc *argp,
                                             CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_eventalloc_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelEventReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -148,10 +228,19 @@ VMAccelEventReturnStatus *vmcl_eventalloc_1(VMCLEventAllocateDesc *argp,
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelEventReturnStatus *vmcl_eventgetstatus_1(VMCLEventId *argp,
                                                 CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_eventgetstatus_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelEventReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -161,9 +250,18 @@ VMAccelEventReturnStatus *vmcl_eventgetstatus_1(VMCLEventId *argp,
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelEventReturnStatus *vmcl_eventdestroy_1(VMCLEventId *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_eventdestroy_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelEventReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -173,10 +271,19 @@ VMAccelEventReturnStatus *vmcl_eventdestroy_1(VMCLEventId *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelFenceReturnStatus *vmcl_fencealloc_1(VMCLFenceAllocateDesc *argp,
                                             CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_fencealloc_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelFenceReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -186,10 +293,19 @@ VMAccelFenceReturnStatus *vmcl_fencealloc_1(VMCLFenceAllocateDesc *argp,
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelFenceReturnStatus *vmcl_fencegetstatus_1(VMCLFenceId *argp,
                                                 CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_fencegetstatus_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelFenceReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -199,9 +315,18 @@ VMAccelFenceReturnStatus *vmcl_fencegetstatus_1(VMCLFenceId *argp,
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelFenceReturnStatus *vmcl_fencedestroy_1(VMCLFenceId *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_fencedestroy_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelFenceReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -211,9 +336,18 @@ VMAccelFenceReturnStatus *vmcl_fencedestroy_1(VMCLFenceId *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelReturnStatus *vmcl_queueflush_1(VMCLQueueId *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_queueflush_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -223,9 +357,18 @@ VMAccelReturnStatus *vmcl_queueflush_1(VMCLQueueId *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelReturnStatus *vmcl_eventinsert_1(VMCLEventInsertOp *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_eventinsert_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -235,9 +378,18 @@ VMAccelReturnStatus *vmcl_eventinsert_1(VMCLEventInsertOp *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelReturnStatus *vmcl_fenceinsert_1(VMCLFenceInsertOp *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_fenceinsert_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -247,9 +399,18 @@ VMAccelReturnStatus *vmcl_fenceinsert_1(VMCLFenceInsertOp *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelReturnStatus *vmcl_imageupload_1(VMCLImageUploadOp *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_imageupload_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -259,10 +420,19 @@ VMAccelReturnStatus *vmcl_imageupload_1(VMCLImageUploadOp *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelDownloadReturnStatus *vmcl_imagedownload_1(VMCLImageDownloadOp *argp,
                                                   CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_imagedownload_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelDownloadReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -272,10 +442,19 @@ VMAccelDownloadReturnStatus *vmcl_imagedownload_1(VMCLImageDownloadOp *argp,
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelSurfaceMapReturnStatus *vmcl_surfacemap_1(VMCLSurfaceMapOp *argp,
                                                  CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_surfacemap_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelSurfaceMapReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -285,10 +464,19 @@ VMAccelSurfaceMapReturnStatus *vmcl_surfacemap_1(VMCLSurfaceMapOp *argp,
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelReturnStatus *vmcl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp,
                                          CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_surfaceunmap_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -298,9 +486,18 @@ VMAccelReturnStatus *vmcl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp,
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelReturnStatus *vmcl_surfacecopy_1(VMCLSurfaceCopyOp *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_surfacecopy_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -310,9 +507,18 @@ VMAccelReturnStatus *vmcl_surfacecopy_1(VMCLSurfaceCopyOp *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelReturnStatus *vmcl_imagefill_1(VMCLImageFillOp *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_imagefill_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -322,10 +528,19 @@ VMAccelReturnStatus *vmcl_imagefill_1(VMCLImageFillOp *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMCLSamplerAllocateReturnStatus *
 vmcl_sampleralloc_1(VMCLSamplerAllocateDesc *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_sampleralloc_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMCLSamplerAllocateReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -336,9 +551,18 @@ vmcl_sampleralloc_1(VMCLSamplerAllocateDesc *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelReturnStatus *vmcl_samplerdestroy_1(VMCLSamplerId *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_samplerdestroy_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -348,10 +572,19 @@ VMAccelReturnStatus *vmcl_samplerdestroy_1(VMCLSamplerId *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMCLKernelAllocateReturnStatus *vmcl_kernelalloc_1(VMCLKernelAllocateDesc *argp,
                                                    CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_kernelalloc_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMCLKernelAllocateReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -361,9 +594,18 @@ VMCLKernelAllocateReturnStatus *vmcl_kernelalloc_1(VMCLKernelAllocateDesc *argp,
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelReturnStatus *vmcl_kerneldestroy_1(VMCLKernelId *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_kerneldestroy_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -373,9 +615,18 @@ VMAccelReturnStatus *vmcl_kerneldestroy_1(VMCLKernelId *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }
 
 VMAccelReturnStatus *vmcl_dispatch_1(VMCLDispatchOp *argp, CLIENT *clnt) {
+#if ENABLE_VMACCEL_LOCAL
+   if (clnt == NULL) {
+      return vmcl_dispatch_1_svc(argp, NULL);
+   }
+#endif
+#if ENABLE_VMACCEL_RPC
    static VMAccelReturnStatus clnt_res;
 
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -385,4 +636,7 @@ VMAccelReturnStatus *vmcl_dispatch_1(VMCLDispatchOp *argp, CLIENT *clnt) {
       return (NULL);
    }
    return (&clnt_res);
+#else
+   return (NULL);
+#endif
 }

@@ -44,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #include "vmaccel_defs.h"
 #include "vmaccel_mgr.h"
-#if VMACCEL_LOCAL
+#if ENABLE_VMACCEL_LOCAL
 #include "vmaccel_local.h"
 #include "vmaccel_ops.h"
 #else

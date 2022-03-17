@@ -25,7 +25,7 @@
 #
 
 set(SERVER_SOURCES
-   ../../src/vmcl_callback_rpc_clnt.c
+   ../../src/vmcl_callback_clnt.c
    ../../src/vmcl_callback_rpc_xdr.c
    ../../src/vmcl_rpc_server.c
    ../../src/vmcl_rpc_xdr.c)

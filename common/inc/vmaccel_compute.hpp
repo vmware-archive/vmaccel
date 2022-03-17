@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2019-2021 VMware, Inc.
+Copyright (c) 2019-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #include "vmaccel_defs.h"
 #include "vmcl_defs.h"
-#if VMACCEL_LOCAL
+#if ENABLE_VMACCEL_LOCAL
 #include "vmcl_local.h"
 #include "vmcl_ops.h"
 #else
@@ -648,7 +648,7 @@ public:
 /**
  * Accessors.
  */
-#if VMACCEL_LOCAL
+#if ENABLE_VMACCEL_LOCAL
    struct svc_req *get_client() {
       return NULL;
    }

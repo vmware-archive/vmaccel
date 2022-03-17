@@ -26,7 +26,7 @@
 
 set(CLIENT_SOURCES
    ../../src/vmcl_callback_rpc_server.c
-   ../../src/vmcl_rpc_clnt.c)
+   ../../src/vmcl_clnt.c)
 
 add_library(vmcl_rpc_client ${CLIENT_SOURCES})
 target_link_libraries(vmcl_rpc_client vmcl_rpc)

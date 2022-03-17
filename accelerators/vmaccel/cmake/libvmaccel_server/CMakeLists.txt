@@ -25,9 +25,10 @@
 #
 
 set(SERVER_SOURCES
-   ../../src/vmaccel_callback_rpc_clnt.c
+   ../../src/vmaccel_callback_clnt.c
    ../../src/vmaccel_callback_rpc_xdr.c
    ../../src/vmaccel_rpc_server.c
    ../../src/vmaccel_rpc_xdr.c)
 
 add_library(vmaccel_server ${SERVER_SOURCES})
+target_compile_definitions(vmaccel_server PRIVATE ENABLE_VMACCEL_LOCAL=1 ENABLE_VMACCEL_RPC=1)
