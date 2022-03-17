@@ -233,9 +233,9 @@ public:
       surf->log_consistency();
 #endif
 
-/*
- * Detect if there are any updates from the application for this surface.
- */
+      /*
+       * Detect if there are any updates from the application for this surface.
+       */
 #if !DEBUG_FORCE_SURFACE_CONSISTENCY
       if (surf->is_consistent(get_contextId()) && !force) {
          unlock();
@@ -644,9 +644,9 @@ public:
       END_TIME_STAT(destroy_surface);
    }
 
-/**
- * Accessors.
- */
+   /**
+    * Accessors.
+    */
    CLIENT *get_client() { return clnt; }
 
    VMAccelId get_accelId() { return accelId; }

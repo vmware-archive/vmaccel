@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2019 VMware, Inc.
+Copyright (c) 2016-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "log_level.h"
 
 static VMCLOps *cl = &vmwopenclOps;
+static volatile unsigned long clRefCount = 0;
 
 VMAccelAllocateStatus *vmcl_poweron_svc(VMCLOps *ops) {
    VMAccelAllocateStatus *ret = NULL;
@@ -45,6 +46,7 @@ VMAccelAllocateStatus *vmcl_poweron_svc(VMCLOps *ops) {
    for (int i = 0; i < VMACCEL_SELECT_MAX; i++) {
       ret = cl->poweron(NULL, i, 0);
       if (ret->status == VMACCEL_SUCCESS) {
+         clRefCount++;
          return ret;
       }
    }
@@ -54,7 +56,13 @@ VMAccelAllocateStatus *vmcl_poweron_svc(VMCLOps *ops) {
 }
 
 VMAccelStatus *vmcl_poweroff_svc() {
-   return cl->poweroff();
+   if (clRefCount == 1) {
+      clRefCount = 0;
+      return cl->poweroff();
+   } else if (clRefCount > 1) {
+      clRefCount--;
+   }
+   return NULL;
 }
 
 VMCLContextAllocateReturnStatus *

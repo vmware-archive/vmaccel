@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2019-2020 VMware, Inc.
+Copyright (c) 2019-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -46,9 +46,10 @@ extern "C" {
 #include "vmaccel_mgr.h"
 #if ENABLE_VMACCEL_LOCAL
 #include "vmaccel_ops.h"
-#else
-#include "vmaccel_rpc.h"
+#include "vmcl_ops.h"
 #endif
+#include "vmaccel_rpc.h"
+#include "vmaccel_stream.h"
 #include "vmaccel_utils.h"
 #include "vmaccel_types_address.h"
 #include "vmaccel_types_address.hpp"
@@ -332,12 +333,24 @@ public:
     *            in VMAccelAddress format.
     */
    accelerator(const address &mgr,
-               int accelMaxRefObjects = VMACCEL_MAX_REF_OBJECTS) {
+               int accelMaxRefObjects = VMACCEL_MAX_REF_OBJECTS,
+               bool_t useLocalBackend = false,
+	       bool_t useStreaming = false) {
       char host[256];
-      if (!VMAccel_IsLocal()) {
-         DeepCopy(mgrAddr, mgr.ref_accel_addr());
+      vmclLocalBackend = false;
+      vmaccelStreaming = false;
+#if ENABLE_VMACCEL_LOCAL
+      if (useLocalBackend) {
+         vmcl_poweron_svc(NULL);
+         vmclLocalBackend = true;
       }
-      if (VMAccel_AddressOpaqueAddrToString(mgr.get_accel_addr(), host,
+#endif
+      if (useStreaming) {
+         vmaccel_stream_poweron();
+	 vmaccelStreaming = true;
+      }
+      if (!useLocalBackend &&
+          VMAccel_AddressOpaqueAddrToString(mgr.get_accel_addr(), host,
                                             sizeof(host))) {
          VMACCEL_LOG("vmaccel: Connecting to Accelerator manager %s\n", host);
          mgrClnt = clnt_create(host, VMACCELMGR, VMACCELMGR_VERSION, "tcp");
@@ -355,6 +368,8 @@ public:
 
             if (!clnt_control(mgrClnt, CLSET_TIMEOUT, (char *)&tv)) {
                VMACCEL_WARNING("vmaccel: Unable to set timeout..\n");
+            } else {
+               DeepCopy(mgrAddr, mgr.ref_accel_addr());
             }
          }
       }
@@ -380,10 +395,15 @@ public:
       if (mgrClnt != NULL) {
          clnt_destroy(mgrClnt);
          mgrClnt = NULL;
-      }
-
-      if (!VMAccel_IsLocal()) {
          Destructor(mgrAddr);
+      }
+#if ENABLE_VMACCEL_LOCAL
+      if (vmclLocalBackend) {
+         vmcl_poweroff_svc();
+      }
+#endif
+      if (vmaccelStreaming) {
+         vmaccel_stream_poweroff();
       }
    }
 
@@ -487,6 +507,15 @@ public:
    }
 
 private:
+   /*
+    * Features enabled.
+    */
+   bool_t vmclLocalBackend;
+   bool_t vmaccelStreaming;
+
+   /*
+    * Accelerator manager for this accelerator.
+    */
    VMAccelAddress mgrAddr;
    CLIENT *mgrClnt;
 

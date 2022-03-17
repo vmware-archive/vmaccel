@@ -460,15 +460,10 @@ int main(int argc, char **argv) {
       return 1;
    }
 
-#if ENABLE_VMACCEL_LOCAL
-   vmcl_poweron_svc(NULL);
-#elif ENABLE_VMCL_STREAM_SERVER
-   vmaccel_stream_poweron();
-#endif
-
    address mgrAddr(host);
    work_topology workTopology({0}, {numRows}, {numColumns});
-   ref_object<accelerator> accel(new accelerator(mgrAddr));
+   ref_object<accelerator> accel(new accelerator(mgrAddr, VMACCEL_MAX_REF_OBJECTS,
+                                                 ENABLE_VMACCEL_LOCAL, ENABLE_VMCL_STREAM_SERVER));
 
    /*
     * Initialize the Compute Kernel.
@@ -887,12 +882,6 @@ int main(int argc, char **argv) {
          }
       }
    }
-
-#if ENABLE_VMACCEL_LOCAL
-   vmcl_poweroff_svc();
-#elif ENABLE_VMCL_STREAM_SERVER
-   vmaccel_stream_poweroff();
-#endif
 
    VMACCEL_LOG("Test PASSED...\n");
 
