@@ -47,7 +47,6 @@ extern "C" {
 #include "vmaccel_defs.h"
 #include "vmcl_defs.h"
 #if ENABLE_VMACCEL_LOCAL
-#include "vmcl_local.h"
 #include "vmcl_ops.h"
 #else
 #include "vmcl_rpc.h"
@@ -648,13 +647,7 @@ public:
 /**
  * Accessors.
  */
-#if ENABLE_VMACCEL_LOCAL
-   struct svc_req *get_client() {
-      return NULL;
-   }
-#else
    CLIENT *get_client() { return clnt; }
-#endif
 
    VMAccelId get_accelId() { return accelId; }
 
@@ -691,6 +684,7 @@ private:
 
       strcpy(&host[0], "127.0.0.1");
       accelId = VMACCEL_INVALID_ID;
+      clnt = NULL;
 
       if (accel->get_manager() != NULL) {
          memset(&vmaccelmgr_alloc_1_arg, 0, sizeof(vmaccelmgr_alloc_1_arg));

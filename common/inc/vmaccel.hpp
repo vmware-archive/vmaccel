@@ -45,7 +45,6 @@ extern "C" {
 #include "vmaccel_defs.h"
 #include "vmaccel_mgr.h"
 #if ENABLE_VMACCEL_LOCAL
-#include "vmaccel_local.h"
 #include "vmaccel_ops.h"
 #else
 #include "vmaccel_rpc.h"
