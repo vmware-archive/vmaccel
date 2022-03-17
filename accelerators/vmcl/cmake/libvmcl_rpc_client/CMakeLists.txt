@@ -30,4 +30,4 @@ set(CLIENT_SOURCES
 
 add_library(vmcl_rpc_client ${CLIENT_SOURCES})
 target_link_libraries(vmcl_rpc_client vmcl_rpc)
-target_compile_definitions(vmcl_rpc_client PUBLIC ENABLE_VMACCEL_LOCAL=0 ENABLE_VMACCEL_RPC=1)
+target_compile_definitions(vmcl_rpc_client PRIVATE ENABLE_VMACCEL_LOCAL=0 ENABLE_VMACCEL_RPC=1)
