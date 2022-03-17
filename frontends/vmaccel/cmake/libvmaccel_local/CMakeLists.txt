@@ -4,9 +4,9 @@ set(SOURCES
 
 set(LIBRARIES
    vmaccel_utils_local
-   vmcl_server
-   vmaccelmgr_server
-   vmaccel_server)
+   vmcl_local_client
+   vmaccelmgr_local_client
+   vmaccel_local_client)
 
 add_library(vmaccel_local ${SOURCES})
 target_link_libraries(vmaccel_local ${LIBRARIES})

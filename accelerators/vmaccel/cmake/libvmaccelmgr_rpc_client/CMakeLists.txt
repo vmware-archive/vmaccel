@@ -29,3 +29,4 @@ set(CLIENT_SOURCES
 
 add_library(vmaccelmgr_rpc_client ${CLIENT_SOURCES})
 target_link_libraries(vmaccelmgr_rpc_client vmaccelmgr_rpc)
+target_compile_definitions(vmaccelmgr_rpc_client PUBLIC ENABLE_VMACCEL_LOCAL=0 ENABLE_VMACCEL_RPC=1)

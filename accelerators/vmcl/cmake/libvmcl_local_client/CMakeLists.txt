@@ -28,6 +28,6 @@ set(CLIENT_SOURCES
    ../../src/vmcl_callback_rpc_server.c
    ../../src/vmcl_rpc_clnt.c)
 
-add_library(vmcl_rpc_client ${CLIENT_SOURCES})
-target_link_libraries(vmcl_rpc_client vmcl_rpc)
-target_compile_definitions(vmcl_rpc_client PUBLIC ENABLE_VMACCEL_LOCAL=0 ENABLE_VMACCEL_RPC=1)
+add_library(vmcl_local_client ${CLIENT_SOURCES})
+target_link_libraries(vmcl_local_client vmcl_server)
+target_compile_definitions(vmcl_local_client PUBLIC ENABLE_VMACCEL_LOCAL=1 ENABLE_VMACCEL_RPC=0)
