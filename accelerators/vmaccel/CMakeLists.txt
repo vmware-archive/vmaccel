@@ -125,9 +125,11 @@ endfunction()
 
 include_directories(${GLOBAL_INC})
 
-add_subdirectory(cmake/libvmaccel_client)
+add_subdirectory(cmake/libvmaccel_rpc)
+add_subdirectory(cmake/libvmaccel_rpc_client)
 add_subdirectory(cmake/libvmaccel_server)
-add_subdirectory(cmake/libvmaccelmgr_client)
+add_subdirectory(cmake/libvmaccelmgr_rpc)
+add_subdirectory(cmake/libvmaccelmgr_rpc_client)
 add_subdirectory(cmake/libvmaccelmgr_server)
 add_subdirectory(cmake/vmaccel_server)
 add_subdirectory(cmake/vmaccelmgr_server)

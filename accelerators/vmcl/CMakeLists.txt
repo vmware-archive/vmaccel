@@ -123,7 +123,8 @@ ProcessGen(
    specs/vmcl_rpc.x
    specs/vmcl_callback_rpc.x)
 
-add_subdirectory(cmake/libvmcl_client)
+add_subdirectory(cmake/libvmcl_rpc)
+add_subdirectory(cmake/libvmcl_rpc_client)
 add_subdirectory(cmake/libvmcl_server)
 add_subdirectory(cmake/vmcl_server)
 

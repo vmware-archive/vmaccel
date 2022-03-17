@@ -4,9 +4,9 @@ set(SOURCES
 
 set(LIBRARIES
    vmaccel_utils
-   vmcl_client
-   vmaccelmgr_client
-   vmaccel_client)
+   vmcl_rpc_client
+   vmaccelmgr_rpc_client
+   vmaccel_rpc_client)
 
 add_library(vmaccel ${SOURCES})
 target_link_libraries(vmaccel ${LIBRARIES})

@@ -31,4 +31,4 @@ set(SERVER_SOURCES
    ../../src/vmcl_rpc_xdr.c)
 
 add_library(vmcl_server ${SERVER_SOURCES})
-target_link_libraries(vmcl_server vmwopencl vmaccelmgr_client)
+target_link_libraries(vmcl_server vmwopencl vmaccelmgr_rpc_client)

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016-2019 VMware, Inc.
+# Copyright (c) 2016-2022 VMware, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,10 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(CLIENT_SOURCES
-   ../../src/vmcl_callback_rpc_server.c
-   ../../src/vmcl_callback_rpc_xdr.c
-   ../../src/vmcl_rpc_clnt.c
-   ../../src/vmcl_rpc_xdr.c)
+set(RPC_SOURCES
+   ../../src/vmaccel_rpc_xdr.c)
 
-add_library(vmcl_client ${CLIENT_SOURCES})
+add_library(vmaccelmgr_rpc ${RPC_SOURCES})

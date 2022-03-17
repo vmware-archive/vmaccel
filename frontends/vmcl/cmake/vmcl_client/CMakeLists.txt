@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016-2019 VMware, Inc.
+# Copyright (c) 2016-2022 VMware, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,4 +25,4 @@
 #
 
 add_executable(vmcl_clnt ../../src/vmcl_rpc_client.c)
-target_link_libraries(vmcl_clnt vmcl_client vmaccel_client)
+target_link_libraries(vmcl_clnt vmcl_rpc_client vmaccel_rpc_client)

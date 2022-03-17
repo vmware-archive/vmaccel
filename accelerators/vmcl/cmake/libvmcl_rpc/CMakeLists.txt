@@ -24,5 +24,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(vmaccel_clnt ../../src/vmaccel_rpc_client.c)
-target_link_libraries(vmaccel_clnt vmaccel_rpc_client)
+set(RPC_SOURCES
+   ../../src/vmcl_callback_rpc_xdr.c
+   ../../src/vmcl_rpc_xdr.c)
+
+add_library(vmcl_rpc ${RPC_SOURCES})

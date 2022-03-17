@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016-2019 VMware, Inc.
+# Copyright (c) 2016-2022 VMware, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,7 @@
 #
 
 set(CLIENT_SOURCES
-   ../../src/vmaccel_mgr_clnt.c
-   ../../src/vmaccel_rpc_xdr.c)
+   ../../src/vmaccel_mgr_clnt.c)
 
-add_library(vmaccelmgr_client ${CLIENT_SOURCES})
+add_library(vmaccelmgr_rpc_client ${CLIENT_SOURCES})
+target_link_libraries(vmaccelmgr_rpc_client vmaccelmgr_rpc)
