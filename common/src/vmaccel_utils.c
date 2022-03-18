@@ -282,7 +282,5 @@ bool VMAccel_IsLocal() {
 }
 
 void vmaccel_xdr_free(xdrproc_t proc, caddr_t ptr) {
-   if (!VMAccel_IsLocal()) {
-      xdr_free(proc, ptr);
-   }
+   xdr_free(proc, ptr);
 }

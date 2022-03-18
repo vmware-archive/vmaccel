@@ -337,12 +337,12 @@ public:
                bool_t useLocalBackend = false,
 	       bool_t useStreaming = false) {
       char host[256];
-      vmclLocalBackend = false;
+      localBackend = false;
       vmaccelStreaming = false;
 #if ENABLE_VMACCEL_LOCAL
       if (useLocalBackend) {
          vmcl_poweron_svc(NULL);
-         vmclLocalBackend = true;
+         localBackend = true;
       }
 #endif
       if (useStreaming) {
@@ -398,7 +398,7 @@ public:
          Destructor(mgrAddr);
       }
 #if ENABLE_VMACCEL_LOCAL
-      if (vmclLocalBackend) {
+      if (localBackend) {
          vmcl_poweroff_svc();
       }
 #endif
@@ -420,6 +420,13 @@ public:
     * @return A pointer to the manager client.
     */
    CLIENT *get_manager() { return mgrClnt; }
+
+   /**
+    * is_local_backend
+    *
+    * @return True if the accelerator is using a local backend.
+    */
+   bool_t is_local_backend() { return localBackend; }
 
    /**
     * alloc_id
@@ -510,7 +517,7 @@ private:
    /*
     * Features enabled.
     */
-   bool_t vmclLocalBackend;
+   bool_t localBackend;
    bool_t vmaccelStreaming;
 
    /*

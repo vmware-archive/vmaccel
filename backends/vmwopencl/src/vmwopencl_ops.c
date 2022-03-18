@@ -401,7 +401,6 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
    result.desc.maxSurfaces = VMCL_MAX_SURFACES;
    result.desc.maxMappings = VMCL_MAX_SURFACES;
 
-#if ENABLE_VMCL_STREAM_SERVER
    if (!VMAccel_IsLocal()) {
       VMAccelStreamCallbacks cb;
       cb.clSurfacemap_1 = vmwopencl_surfacemap_1;
@@ -409,7 +408,6 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
       vmaccel_stream_server(VMACCEL_STREAM_TYPE_VMCL_UPLOAD,
                             VMACCEL_VMCL_BASE_PORT, &cb);
    }
-#endif
 
    return (&result);
 }
