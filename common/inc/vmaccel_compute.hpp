@@ -274,8 +274,6 @@ public:
                                              VMACCEL_MAP_ASYNC_FLAG;
 
          if (client == NULL) {
-            vmcl_surfacemap_1_arg.op.mapFlags |= VMACCEL_MAP_NO_FREE_PTR_FLAG;
-
             result_2 = vmcl_surfacemap_1(&vmcl_surfacemap_1_arg, client);
 
             if (result_2 != NULL &&
@@ -313,7 +311,6 @@ public:
                vmcl_surfaceunmap_1_arg.op.ptr.ptr_len =
                   vmcl_surfacemap_1_arg.op.size.x;
                vmcl_surfaceunmap_1_arg.op.ptr.ptr_val = (char *)ptr;
-               vmcl_surfaceunmap_1_arg.op.mapFlags |= VMACCEL_MAP_NO_FREE_PTR_FLAG;
 
                result_3 =
                   vmcl_surfaceunmap_1(&vmcl_surfaceunmap_1_arg, client);
@@ -425,10 +422,6 @@ public:
          vmcl_surfacemap_1_arg.op.size.y = surf->get_desc().height;
          vmcl_surfacemap_1_arg.op.mapFlags = VMACCEL_MAP_READ_FLAG;
 
-         if (client == NULL) {
-            vmcl_surfacemap_1_arg.op.mapFlags |= VMACCEL_MAP_NO_FREE_PTR_FLAG;
-         }
-
          assert(surf->get_desc().format == VMACCEL_FORMAT_R8_TYPELESS);
 
          result_1 = vmcl_surfacemap_1(&vmcl_surfacemap_1_arg, client);
@@ -467,10 +460,6 @@ public:
             vmcl_surfaceunmap_1_arg.op.ptr.ptr_len =
                vmcl_surfacemap_1_arg.op.size.x;
             vmcl_surfaceunmap_1_arg.op.ptr.ptr_val = (char *)ptr;
-
-            if (client == NULL) {
-               vmcl_surfaceunmap_1_arg.op.mapFlags |= VMACCEL_MAP_NO_FREE_PTR_FLAG;
-            }
 
             result_2 =
                vmcl_surfaceunmap_1(&vmcl_surfaceunmap_1_arg, client);

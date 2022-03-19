@@ -319,8 +319,16 @@ VMAccelSurfaceMapReturnStatus *vmcl_surfacemap_1_svc(VMCLSurfaceMapOp *argp,
    static VMAccelSurfaceMapReturnStatus result;
 
    /*
-    * insert server code here
+    * Don't free the incoming pointers in local mode.
     */
+   if (rqstp == NULL) {
+      argp->op.mapFlags |= VMACCEL_MAP_NO_FREE_PTR_FLAG;
+   } else if (argp->op.mapFlags & VMACCEL_MAP_NO_FREE_PTR_FLAG) {
+      static VMAccelSurfaceMapStatus mapResult;
+      mapResult.status = VMACCEL_FAIL;
+      result.VMAccelSurfaceMapReturnStatus_u.ret = (&mapResult);
+      return (&result);
+   }
    result.VMAccelSurfaceMapReturnStatus_u.ret = cl->surfacemap_1(argp);
 
    return (&result);
@@ -332,8 +340,16 @@ VMAccelReturnStatus *vmcl_surfaceunmap_1_svc(VMCLSurfaceUnmapOp *argp,
    static VMAccelReturnStatus result;
 
    /*
-    * insert server code here
+    * Don't free the incoming pointers in local mode.
     */
+   if (rqstp == NULL) {
+      argp->op.mapFlags |= VMACCEL_MAP_NO_FREE_PTR_FLAG;
+   } else if (argp->op.mapFlags & VMACCEL_MAP_NO_FREE_PTR_FLAG) {
+      static VMAccelStatus unmapResult;
+      unmapResult.status = VMACCEL_FAIL;
+      result.VMAccelReturnStatus_u.ret = (&unmapResult);
+      return (&result);
+   }
    result.VMAccelReturnStatus_u.ret = cl->surfaceunmap_1(argp);
 
    return (&result);
