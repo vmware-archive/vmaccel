@@ -273,14 +273,6 @@ bool VMAccel_AddressStringToOpaqueAddr(const char *addr, char *out, int len) {
    return false;
 }
 
-bool VMAccel_IsLocal() {
-#if ENABLE_VMACCEL_LOCAL
-   return TRUE;
-#else
-   return FALSE;
-#endif
-}
-
 void vmaccel_xdr_free(xdrproc_t proc, caddr_t ptr) {
    xdr_free(proc, ptr);
 }

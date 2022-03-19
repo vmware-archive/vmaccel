@@ -335,19 +335,19 @@ public:
    accelerator(const address &mgr,
                int accelMaxRefObjects = VMACCEL_MAX_REF_OBJECTS,
                bool_t useLocalBackend = false,
-	       bool_t useStreaming = false) {
+               bool_t useDataStreaming = false) {
       char host[256];
       localBackend = false;
-      vmaccelStreaming = false;
+      dataStreaming = false;
 #if ENABLE_VMACCEL_LOCAL
       if (useLocalBackend) {
          vmcl_poweron_svc(NULL);
          localBackend = true;
       }
 #endif
-      if (useStreaming) {
+      if (useDataStreaming) {
          vmaccel_stream_poweron();
-	 vmaccelStreaming = true;
+         dataStreaming = true;
       }
       if (!useLocalBackend &&
           VMAccel_AddressOpaqueAddrToString(mgr.get_accel_addr(), host,
@@ -391,7 +391,6 @@ public:
          IdentifierDB_Free(refObjectDB);
          refObjectDB = NULL;
       }
-
       if (mgrClnt != NULL) {
          clnt_destroy(mgrClnt);
          mgrClnt = NULL;
@@ -402,7 +401,7 @@ public:
          vmcl_poweroff_svc();
       }
 #endif
-      if (vmaccelStreaming) {
+      if (dataStreaming) {
          vmaccel_stream_poweroff();
       }
    }
@@ -427,6 +426,13 @@ public:
     * @return True if the accelerator is using a local backend.
     */
    bool_t is_local_backend() { return localBackend; }
+
+   /**
+    * is_data_streaming_enabled
+    *
+    * @return True if data streaming is enabled.
+    */
+   bool_t is_data_streaming_enabled() { return dataStreaming; }
 
    /**
     * alloc_id
@@ -518,7 +524,7 @@ private:
     * Features enabled.
     */
    bool_t localBackend;
-   bool_t vmaccelStreaming;
+   bool_t dataStreaming;
 
    /*
     * Accelerator manager for this accelerator.

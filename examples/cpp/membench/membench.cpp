@@ -463,7 +463,8 @@ int main(int argc, char **argv) {
    address mgrAddr(host);
    work_topology workTopology({0}, {numRows}, {numColumns});
    ref_object<accelerator> accel(new accelerator(mgrAddr, VMACCEL_MAX_REF_OBJECTS,
-                                                 ENABLE_VMACCEL_LOCAL, ENABLE_VMCL_STREAM_SERVER));
+                                                 ENABLE_VMACCEL_LOCAL,
+                                                 ENABLE_DATA_STREAMING));
 
    /*
     * Initialize the Compute Kernel.

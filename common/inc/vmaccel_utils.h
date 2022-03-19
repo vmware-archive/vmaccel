@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2019 VMware, Inc.
+Copyright (c) 2016-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -161,8 +161,6 @@ void IdentifierDB_Log(IdentifierDB *db, const char *prefix);
 bool VMAccel_AddressOpaqueAddrToString(const VMAccelAddress *addr, char *out,
                                        int len);
 bool VMAccel_AddressStringToOpaqueAddr(const char *addr, char *out, int len);
-
-bool VMAccel_IsLocal();
 
 void vmaccel_xdr_free(xdrproc_t proc, caddr_t ptr);
 

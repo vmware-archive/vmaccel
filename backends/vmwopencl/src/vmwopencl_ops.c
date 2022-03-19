@@ -401,13 +401,13 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
    result.desc.maxSurfaces = VMCL_MAX_SURFACES;
    result.desc.maxMappings = VMCL_MAX_SURFACES;
 
-   if (!VMAccel_IsLocal()) {
-      VMAccelStreamCallbacks cb;
-      cb.clSurfacemap_1 = vmwopencl_surfacemap_1;
-      cb.clSurfaceunmap_1 = vmwopencl_surfaceunmap_1;
-      vmaccel_stream_server(VMACCEL_STREAM_TYPE_VMCL_UPLOAD,
-                            VMACCEL_VMCL_BASE_PORT, &cb);
-   }
+#if ENABLE_DATA_STREAMING
+   VMAccelStreamCallbacks cb;
+   cb.clSurfacemap_1 = vmwopencl_surfacemap_1;
+   cb.clSurfaceunmap_1 = vmwopencl_surfaceunmap_1;
+   vmaccel_stream_server(VMACCEL_STREAM_TYPE_VMCL_UPLOAD,
+                         VMACCEL_VMCL_BASE_PORT, &cb);
+#endif
 
    return (&result);
 }
@@ -1317,8 +1317,7 @@ VMAccelStatus *vmwopencl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp) {
    /*
     * We are done with the contents, free the pointer.
     */
-   if (!VMAccel_IsLocal() &&
-       ((argp->op.mapFlags & VMACCEL_MAP_NO_FREE_PTR_FLAG) == 0)) {
+   if ((argp->op.mapFlags & VMACCEL_MAP_NO_FREE_PTR_FLAG) == 0) {
       free(argp->op.ptr.ptr_val);
       argp->op.ptr.ptr_val = NULL;
       argp->op.ptr.ptr_len = 0;
