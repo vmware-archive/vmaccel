@@ -118,19 +118,24 @@ public:
     * @param host Host address in a null-terminated string format.
     */
    address(const std::string host) {
-      addr.addr.addr_val =
-         (char *)malloc(VMACCEL_MAX_LOCATION_SIZE * sizeof(char));
-      addr.addr.addr_len = VMACCEL_MAX_LOCATION_SIZE;
-      if (!VMAccel_AddressStringToOpaqueAddr(host.c_str(), addr.addr.addr_val,
-                                             addr.addr.addr_len)) {
-         throw exception(VMACCEL_FAIL, "Failed to convert address");
+      if (host.empty()) {
+         addr.addr.addr_val = NULL;
+         addr.addr.addr_len = 0;
+      } else {
+         addr.addr.addr_val =
+            (char *)malloc(VMACCEL_MAX_LOCATION_SIZE * sizeof(char));
+         addr.addr.addr_len = VMACCEL_MAX_LOCATION_SIZE;
+         if (!VMAccel_AddressStringToOpaqueAddr(host.c_str(), addr.addr.addr_val,
+                                                addr.addr.addr_len)) {
+            throw exception(VMACCEL_FAIL, "Failed to convert address");
+         }
       }
    }
 
    /**
     * Destructor.
     */
-   ~address() { free(addr.addr.addr_val); }
+   ~address() { if (addr.addr.addr_val == NULL) free(addr.addr.addr_val); }
 
    /**
     * get_accel_addr
@@ -589,6 +594,19 @@ public:
       LOG_EXIT(("} surface::Constructor\n"));
    }
 
+   surface(const std::shared_ptr<accelerator> &a, VMAccelId q,
+           VMAccelSurfaceDesc d, std::shared_ptr<char> &backingPtr)
+      : object(q) {
+      LOG_ENTRY(("surface::Constructor {\n"));
+      accel = a;
+      desc = d;
+      generation = 0;
+      id = a->alloc_id();
+      backing = backingPtr;
+      consistencyDB = IdentifierDB_Alloc(a->get_max_ref_objects());
+      LOG_EXIT(("} surface::Constructor\n"));
+   }
+
    /**
     * Destructor.
     */
@@ -796,6 +814,26 @@ public:
                        VMAccelSurfaceDesc d) {
       std::shared_ptr<surface> surfPtr;
       surfPtr = std::shared_ptr<surface>(new surface(a, q, d));
+      surf = ref_object<surface>(surfPtr, sizeof(vmaccel::surface), 0, 0);
+      /*
+       * Add the surface to the accelerator tracking list for context
+       * destruction to dereference.
+       */
+      a->add_surface(surf->get_id(), surf);
+   }
+
+   /**
+    * Constructor.
+    *
+    * @param a Accelerator class used to instantiate the compute operation.
+    * @param q Queue ID for the accelerator surface.
+    * @param d Descriptor for the surface.
+    * @param backingPtr Backing allocation for the surface.
+    */
+   accelerator_surface(const std::shared_ptr<accelerator> &a, VMAccelId q,
+                       VMAccelSurfaceDesc d, std::shared_ptr<char> &backingPtr) {
+      std::shared_ptr<surface> surfPtr;
+      surfPtr = std::shared_ptr<surface>(new surface(a, q, d, backingPtr));
       surf = ref_object<surface>(surfPtr, sizeof(vmaccel::surface), 0, 0);
       /*
        * Add the surface to the accelerator tracking list for context

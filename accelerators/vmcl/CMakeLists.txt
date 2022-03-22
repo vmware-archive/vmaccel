@@ -125,6 +125,7 @@ ProcessGen(
 
 add_subdirectory(cmake/libvmcl_rpc)
 add_subdirectory(cmake/libvmcl_server)
+add_subdirectory(cmake/libvmcl_hybrid_client)
 add_subdirectory(cmake/libvmcl_local_client)
 add_subdirectory(cmake/libvmcl_rpc_client)
 add_subdirectory(cmake/vmcl_server)

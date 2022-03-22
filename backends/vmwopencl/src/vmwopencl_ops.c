@@ -1164,9 +1164,15 @@ VMAccelDownloadStatus *vmwopencl_imagedownload_1(VMCLImageDownloadOp *argp) {
        surfaces[sid].inst[inst].svm_ptr == NULL) {
       unsigned int blocking = 0;
 
-      ptr = calloc(1, argp->op.imgRegion.size.x);
+      if (argp->op.ptr.ptr_val == NULL) {
+         ptr = calloc(1, argp->op.imgRegion.size.x);
+      } else {
+         ptr = argp->op.ptr.ptr_val;
+      }
 
       if (argp->mode == VMACCEL_SURFACE_READ_SYNCHRONOUS) {
+         VMACCEL_LOG("%s: Enqueing blocking read sid=%d -> %p\n",
+                     __FUNCTION__, sid, ptr);
          blocking = TRUE;
       }
 

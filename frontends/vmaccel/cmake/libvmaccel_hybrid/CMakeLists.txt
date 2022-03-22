@@ -29,10 +29,10 @@ set(SOURCES
    ../../src/vmaccel.cpp)
 
 set(LIBRARIES
-   vmaccel_utils_local
-   vmcl_local_client
-   vmaccelmgr_local_client
-   vmaccel_local_client)
+   vmaccel_utils
+   vmcl_hybrid_client
+   vmaccelmgr_hybrid_client
+   vmaccel_hybrid_client)
 
-add_library(vmaccel_local ${SOURCES})
-target_link_libraries(vmaccel_local ${LIBRARIES})
+add_library(vmaccel_hybrid ${SOURCES})
+target_link_libraries(vmaccel_hybrid ${LIBRARIES})

@@ -24,15 +24,23 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+set(CMAKE_CXX_STANDARD 11)
+
 set(SOURCES
-   ../../src/vmaccel.c
-   ../../src/vmaccel.cpp)
+    hybrid_compute.cpp)
 
-set(LIBRARIES
-   vmaccel_utils_local
-   vmcl_local_client
-   vmaccelmgr_local_client
-   vmaccel_local_client)
+set(LOCAL_SOURCES
+    ../../../frontends/vmaccel/src/vmaccel.cpp)
 
-add_library(vmaccel_local ${SOURCES})
-target_link_libraries(vmaccel_local ${LIBRARIES})
+set(GLOBAL_INC ../../../common/inc)
+
+include_directories(${GLOBAL_INC})
+
+add_executable(hybrid_compute ${SOURCES} ${LOCAL_SOURCES})
+target_link_libraries(hybrid_compute vmaccel_hybrid)
+target_compile_definitions(hybrid_compute PUBLIC ENABLE_VMACCEL_LOCAL=1 ENABLE_VMACCEL_RPC=1 LOG_SURFACE_OP=1)
+set_target_properties(hybrid_compute
+   PROPERTIES
+   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_EXAMPLES_OUTPUT_DIRECTORY}")
+
+

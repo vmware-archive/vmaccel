@@ -36,16 +36,9 @@ set(GLOBAL_INC ../../../common/inc)
 
 include_directories(${GLOBAL_INC})
 
-add_executable(vmcl_rpc_membench ${SOURCES})
-target_link_libraries(vmcl_rpc_membench vmaccel)
-target_compile_definitions(vmcl_rpc_membench PUBLIC ENABLE_VMACCEL_LOCAL=0 ENABLE_VMACCEL_RPC=1)
-set_target_properties(vmcl_rpc_membench
-   PROPERTIES
-   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_EXAMPLES_OUTPUT_DIRECTORY}")
-
 add_executable(vmcl_membench ${SOURCES} ${LOCAL_SOURCES})
-target_link_libraries(vmcl_membench vmaccel_local)
-target_compile_definitions(vmcl_membench PUBLIC ENABLE_VMACCEL_LOCAL=1 ENABLE_VMACCEL_RPC=0)
+target_link_libraries(vmcl_membench vmaccel_hybrid)
+target_compile_definitions(vmcl_membench PUBLIC ENABLE_VMACCEL_LOCAL=1 ENABLE_VMACCEL_RPC=1)
 set_target_properties(vmcl_membench
    PROPERTIES
    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_EXAMPLES_OUTPUT_DIRECTORY}")

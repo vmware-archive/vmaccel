@@ -340,10 +340,10 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
          *pDirtyPages = TRUE;
          i++;
       } else if (strcmp("--help", argv[i]) == 0) {
-         printf("Usage: membench <options>\n\n");
+         printf("Usage: vmcl_membench <options>\n\n");
          printf("  --help               Help and usage information\n");
          printf("  -v                   Verbose output\n");
-         printf("  -h <IP>              Host to execute workload on\n");
+         printf("  -h <IP>              Host to execute workload on (optional)\n");
          printf("  -i <num iterations>  Number of iterations\n");
          printf("  -l <num passes>      Number of passes within each thread\n");
          printf("  -m <number of rows>  Number of rows in the matrix,\n");
@@ -389,7 +389,7 @@ int main(int argc, char **argv) {
    float totalRuntimeMS = 0.0f;
    float quiesceTimeMS = 0.0f;
    int epsilonDelayMS = 0;
-   std::string host = "127.0.0.1";
+   std::string host = "";
    int numRows = 8192;
    int numColumns = 1;
    int chunkSize = 4096;
@@ -463,7 +463,7 @@ int main(int argc, char **argv) {
    address mgrAddr(host);
    work_topology workTopology({0}, {numRows}, {numColumns});
    ref_object<accelerator> accel(new accelerator(mgrAddr, VMACCEL_MAX_REF_OBJECTS,
-                                                 ENABLE_VMACCEL_LOCAL,
+                                                 ENABLE_VMACCEL_LOCAL && host.empty(),
                                                  ENABLE_DATA_STREAMING));
 
    /*

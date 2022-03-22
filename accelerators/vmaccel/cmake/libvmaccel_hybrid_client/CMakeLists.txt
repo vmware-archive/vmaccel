@@ -24,15 +24,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(SOURCES
-   ../../src/vmaccel.c
-   ../../src/vmaccel.cpp)
+set(CLIENT_SOURCES
+   ../../src/vmaccel_callback_rpc_server.c
+   ../../src/vmaccel_clnt.c)
 
-set(LIBRARIES
-   vmaccel_utils_local
-   vmcl_local_client
-   vmaccelmgr_local_client
-   vmaccel_local_client)
-
-add_library(vmaccel_local ${SOURCES})
-target_link_libraries(vmaccel_local ${LIBRARIES})
+add_library(vmaccel_hybrid_client ${CLIENT_SOURCES})
+target_link_libraries(vmaccel_hybrid_client vmaccel_rpc vmaccel_server)
+target_compile_definitions(vmaccel_hybrid_client PRIVATE ENABLE_VMACCEL_LOCAL=1 ENABLE_VMACCEL_RPC=1)

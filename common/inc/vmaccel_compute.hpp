@@ -262,6 +262,10 @@ public:
       }
 
       if (!imgUpload) {
+#if LOG_SURFACE_OP
+         VMACCEL_LOG("%s: Image map %d\n", __FUNCTION__, surf->get_id());
+#endif
+
          memset(&vmcl_surfacemap_1_arg, 0, sizeof(vmcl_surfacemap_1_arg));
          vmcl_surfacemap_1_arg.queue.cid = get_contextId();
          vmcl_surfacemap_1_arg.queue.id = qid;
@@ -345,7 +349,11 @@ public:
             assert(0);
          }
       } else {
-         memset(&vmcl_imgupload_1_arg, 0, sizeof(vmcl_imgupload_1_arg));
+#if LOG_SURFACE_OP
+         VMACCEL_LOG("%s: Image upload %d\n", __FUNCTION__, surf->get_id());
+#endif
+
+	 memset(&vmcl_imgupload_1_arg, 0, sizeof(vmcl_imgupload_1_arg));
          vmcl_imgupload_1_arg.queue.cid = get_contextId();
          vmcl_imgupload_1_arg.queue.id = qid;
          vmcl_imgupload_1_arg.img.cid = get_contextId();
@@ -393,11 +401,15 @@ public:
     *
     * Evict a surface from the context.
     */
-   bool download_surface(ref_object<surface> surf, bool force = false,
+   bool download_surface(ref_object<surface> surf,
+                         bool force = false,
+                         bool imgDownload = false,
                          VMAccelId qid = VMACCEL_INVALID_ID) {
       VMAccelSurfaceMapReturnStatus *result_1;
       VMCLSurfaceMapOp vmcl_surfacemap_1_arg;
+      VMCLImageDownloadOp vmcl_imgdownload_1_arg;
       VMAccelReturnStatus *result_2;
+      VMAccelDownloadReturnStatus *result_3;
       VMCLSurfaceUnmapOp vmcl_surfaceunmap_1_arg;
 
       START_TIME_STAT(download_surface);
@@ -409,7 +421,12 @@ public:
       surf->log_consistency();
 #endif
 
-      if (surf->get_desc().usage != VMACCEL_SURFACE_USAGE_READONLY || force) {
+      if (!imgDownload &&
+          (surf->get_desc().usage != VMACCEL_SURFACE_USAGE_READONLY || force)) {
+#if LOG_SURFACE_OP
+         VMACCEL_LOG("%s: Image map %d\n", __FUNCTION__, surf->get_id());
+#endif
+
          memset(&vmcl_surfacemap_1_arg, 0, sizeof(vmcl_surfacemap_1_arg));
          vmcl_surfacemap_1_arg.queue.cid = get_contextId();
          if (qid == VMACCEL_INVALID_ID) {
@@ -480,6 +497,41 @@ public:
                                 (caddr_t)result_2);
             }
          }
+      } else if (imgDownload) {
+#if LOG_SURFACE_OP
+         VMACCEL_LOG("%s: Image download %d\n", __FUNCTION__, surf->get_id());
+#endif
+
+         memset(&vmcl_imgdownload_1_arg, 0, sizeof(vmcl_imgdownload_1_arg));
+         vmcl_imgdownload_1_arg.queue.cid = get_contextId();
+         vmcl_imgdownload_1_arg.queue.id = qid;
+         vmcl_imgdownload_1_arg.img.cid = get_contextId();
+         vmcl_imgdownload_1_arg.img.accel.type = surf->get_desc().type;
+         vmcl_imgdownload_1_arg.img.accel.handleType = VMACCEL_HANDLE_ID;
+         vmcl_imgdownload_1_arg.img.accel.id = surf->get_id();
+         vmcl_imgdownload_1_arg.img.accel.generation = surf->get_generation();
+         vmcl_imgdownload_1_arg.op.imgRegion.coord.x = 0;
+         vmcl_imgdownload_1_arg.op.imgRegion.coord.y = 0;
+         vmcl_imgdownload_1_arg.op.imgRegion.coord.z = 0;
+         vmcl_imgdownload_1_arg.op.imgRegion.size.x = surf->get_desc().width;
+         vmcl_imgdownload_1_arg.op.imgRegion.size.y = surf->get_desc().height;
+         vmcl_imgdownload_1_arg.op.imgRegion.size.z = surf->get_desc().depth;
+
+         vmcl_imgdownload_1_arg.op.ptr.ptr_len = surf->get_desc().width;
+         vmcl_imgdownload_1_arg.op.ptr.ptr_val = surf->get_backing().get();
+
+         vmcl_imgdownload_1_arg.mode = VMACCEL_SURFACE_READ_SYNCHRONOUS;
+
+         result_3 = vmcl_imagedownload_1(&vmcl_imgdownload_1_arg, client);
+
+         if (result_3 != NULL) {
+            if (client != NULL) {
+               vmaccel_xdr_free((xdrproc_t)xdr_VMAccelDownloadReturnStatus,
+                                (caddr_t)result_3);
+            }
+         }
+
+         flush_queue(qid);
       }
 #if DEBUG_COMPUTE_OPERATION
       else {
@@ -1241,7 +1293,7 @@ bool prepareComputeSurfaceArgs(ref_object<clcontext> &clctx, VMAccelId qid,
       return false;
    }
 
-   if (clctx->upload_surface(arg, true, qid)) {
+   if (clctx->upload_surface(arg, false, false, true, qid)) {
       kernelArgs[argIndex].index = argIndex;
       kernelArgs[argIndex].type = VMCL_ARG_SURFACE;
       kernelArgs[argIndex].surf.id = arg->get_id();
@@ -1417,7 +1469,7 @@ bool quiesceComputeSurfaceArgs(ref_object<clcontext> &clctx, VMAccelId qid,
       return true;
    }
 
-   clctx->download_surface(arg, false, qid);
+   clctx->download_surface(arg, false, ENABLE_IMAGE_DOWNLOAD, qid);
 
 #if DEBUG_PERSISTENT_SURFACES
    VMACCEL_LOG("%s: Detroying server side persistent surface\n", __FUNCTION__);
