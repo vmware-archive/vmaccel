@@ -87,7 +87,7 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
                           int *pMemoryPoolS, int *pKernelFunc,
                           int *pKernelDevice, int *pDirtyPages,
                           int *pEarlyInit, int *pFastResume,
-                          int *pVerbose) {
+                          int *pCopyToUserMemory, int *pVerbose) {
    int i = 1;
 
    while (i < argc) {
@@ -163,6 +163,9 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
       } else if (strcmp("--fastResume", argv[i]) == 0) {
          *pFastResume = TRUE;
          i++;
+      } else if (strcmp("--copyToUserMemory", argv[i]) == 0) {
+         *pCopyToUserMemory = TRUE;
+         i++;
       } else if (strcmp("--dirtyPages", argv[i]) == 0) {
          if (i == argc) {
             return 1;
@@ -201,6 +204,7 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
          printf("  --memoryPoolS <x>    Semaphore memory pool\n");
          printf("  --earlyInit          Initialize the remote accelerator early\n");
          printf("  --fastResume         Fast resume of remote accelerator workload\n");
+         printf("  --copyToUserMemory   Copy accelerator state to user memory\n");
          printf("  --dirtyPages         Dirty pages each iteration\n");
          printf("\n");
          exit(1);
@@ -245,6 +249,7 @@ int main(int argc, char **argv) {
    int dirtyPages = FALSE;
    int earlyInit = FALSE;
    int fastResume = FALSE;
+   int copyToUserMemory = FALSE;
    int verbose = FALSE;
    int numSubDevices = 0;
    int numQueues = 0;
@@ -252,7 +257,8 @@ int main(int argc, char **argv) {
    if (ParseCommandArguments(
           argc, argv, host, &numRows, &numColumns, &chunkSize, &numPasses,
           &numIterations, &memoryPoolA, &memoryPoolB, &memoryPoolS, &kernelFunc,
-          &kernelDevice, &dirtyPages, &earlyInit, &fastResume, &verbose)) {
+          &kernelDevice, &dirtyPages, &earlyInit, &fastResume,
+          &copyToUserMemory, &verbose)) {
       return 1;
    }
 
@@ -274,6 +280,7 @@ int main(int argc, char **argv) {
                MEMPOOL(memoryPoolS));
    VMACCEL_LOG("  Early Initialization:                   %d\n", earlyInit);
    VMACCEL_LOG("  Fast Resume:                            %d\n", fastResume);
+   VMACCEL_LOG("  Copy To User Memory:                    %d\n", copyToUserMemory);
    VMACCEL_LOG("  Number of Iterations:                   %d\n", numIterations);
    VMACCEL_LOG("\n");
 
@@ -497,6 +504,24 @@ int main(int argc, char **argv) {
 
          clock_gettime(CLOCK_REALTIME, &saveStartTime);
          opobj->quiesce();
+         if (copyToUserMemory) {
+            if (localAccelA->download<int>(rgn, memA) != VMACCEL_SUCCESS) {
+               VMACCEL_LOG("ERROR: Unable to readback A\n");
+               return 1;
+            }
+            if (localAccelB->download<int>(rgn, memB) != VMACCEL_SUCCESS) {
+               VMACCEL_LOG("ERROR: Unable to readback B\n");
+               return 1;
+            }
+            if (localAccelS->download<int>(rgnSem, memS) != VMACCEL_SUCCESS) {
+               VMACCEL_LOG("ERROR: Unable to readback S\n");
+               return 1;
+            }
+            if (localAccelDims->download<int>(rgnDims, memDims) != VMACCEL_SUCCESS) {
+               VMACCEL_LOG("ERROR: Unable to readback Dims\n");
+               return 1;
+            }
+         }
          clock_gettime(CLOCK_REALTIME, &saveEndTime);
          downloadBytes += 2 * surfBytes + 2 * numRows * numColumns * sizeof(int);
       }
@@ -508,20 +533,37 @@ int main(int argc, char **argv) {
        */
       compute::context rc(remoteAccel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
                           numSubDevices, numQueues, 0);
+      std::shared_ptr<char> localAccelABacking;
+      std::shared_ptr<char> localAccelBBacking;
+      std::shared_ptr<char> localAccelSBacking;
+      std::shared_ptr<char> localAccelDimsBacking;
+
+      if (copyToUserMemory) {
+         localAccelABacking = std::shared_ptr<char>(new char[descA.width]);
+         localAccelBBacking = std::shared_ptr<char>(new char[descB.width]);
+         localAccelSBacking = std::shared_ptr<char>(new char[semDesc.width]);
+         localAccelDimsBacking = std::shared_ptr<char>(new char[descDims.width]);
+      } else {
+         localAccelABacking = localAccelA->get_backing();
+         localAccelBBacking = localAccelB->get_backing();
+         localAccelSBacking = localAccelS->get_backing();
+         localAccelDimsBacking = localAccelDims->get_backing();
+      }
+
       accelerator_surface remoteAccelA(
          remoteAccel.get(),
          MEMDEVICE(memoryPoolA) * numQueues + MEMQUEUE(memoryPoolA), descA,
-         localAccelA->get_backing());
+         localAccelABacking);
       accelerator_surface remoteAccelB(
          remoteAccel.get(),
          MEMDEVICE(memoryPoolB) * numQueues + MEMQUEUE(memoryPoolB), descB,
-         localAccelB->get_backing());
+         localAccelBBacking);
       accelerator_surface remoteAccelS(
          remoteAccel.get(),
          MEMDEVICE(memoryPoolS) * numQueues + MEMQUEUE(memoryPoolS), semDesc,
-         localAccelS->get_backing());
+         localAccelSBacking);
       accelerator_surface remoteAccelDims(remoteAccel.get(), kernelDevice, descDims,
-         localAccelDims->get_backing());
+         localAccelDimsBacking);
 
       compute::binding rBindA(VMACCEL_BIND_UNORDERED_ACCESS_FLAG,
                               VMACCEL_SURFACE_USAGE_READWRITE, remoteAccelA);
@@ -592,6 +634,25 @@ int main(int argc, char **argv) {
 
       VMACCEL_LOG("Uploading surfaces to remote accelerator\n");
 
+      if (copyToUserMemory) {
+         if (remoteAccelA->upload<int>(rgn, memA) != VMACCEL_SUCCESS) {
+            VMACCEL_LOG("ERROR: Unable to upload A\n");
+            return 1;
+         }
+         if (remoteAccelB->upload<int>(rgn, memB) != VMACCEL_SUCCESS) {
+            VMACCEL_LOG("ERROR: Unable to upload B\n");
+            return 1;
+         }
+         if (remoteAccelS->upload<int>(rgnSem, memS) != VMACCEL_SUCCESS) {
+            VMACCEL_LOG("ERROR: Unable to upload S\n");
+            return 1;
+         }
+         if (remoteAccelDims->upload<int>(rgnDims, memDims) != VMACCEL_SUCCESS) {
+            VMACCEL_LOG("ERROR: Unable to upload Dims\n");
+            return 1;
+         }
+      }
+ 
       rc->upload_surface(rBindA->get_surf(), true, true, false);
       rc->upload_surface(rBindB->get_surf(), true, true, false);
       rc->upload_surface(rBindS->get_surf(), true, true, false);
