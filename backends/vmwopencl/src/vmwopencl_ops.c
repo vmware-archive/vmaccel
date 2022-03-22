@@ -416,8 +416,6 @@ VMAccelStatus *vmwopencl_poweroff() {
    static VMAccelStatus result;
    int i;
 
-   vmaccel_stream_poweroff();
-
    memset(&result, 0, sizeof(result));
 
    for (i = 0; i < VMACCEL_SELECT_MAX; i++) {

@@ -48,8 +48,6 @@ IdentifierDB *g_svrDB[VMACCEL_STREAM_TYPE_MAX];
 int g_svrFD[VMACCEL_STREAM_TYPE_MAX][VMACCEL_MAX_STREAMS];
 pthread_t g_svrThread[VMACCEL_STREAM_TYPE_MAX][VMACCEL_MAX_STREAMS];
 pthread_t g_clntThread[VMACCEL_STREAM_TYPE_MAX][VMACCEL_MAX_STREAMS];
-char *scratch = NULL;
-size_t scratchLen = SCRATCH_BUFFER_SIZE;
 
 DECLARE_TIME_STAT(vmaccel_stream_send_async);
 DECLARE_TIME_STAT(StreamTCPServerThread);
@@ -87,8 +85,6 @@ int vmaccel_stream_poweron() {
    }
 
    g_initThreads = 1;
-
-   scratch = malloc(scratchLen);
 
    return VMACCEL_SUCCESS;
 }
@@ -322,7 +318,7 @@ int vmaccel_stream_server(unsigned int type, unsigned int port,
    if (g_initThreads == 0) {
       VMACCEL_WARNING("%s: vmaccel_stream_poweron not called...\n",
                       __FUNCTION__);
-      assert(0);
+      return VMACCEL_FAIL;
    }
 
    for (int i = 0; i < VMACCEL_MAX_STREAMS; i++) {
@@ -416,10 +412,11 @@ static void *StreamTCPClientThread(void *args) {
    if (g_svrFD[s->type][s->index] == -1) {
       char host[4 * VMACCEL_MAX_LOCATION_SIZE];
 
-      strcpy(&host[0], "127.0.0.1");
+      sprintf(host, "127.0.0.1");
 
       if (!VMAccel_AddressOpaqueAddrToString(&s->accel, host, sizeof(host))) {
-         VMACCEL_WARNING("Unable to translate VMAccelAddress\n");
+         VMACCEL_WARNING("Unable to translate VMAccelAddress host=%s\n",
+                         host);
          END_TIME_STAT(StreamTCPClientThread);
          return args;
       }
@@ -606,8 +603,6 @@ void vmaccel_stream_poweroff() {
          IdentifierDB_Free(g_svrDB[j]);
       }
    }
-
-   free(scratch);
 
    LOG_TIME_STAT(vmaccel_stream_send_async);
    LOG_TIME_STAT(StreamTCPServerThread);

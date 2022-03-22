@@ -262,10 +262,6 @@ public:
       }
 
       if (!imgUpload) {
-#if LOG_SURFACE_OP
-         VMACCEL_LOG("%s: Image map %d\n", __FUNCTION__, surf->get_id());
-#endif
-
          memset(&vmcl_surfacemap_1_arg, 0, sizeof(vmcl_surfacemap_1_arg));
          vmcl_surfacemap_1_arg.queue.cid = get_contextId();
          vmcl_surfacemap_1_arg.queue.id = qid;
@@ -278,6 +274,10 @@ public:
                                              VMACCEL_MAP_ASYNC_FLAG;
 
          if (client == NULL) {
+#if LOG_SURFACE_OP
+            VMACCEL_LOG("%s: Image map %d\n", __FUNCTION__, surf->get_id());
+#endif
+
             result_2 = vmcl_surfacemap_1(&vmcl_surfacemap_1_arg, client);
 
             if (result_2 != NULL &&
@@ -339,6 +339,9 @@ public:
             }
          } else if (get_accel()->is_data_streaming_enabled()) {
             VMAccelAddress a = *(get_accel()->get_manager_addr());
+#if LOG_SURFACE_OP
+            VMACCEL_LOG("%s: Image stream %d\n", __FUNCTION__, surf->get_id());
+#endif
             a.port = VMACCEL_VMCL_BASE_PORT;
             vmaccel_stream_send_async(
                &a, VMACCEL_STREAM_TYPE_VMCL_UPLOAD, &vmcl_surfacemap_1_arg,
@@ -421,6 +424,10 @@ public:
       surf->log_consistency();
 #endif
 
+      if (qid == VMACCEL_INVALID_ID) {
+         qid = surf->get_queue_id();
+      }
+
       if (!imgDownload &&
           (surf->get_desc().usage != VMACCEL_SURFACE_USAGE_READONLY || force)) {
 #if LOG_SURFACE_OP
@@ -429,9 +436,6 @@ public:
 
          memset(&vmcl_surfacemap_1_arg, 0, sizeof(vmcl_surfacemap_1_arg));
          vmcl_surfacemap_1_arg.queue.cid = get_contextId();
-         if (qid == VMACCEL_INVALID_ID) {
-            qid = surf->get_queue_id();
-         }
          vmcl_surfacemap_1_arg.queue.id = qid;
          vmcl_surfacemap_1_arg.op.surf.id = surf->get_id();
          vmcl_surfacemap_1_arg.op.surf.generation = surf->get_generation();
