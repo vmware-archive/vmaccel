@@ -356,7 +356,7 @@ public:
          VMACCEL_LOG("%s: Image upload %d\n", __FUNCTION__, surf->get_id());
 #endif
 
-	 memset(&vmcl_imgupload_1_arg, 0, sizeof(vmcl_imgupload_1_arg));
+         memset(&vmcl_imgupload_1_arg, 0, sizeof(vmcl_imgupload_1_arg));
          vmcl_imgupload_1_arg.queue.cid = get_contextId();
          vmcl_imgupload_1_arg.queue.id = qid;
          vmcl_imgupload_1_arg.img.cid = get_contextId();
@@ -478,6 +478,7 @@ public:
             vmcl_surfaceunmap_1_arg.queue.id = surf->get_queue_id();
             vmcl_surfaceunmap_1_arg.op.surf.id = surf->get_id();
             vmcl_surfaceunmap_1_arg.op.surf.generation = surf->get_generation();
+
             vmcl_surfaceunmap_1_arg.op.ptr.ptr_len =
                vmcl_surfacemap_1_arg.op.size.x;
             vmcl_surfaceunmap_1_arg.op.ptr.ptr_val = (char *)ptr;

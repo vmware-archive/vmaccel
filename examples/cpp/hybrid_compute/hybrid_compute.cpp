@@ -499,11 +499,24 @@ int main(int argc, char **argv) {
             computeBytes += surfBytes * numPasses;
          }
 
-         // Begin migration of the local accelerator working set
+         /*
+          * Phase 3: Stun
+          *
+          * Begin migration of the local accelerator working set
+          */
          clock_gettime(CLOCK_REALTIME, &stunStartTime);
 
          clock_gettime(CLOCK_REALTIME, &saveStartTime);
+
+         /*
+          * Phase 3.a: Quiesce the accelerator and readback the working set
+          */
          opobj->quiesce();
+
+         /*
+          * Phase 3.b: Copy the final version of the working set to
+          *            user memory (optional)
+          */
          if (copyToUserMemory) {
             if (localAccelA->download<int>(rgn, memA) != VMACCEL_SUCCESS) {
                VMACCEL_LOG("ERROR: Unable to readback A\n");
@@ -529,7 +542,7 @@ int main(int argc, char **argv) {
       clock_gettime(CLOCK_REALTIME, &localEndTime);
 
       /*
-       * Phase 3: Setup the remote compute accelerator.
+       * Phase 4: Setup the remote compute accelerator.
        */
       compute::context rc(remoteAccel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
                           numSubDevices, numQueues, 0);
@@ -614,7 +627,7 @@ int main(int argc, char **argv) {
       }
 
       /*
-       * Phase 4: Upload the working set to the remote device
+       * Phase 5: Upload the working set to the remote device
        */
       if (!earlyInit) {
          clock_gettime(CLOCK_REALTIME, &remoteSetupStartTime);
@@ -634,6 +647,9 @@ int main(int argc, char **argv) {
 
       VMACCEL_LOG("Uploading surfaces to remote accelerator\n");
 
+      /*
+       * Phase 5.a: Upload contents from user memory (optional)
+       */
       if (copyToUserMemory) {
          if (remoteAccelA->upload<int>(rgn, memA) != VMACCEL_SUCCESS) {
             VMACCEL_LOG("ERROR: Unable to upload A\n");
@@ -652,7 +668,10 @@ int main(int argc, char **argv) {
             return 1;
          }
       }
- 
+
+      /*
+       * Phase 5.b: Upload the working set to the remote accelerator.
+       */
       rc->upload_surface(rBindA->get_surf(), true, true, false);
       rc->upload_surface(rBindB->get_surf(), true, true, false);
       rc->upload_surface(rBindS->get_surf(), true, true, false);
@@ -666,7 +685,7 @@ int main(int argc, char **argv) {
       clock_gettime(CLOCK_REALTIME, &remoteStartTime);
 
       /*
-       * Phase 5: Dispatch job to the remote compute accelerator.
+       * Phase 6: Dispatch job to the remote compute accelerator.
        */
       if (kernelFunc >= 0) {
          ref_object<compute::operation> opobj;
