@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016-2019 VMware, Inc.
+# Copyright (c) 2016-2022 VMware, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,5 +30,5 @@
 add_custom_target(
    pre-checkin
    COMMAND python ${CMAKE_SOURCE_DIR}/scripts/format_source.py
-      -c ${CLANG_BINARY_DIR} -t ${CMAKE_SOURCE_DIR} -i ${CMAKE_SOURCE_DIR}/inc
+      -t ${CMAKE_SOURCE_DIR} -i ${CMAKE_SOURCE_DIR}/inc
 )

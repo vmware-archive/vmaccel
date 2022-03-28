@@ -36,15 +36,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 extern "C" {
-#include "vmaccel_rpc.h"
 #include "vmaccel_manager.h"
+#include "vmaccel_rpc.h"
 #include "vmaccel_utils.h"
 }
 
 #include "vmaccel_manager.hpp"
-#include "vmaccel_types_int.hpp"
-#include "vmaccel_types_desc.hpp"
 #include "vmaccel_types_allocrange.hpp"
+#include "vmaccel_types_desc.hpp"
+#include "vmaccel_types_int.hpp"
 
 #include "log_level.h"
 

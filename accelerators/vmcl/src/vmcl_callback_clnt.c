@@ -26,8 +26,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ******************************************************************************/
 
-#include <memory.h>
 #include "vmcl_callback_rpc.h"
+#include <memory.h>
 
 #if ENABLE_VMACCEL_RPC
 /* Default timeout can be changed using clnt_control() */

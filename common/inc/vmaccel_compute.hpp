@@ -227,7 +227,8 @@ public:
 #if DEBUG_SURFACE_CONSISTENCY
       int imgUpload = FALSE;
 #else
-      int imgUpload = surf->get_desc().pool != VMACCEL_SURFACE_POOL_SYSTEM_MEMORY;
+      int imgUpload =
+         surf->get_desc().pool != VMACCEL_SURFACE_POOL_SYSTEM_MEMORY;
 #endif
 
       START_TIME_STAT(upload_surface);
@@ -316,8 +317,7 @@ public:
                   vmcl_surfacemap_1_arg.op.size.x;
                vmcl_surfaceunmap_1_arg.op.ptr.ptr_val = (char *)ptr;
 
-               result_3 =
-                  vmcl_surfaceunmap_1(&vmcl_surfaceunmap_1_arg, client);
+               result_3 = vmcl_surfaceunmap_1(&vmcl_surfaceunmap_1_arg, client);
 
                if (client != NULL) {
                   vmaccel_xdr_free((xdrproc_t)xdr_VMAccelSurfaceMapReturnStatus,
@@ -404,8 +404,7 @@ public:
     *
     * Evict a surface from the context.
     */
-   bool download_surface(ref_object<surface> surf,
-                         bool force = false,
+   bool download_surface(ref_object<surface> surf, bool force = false,
                          bool imgDownload = false,
                          VMAccelId qid = VMACCEL_INVALID_ID) {
       VMAccelSurfaceMapReturnStatus *result_1;
@@ -483,8 +482,7 @@ public:
                vmcl_surfacemap_1_arg.op.size.x;
             vmcl_surfaceunmap_1_arg.op.ptr.ptr_val = (char *)ptr;
 
-            result_2 =
-               vmcl_surfaceunmap_1(&vmcl_surfaceunmap_1_arg, client);
+            result_2 = vmcl_surfaceunmap_1(&vmcl_surfaceunmap_1_arg, client);
 
             if (client != NULL) {
                vmaccel_xdr_free((xdrproc_t)xdr_VMAccelSurfaceMapReturnStatus,
@@ -557,8 +555,7 @@ public:
     * Fills the contents of the surface.
     */
    void fill_surface(VMAccelId qid, ref_object<surface> surf,
-                     VMAccelSurfaceRegion region,
-                     const void * element,
+                     VMAccelSurfaceRegion region, const void *element,
                      unsigned int elementFormat) {
       VMAccelReturnStatus *result_1;
       VMCLImageFillOp vmcl_imagefill_1_arg;
@@ -588,8 +585,8 @@ public:
          vmcl_imagefill_1_arg.op.u.b = *((unsigned int *)element);
          vmcl_imagefill_1_arg.op.u.a = *((unsigned int *)element);
       } else {
-         VMACCEL_WARNING("%s: Unsupported fill format %d\n",
-                         __FUNCTION__, elementFormat);
+         VMACCEL_WARNING("%s: Unsupported fill format %d\n", __FUNCTION__,
+                         elementFormat);
          unlock();
          END_TIME_STAT(fill_surface);
          return;
@@ -602,9 +599,8 @@ public:
                          __FUNCTION__, sid, get_contextId());
       } else {
          if (result_1->VMAccelReturnStatus_u.ret->status != VMACCEL_SUCCESS) {
-            VMACCEL_WARNING(
-               "%s: Unable to fill surface %d using context %d\n",
-               __FUNCTION__, sid, get_contextId());
+            VMACCEL_WARNING("%s: Unable to fill surface %d using context %d\n",
+                            __FUNCTION__, sid, get_contextId());
          }
          if (client != NULL) {
             vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
@@ -714,8 +710,7 @@ public:
       VMACCEL_LOG("%s: Destroying surface %d\n", __FUNCTION__, id);
 #endif
 
-      result_1 =
-         vmcl_surfacedestroy_1(&vmcl_surfacedestroy_1_arg, client);
+      result_1 = vmcl_surfacedestroy_1(&vmcl_surfacedestroy_1_arg, client);
 
       if (result_1 == NULL) {
          VMACCEL_WARNING("%s: Unable to destroy surface %d using context %d\n",
@@ -1040,8 +1035,7 @@ public:
          vmcl_kerneldestroy_1_arg.cid = clctx->get_contextId();
          vmcl_kerneldestroy_1_arg.id = kernelId;
 
-         result_1 = vmcl_kerneldestroy_1(&vmcl_kerneldestroy_1_arg,
-                                         client);
+         result_1 = vmcl_kerneldestroy_1(&vmcl_kerneldestroy_1_arg, client);
 
          if (result_1 == NULL) {
             VMACCEL_WARNING("%s: Unable to destroy kernel id = %u\n",
@@ -1109,15 +1103,14 @@ public:
       vmcl_kernelalloc_1_arg.source.source_val =
          (char *)kernels.find(type)->second.get_ptr();
 
-      result_1 =
-         vmcl_kernelalloc_1(&vmcl_kernelalloc_1_arg, client);
+      result_1 = vmcl_kernelalloc_1(&vmcl_kernelalloc_1_arg, client);
 
       if (result_1 != NULL) {
          std::tuple<unsigned int, std::string> key;
 
          key = std::make_tuple(type, func);
 
-	 if (client != NULL) {
+         if (client != NULL) {
             vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
                              (caddr_t)result_1);
          }
@@ -1170,8 +1163,7 @@ bool prepareComputeArgs(ref_object<clcontext> &clctx,
    vmcl_surfacealloc_1_arg.desc.usage = arg.get_usage();
    vmcl_surfacealloc_1_arg.desc.bindFlags = VMACCEL_BIND_UNORDERED_ACCESS_FLAG;
 
-   result_1 =
-      vmcl_surfacealloc_1(&vmcl_surfacealloc_1_arg, client);
+   result_1 = vmcl_surfacealloc_1(&vmcl_surfacealloc_1_arg, client);
 
    if (result_1 == NULL) {
       VMACCEL_WARNING("%s: Unable to allocate surface %d for context %d\n",
@@ -1230,8 +1222,7 @@ bool prepareComputeArgs(ref_object<clcontext> &clctx,
       vmcl_surfaceunmap_1_arg.op.ptr.ptr_len = vmcl_surfacemap_1_arg.op.size.x;
       vmcl_surfaceunmap_1_arg.op.ptr.ptr_val = (char *)ptr;
 
-      result_3 =
-         vmcl_surfaceunmap_1(&vmcl_surfaceunmap_1_arg, client);
+      result_3 = vmcl_surfaceunmap_1(&vmcl_surfaceunmap_1_arg, client);
 
       if (client != NULL) {
          vmaccel_xdr_free((xdrproc_t)xdr_VMAccelSurfaceMapReturnStatus,
@@ -1243,7 +1234,8 @@ bool prepareComputeArgs(ref_object<clcontext> &clctx,
       }
 
       if (client != NULL) {
-         vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus, (caddr_t)result_3);
+         vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
+                          (caddr_t)result_3);
       }
 
       kernelArgs[argIndex].index = argIndex;
@@ -1404,19 +1396,18 @@ bool quiesceComputeArgs(ref_object<clcontext> &clctx,
             vmcl_surfacemap_1_arg.op.size.x;
          vmcl_surfaceunmap_1_arg.op.ptr.ptr_val = (char *)ptr;
 
-         result_2 =
-            vmcl_surfaceunmap_1(&vmcl_surfaceunmap_1_arg, client);
+         result_2 = vmcl_surfaceunmap_1(&vmcl_surfaceunmap_1_arg, client);
 
-	 if (client != NULL) {
+         if (client != NULL) {
             vmaccel_xdr_free((xdrproc_t)xdr_VMAccelSurfaceMapReturnStatus,
                              (caddr_t)result_1);
-	 }
+         }
 
          if (result_2 == NULL) {
             return false;
          }
 
-	 if (client != NULL) {
+         if (client != NULL) {
             vmaccel_xdr_free((xdrproc_t)xdr_VMAccelReturnStatus,
                              (caddr_t)result_2);
          }
@@ -1427,8 +1418,7 @@ bool quiesceComputeArgs(ref_object<clcontext> &clctx,
    vmcl_surfacedestroy_1_arg.cid = clctx->get_contextId();
    vmcl_surfacedestroy_1_arg.accel.id = kernelArgs[argIndex].surf.id;
 
-   result_3 =
-      vmcl_surfacedestroy_1(&vmcl_surfacedestroy_1_arg, client);
+   result_3 = vmcl_surfacedestroy_1(&vmcl_surfacedestroy_1_arg, client);
 
    if (result_3 == NULL) {
       return false;
@@ -1767,8 +1757,7 @@ public:
          }
 #endif
 
-         result_1 =
-            vmcl_dispatch_1(&vmcl_dispatch_1_arg, client);
+         result_1 = vmcl_dispatch_1(&vmcl_dispatch_1_arg, client);
 
          if (result_1 != NULL) {
             res = result_1->VMAccelReturnStatus_u.ret->status;
@@ -2081,8 +2070,7 @@ int execute(std::shared_ptr<vmaccel::accelerator> &accel,
                              (caddr_t)result_2);
          }
 
-         result_3 =
-            vmcl_queueflush_1(&vmcl_queueflush_1_arg, client);
+         result_3 = vmcl_queueflush_1(&vmcl_queueflush_1_arg, client);
 
          if (result_3 != NULL) {
             /*

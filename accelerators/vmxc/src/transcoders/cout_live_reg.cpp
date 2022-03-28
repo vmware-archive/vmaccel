@@ -36,9 +36,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 
 #include "cout_live_reg.h"
-#include "reg_analysis_pass.h"
 #include "opt/ir_context.h"
 #include "opt/register_pressure.h"
+#include "reg_analysis_pass.h"
 
 using namespace spvtools;
 using namespace spvtools::opt;

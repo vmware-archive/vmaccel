@@ -26,12 +26,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ******************************************************************************/
 
-#include <assert.h>
-#include <stdlib.h>
-#include "vmaccel_rpc.h"
-#include "vmaccel_types_address.h"
 #include "vmaccel_utils.h"
 #include "log_level.h"
+#include "vmaccel_rpc.h"
+#include "vmaccel_types_address.h"
+#include <assert.h>
+#include <stdlib.h>
 
 /**
  * @brief Takes a difference of two timespec structures per the example
@@ -174,8 +174,8 @@ bool IdentifierDB_AcquireIdRange(IdentifierDB *db, unsigned int start,
    }
    for (unsigned int i = start / 32; i <= end / 32; i++) {
       unsigned int numBits = MIN(32, end - start + 1);
-      unsigned int mask = (numBits == 32) ? 0xffffffff : ((1 << numBits) - 1)
-                                                            << (start % 32);
+      unsigned int mask =
+         (numBits == 32) ? 0xffffffff : ((1 << numBits) - 1) << (start % 32);
       if (db->bits[i] & mask) {
          return false;
       }
@@ -231,8 +231,8 @@ bool IdentifierDB_ReleaseIdRange(IdentifierDB *db, unsigned int start,
    }
    for (unsigned int i = start / 32; i <= end / 32; i++) {
       unsigned int numBits = MIN(32, end - start + 1);
-      unsigned int mask = (numBits == 32) ? 0xffffffff : ((1 << numBits) - 1)
-                                                            << (start % 32);
+      unsigned int mask =
+         (numBits == 32) ? 0xffffffff : ((1 << numBits) - 1) << (start % 32);
       db->bits[i] &= ~mask;
       start += 32 - (start % 32);
    }

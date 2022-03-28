@@ -31,15 +31,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * It was generated using rpcgen.
  */
 
-#include "vmaccel_mgr.h"
 #include "vmaccel_manager.h"
+#include "vmaccel_mgr.h"
+#include <memory.h>
+#include <netinet/in.h>
+#include <rpc/pmap_clnt.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <rpc/pmap_clnt.h>
 #include <string.h>
-#include <memory.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <syslog.h>
 
 #ifndef SIG_PF

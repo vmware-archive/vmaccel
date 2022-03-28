@@ -29,8 +29,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _VMACCEL_MANAGER_HPP_
 #define _VMACCEL_MANAGER_HPP_ 1
 
+#include "vmaccel_allocator.hpp"
 #include "vmaccel_rpc.h"
 #include "vmaccel_utils.h"
-#include "vmaccel_allocator.hpp"
 
 #endif /* defined _VMACCEL_MANAGER_HPP_ */

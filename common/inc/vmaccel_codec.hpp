@@ -135,6 +135,6 @@ private:
    VMAccelId accelId;
    VMAccelId contextId;
 };
-};
+}; // namespace vmaccel
 
 #endif /* defined _VMACCEL_CODEC_HPP_ */

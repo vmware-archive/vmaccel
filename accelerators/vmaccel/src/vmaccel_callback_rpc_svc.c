@@ -27,13 +27,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #include "vmaccel_callback_rpc.h"
+#include <memory.h>
+#include <netinet/in.h>
+#include <rpc/pmap_clnt.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <rpc/pmap_clnt.h>
 #include <string.h>
-#include <memory.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <syslog.h>
 
 #ifndef SIG_PF
@@ -94,8 +94,9 @@ int main(int argc, char **argv) {
    }
    if (!svc_register(transp, VMACCEL_CALLBACK, VMACCEL_CALLBACK_VERSION,
                      vmaccel_callback_1, IPPROTO_UDP)) {
-      syslog(LOG_ERR, "%s", "unable to register (VMACCEL_CALLBACK, "
-                            "VMACCEL_CALLBACK_VERSION, udp).");
+      syslog(LOG_ERR, "%s",
+             "unable to register (VMACCEL_CALLBACK, "
+             "VMACCEL_CALLBACK_VERSION, udp).");
       exit(1);
    }
 
@@ -106,8 +107,9 @@ int main(int argc, char **argv) {
    }
    if (!svc_register(transp, VMACCEL_CALLBACK, VMACCEL_CALLBACK_VERSIO N,
                      vmaccel_callback_1, IPPROTO_TCP)) {
-      syslog(LOG_ERR, "%s", "unable to register (VMACCEL_CALLBACK, "
-                            "VMACCEL_CALLBACK_VERSION, tcp).");
+      syslog(LOG_ERR, "%s",
+             "unable to register (VMACCEL_CALLBACK, "
+             "VMACCEL_CALLBACK_VERSION, tcp).");
       exit(1);
    }
 

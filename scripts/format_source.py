@@ -89,7 +89,7 @@ if __name__ == "__main__":
    parser = OptionParser()
 
    parser.add_option("-c", "--clangPath", dest="CLANG_PATH",
-                     default=None,
+                     default="/usr/bin",
                      help="Specifies the path for clang.")
    parser.add_option("-t", "--sourceTree", dest="SOURCE_TREE",
                      default=None,
@@ -108,12 +108,6 @@ if __name__ == "__main__":
    #
    clangPath = os.path.abspath(options.CLANG_PATH)
    includeDirs = os.path.abspath(options.INCLUDE_DIRS)
-
-   if (options.CLANG_PATH is None or options.CLANG_PATH == "" or
-       not os.path.exists(clangPath)):
-      print("ERROR: You must supply a directory containing clang-format")
-      print("       e.g. ../build/external/spirv-llvm/bin")
-      sys.exit(1)
 
    print("clang path: %s" % (clangPath))
    print("Source tree: %s" % (os.path.abspath(options.SOURCE_TREE)))

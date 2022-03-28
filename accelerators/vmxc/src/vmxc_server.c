@@ -29,9 +29,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <string.h>
 
+#include "log_level.h"
 #include "vmxc.h"
 #include "vmxc_spirv.h"
-#include "log_level.h"
 
 VMXCReturnStatus *vmxc_xcode_1_svc(VMXCodeOp *argp, struct svc_req *rqstp) {
    static VMXCReturnStatus result;

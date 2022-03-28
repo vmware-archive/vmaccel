@@ -121,9 +121,9 @@ public:
     * Base instruction processing functionality.
     */
    virtual spv_result_t
-      ProcessHeader(spv_endianness_t /* endian */, uint32_t /* magic */,
-                    uint32_t /* version */, uint32_t /* generator */,
-                    uint32_t /* id_bound */, uint32_t /* schema */) {
+   ProcessHeader(spv_endianness_t /* endian */, uint32_t /* magic */,
+                 uint32_t /* version */, uint32_t /* generator */,
+                 uint32_t /* id_bound */, uint32_t /* schema */) {
       return SPV_SUCCESS;
    }
 

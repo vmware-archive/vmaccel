@@ -34,31 +34,31 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * src/transcoders directory as a transcoding pass used to mutate the given
  * SPIR-V binary.
  */
-#include <spirv_validator_options.h>
 #include <algorithm>
 #include <cassert>
 #include <cstring>
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <spirv_validator_options.h>
 #include <sstream>
 #include <vector>
 
-#include "vmxc_spirv.h"
-#include "spirv-tools/optimizer.hpp"
-#include "tools/io.h"
 #include "opt/build_module.h"
 #include "opt/pass_manager.h"
 #include "opt/passes.h"
+#include "spirv-tools/optimizer.hpp"
+#include "tools/io.h"
 #include "util/make_unique.h"
+#include "vmxc_spirv.h"
 
 /*
  * Internal Passes
  */
-#include "transcoders/cout_pass.h"
 #include "transcoders/cout_bb_pass.h"
 #include "transcoders/cout_cfg_pass.h"
 #include "transcoders/cout_live_reg.h"
+#include "transcoders/cout_pass.h"
 
 namespace spvtools {
 

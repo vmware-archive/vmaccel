@@ -27,12 +27,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #include <assert.h>
-#include <string.h>
 #include <pthread.h>
+#include <string.h>
 
-#include "vmwopencl.h"
 #include "vmaccel_stream.h"
 #include "vmaccel_utils.h"
+#include "vmwopencl.h"
 #include "vmwopencl_utils.h"
 
 typedef struct VMWOpenCLCaps {
@@ -89,7 +89,9 @@ typedef struct VMWOpenCLEvent {
    unsigned int pad;
 } VMWOpenCLEvent;
 
-typedef struct VMWOpenCLSampler { cl_sampler sampler; } VMWOpenCLSampler;
+typedef struct VMWOpenCLSampler {
+   cl_sampler sampler;
+} VMWOpenCLSampler;
 
 typedef struct VMWOpenCLKernel {
    /*
@@ -123,7 +125,9 @@ static VMWOpenCLKernel *kernels = NULL;
 static IdentifierDB *kernelIds = NULL;
 
 const cl_int clDeviceTypes[VMACCEL_SELECT_MAX] = {
-   CL_DEVICE_TYPE_GPU, CL_DEVICE_TYPE_ACCELERATOR, CL_DEVICE_TYPE_ACCELERATOR,
+   CL_DEVICE_TYPE_GPU,
+   CL_DEVICE_TYPE_ACCELERATOR,
+   CL_DEVICE_TYPE_ACCELERATOR,
    CL_DEVICE_TYPE_CPU,
 };
 
@@ -577,7 +581,7 @@ vmwopencl_contextalloc_1(VMCLContextAllocateDesc *argp) {
 
             VMACCEL_LOG("Device[%d]: Allocated %s\n", k, deviceName);
 
-            #define CL_DEVICE_PCI_BUS_ID_NV   0x4008
+#define CL_DEVICE_PCI_BUS_ID_NV 0x4008
             errNum = clGetDeviceInfo(deviceIds[k], CL_DEVICE_PCI_BUS_ID_NV,
                                      sizeof(cl_uint), &id, NULL);
 
@@ -910,7 +914,7 @@ VMAccelQueueStatus *vmwopencl_queuealloc_1(VMCLQueueAllocateDesc *argp) {
    commandQueue =
       clCreateCommandQueueWithProperties(context, devices[subDevice], 0, NULL);
    VMACCEL_WARNING("Device[%d]: Allocating queue %d on device id 0x%x\n",
-		   subDevice, qid, devices[subDevice]);
+                   subDevice, qid, devices[subDevice]);
    if (commandQueue == NULL) {
       VMACCEL_WARNING("Failed to create commandQueue for device 0");
       free(devices);
@@ -1169,8 +1173,8 @@ VMAccelDownloadStatus *vmwopencl_imagedownload_1(VMCLImageDownloadOp *argp) {
       }
 
       if (argp->mode == VMACCEL_SURFACE_READ_SYNCHRONOUS) {
-         VMACCEL_LOG("%s: Enqueing blocking read sid=%d -> %p\n",
-                     __FUNCTION__, sid, ptr);
+         VMACCEL_LOG("%s: Enqueing blocking read sid=%d -> %p\n", __FUNCTION__,
+                     sid, ptr);
          blocking = TRUE;
       }
 
@@ -1478,8 +1482,8 @@ VMAccelStatus *vmwopencl_imagefill_1(VMCLImageFillOp *argp) {
    }
 
    if (surfaces[sid].inst[inst].generation > gen) {
-      VMACCEL_LOG("%s: semantic error backend.gen=%d gen=%d",
-                  __FUNCTION__, surfaces[sid].inst[inst].generation, gen);
+      VMACCEL_LOG("%s: semantic error backend.gen=%d gen=%d", __FUNCTION__,
+                  surfaces[sid].inst[inst].generation, gen);
 
       result.status = VMACCEL_SEMANTIC_ERROR;
 
@@ -1578,7 +1582,7 @@ vmwopencl_kernelalloc_1(VMCLKernelAllocateDesc *argp) {
            (contexts[cid].minorVersion >= 2) &&
            (argp->language == VMCL_OPENCL_C_2_0))
 #endif
-          ) {
+   ) {
       VMACCEL_LOG("Creating OpenCL C program\n");
 
 #if DEBUG_COMPUTE_OPERATION
@@ -1860,16 +1864,36 @@ cleanup:
  * Setup the backend op dispatch
  */
 VMCLOps vmwopenclOps = {
-   vmwopencl_poweron, vmwopencl_poweroff, NULL, NULL, vmwopencl_contextalloc_1,
-   vmwopencl_contextdestroy_1, vmwopencl_surfacealloc_1,
-   vmwopencl_surfacedestroy_1, vmwopencl_surfacegetsharedhandle_1,
-   vmwopencl_surfacereleasesharedhandle_1, vmwopencl_queuealloc_1,
-   vmwopencl_queuedestroy_1, vmwopencl_eventalloc_1, vmwopencl_eventdestroy_1,
-   vmwopencl_fencealloc_1, vmwopencl_fencedestroy_1, vmwopencl_sampleralloc_1,
-   vmwopencl_samplerdestroy_1, vmwopencl_kernelalloc_1,
-   vmwopencl_kerneldestroy_1, vmwopencl_queueflush_1, vmwopencl_eventinsert_1,
-   vmwopencl_eventgetstatus_1, vmwopencl_fenceinsert_1,
-   vmwopencl_fencegetstatus_1, vmwopencl_imageupload_1,
-   vmwopencl_imagedownload_1, vmwopencl_surfacemap_1, vmwopencl_surfaceunmap_1,
-   vmwopencl_surfacecopy_1, vmwopencl_imagefill_1, vmwopencl_dispatch_1,
+   vmwopencl_poweron,
+   vmwopencl_poweroff,
+   NULL,
+   NULL,
+   vmwopencl_contextalloc_1,
+   vmwopencl_contextdestroy_1,
+   vmwopencl_surfacealloc_1,
+   vmwopencl_surfacedestroy_1,
+   vmwopencl_surfacegetsharedhandle_1,
+   vmwopencl_surfacereleasesharedhandle_1,
+   vmwopencl_queuealloc_1,
+   vmwopencl_queuedestroy_1,
+   vmwopencl_eventalloc_1,
+   vmwopencl_eventdestroy_1,
+   vmwopencl_fencealloc_1,
+   vmwopencl_fencedestroy_1,
+   vmwopencl_sampleralloc_1,
+   vmwopencl_samplerdestroy_1,
+   vmwopencl_kernelalloc_1,
+   vmwopencl_kerneldestroy_1,
+   vmwopencl_queueflush_1,
+   vmwopencl_eventinsert_1,
+   vmwopencl_eventgetstatus_1,
+   vmwopencl_fenceinsert_1,
+   vmwopencl_fencegetstatus_1,
+   vmwopencl_imageupload_1,
+   vmwopencl_imagedownload_1,
+   vmwopencl_surfacemap_1,
+   vmwopencl_surfaceunmap_1,
+   vmwopencl_surfacecopy_1,
+   vmwopencl_imagefill_1,
+   vmwopencl_dispatch_1,
 };

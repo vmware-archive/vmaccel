@@ -29,8 +29,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _VMWOPENCL_H_
 #define _VMWOPENCL_H_
 
-#include "vmcl_rpc.h"
 #include "vmcl_ops.h"
+#include "vmcl_rpc.h"
 
 VMCLOps vmwopenclOps;
 

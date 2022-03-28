@@ -50,9 +50,9 @@ extern "C" {
 #endif
 #include "vmaccel_rpc.h"
 #include "vmaccel_stream.h"
-#include "vmaccel_utils.h"
 #include "vmaccel_types_address.h"
 #include "vmaccel_types_address.hpp"
+#include "vmaccel_utils.h"
 }
 
 #include <cassert>
@@ -125,8 +125,8 @@ public:
          addr.addr.addr_val =
             (char *)malloc(VMACCEL_MAX_LOCATION_SIZE * sizeof(char));
          addr.addr.addr_len = VMACCEL_MAX_LOCATION_SIZE;
-         if (!VMAccel_AddressStringToOpaqueAddr(host.c_str(), addr.addr.addr_val,
-                                                addr.addr.addr_len)) {
+         if (!VMAccel_AddressStringToOpaqueAddr(
+                host.c_str(), addr.addr.addr_val, addr.addr.addr_len)) {
             throw exception(VMACCEL_FAIL, "Failed to convert address");
          }
       }
@@ -135,7 +135,10 @@ public:
    /**
     * Destructor.
     */
-   ~address() { if (addr.addr.addr_val == NULL) free(addr.addr.addr_val); }
+   ~address() {
+      if (addr.addr.addr_val == NULL)
+         free(addr.addr.addr_val);
+   }
 
    /**
     * get_accel_addr
@@ -354,9 +357,8 @@ public:
          vmaccel_stream_poweron();
          dataStreaming = true;
       }
-      if (!useLocalBackend &&
-          VMAccel_AddressOpaqueAddrToString(mgr.get_accel_addr(), host,
-                                            sizeof(host))) {
+      if (!useLocalBackend && VMAccel_AddressOpaqueAddrToString(
+                                 mgr.get_accel_addr(), host, sizeof(host))) {
          VMACCEL_LOG("vmaccel: Connecting to Accelerator manager %s\n", host);
          mgrClnt = clnt_create(host, VMACCELMGR, VMACCELMGR_VERSION, "tcp");
          if (mgrClnt != NULL) {
@@ -831,7 +833,8 @@ public:
     * @param backingPtr Backing allocation for the surface.
     */
    accelerator_surface(const std::shared_ptr<accelerator> &a, VMAccelId q,
-                       VMAccelSurfaceDesc d, std::shared_ptr<char> &backingPtr) {
+                       VMAccelSurfaceDesc d,
+                       std::shared_ptr<char> &backingPtr) {
       std::shared_ptr<surface> surfPtr;
       surfPtr = std::shared_ptr<surface>(new surface(a, q, d, backingPtr));
       surf = ref_object<surface>(surfPtr, sizeof(vmaccel::surface), 0, 0);
@@ -1172,6 +1175,6 @@ protected:
     */
    IdentifierDB *residencyDB;
 };
-};
+}; // namespace vmaccel
 
 #endif /* defined _VMACCEL_HPP_ */

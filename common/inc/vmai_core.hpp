@@ -40,8 +40,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _VMAI_CORE_HPP_ 1
 
 #include "vmaccel.hpp"
-#include "vmaccel_defs.h"
 #include "vmaccel_compute.hpp"
+#include "vmaccel_defs.h"
 #include "vmai_defs.h"
 #include <cassert>
 #include <map>
@@ -152,7 +152,7 @@ public:
 private:
    unsigned int type;
 };
-};
-};
+}; // namespace ai
+}; // namespace vmaccel
 
 #endif /* defined _VMAI_CORE_HPP_ */

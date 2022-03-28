@@ -26,8 +26,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ******************************************************************************/
 
-#include "vmaccel_mgr.h"
 #include "vmaccel_manager.h"
+#include "vmaccel_mgr.h"
 
 VMAccelAllocateReturnStatus *
 vmaccelmgr_register_1_svc(VMAccelRegisterDesc *argp, struct svc_req *rqstp) {

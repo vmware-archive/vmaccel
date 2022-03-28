@@ -35,21 +35,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmcodec_ops.h"
 #include "vmcodec_rpc.h"
 #include <assert.h>
+#include <ifaddrs.h>
+#include <memory.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <rpc/pmap_clnt.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <rpc/pmap_clnt.h>
 #include <string.h>
-#include <memory.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <ifaddrs.h>
-#include <netdb.h>
 #include <syslog.h>
 
-#include "vmaccel_types_address.h"
-#include "vmaccel_mgr_utils.h"
 #include "log_level.h"
+#include "vmaccel_mgr_utils.h"
+#include "vmaccel_types_address.h"
 
 #ifndef SIG_PF
 #define SIG_PF void (*)(int)

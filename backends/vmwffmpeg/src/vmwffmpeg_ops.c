@@ -29,8 +29,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assert.h>
 #include <string.h>
 
-#include "vmwffmpeg.h"
 #include "vmaccel_utils.h"
+#include "vmwffmpeg.h"
 
 #include "log_level.h"
 
@@ -144,8 +144,16 @@ VMAccelStatus *vmwffmpeg_encode_1(VMCODECEncodeOp *argp) {
  * Setup the backend op dispatch
  */
 VMCODECOps vmwffmpegOps = {
-   vmwffmpeg_poweron, vmwffmpeg_poweroff, NULL, NULL, vmwffmpeg_contextalloc_1,
-   vmwffmpeg_contextdestroy_1, vmwffmpeg_surfacealloc_1,
-   vmwffmpeg_surfacedestroy_1, vmwffmpeg_imageupload_1,
-   vmwffmpeg_imagedownload_1, vmwffmpeg_decode_1, vmwffmpeg_encode_1,
+   vmwffmpeg_poweron,
+   vmwffmpeg_poweroff,
+   NULL,
+   NULL,
+   vmwffmpeg_contextalloc_1,
+   vmwffmpeg_contextdestroy_1,
+   vmwffmpeg_surfacealloc_1,
+   vmwffmpeg_surfacedestroy_1,
+   vmwffmpeg_imageupload_1,
+   vmwffmpeg_imagedownload_1,
+   vmwffmpeg_decode_1,
+   vmwffmpeg_encode_1,
 };

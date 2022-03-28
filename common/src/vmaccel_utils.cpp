@@ -26,9 +26,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ******************************************************************************/
 
-#include <bitset>
-#include "vmaccel_rpc.h"
 #include "vmaccel_utils.h"
+#include "vmaccel_rpc.h"
+#include <bitset>
 
 template <size_t bitsetSize>
 int BitSet_FindFirstZero(std::bitset<bitsetSize> bits) {

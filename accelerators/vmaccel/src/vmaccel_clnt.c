@@ -26,8 +26,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ******************************************************************************/
 
-#include <memory.h> /* for memset */
 #include "vmaccel_rpc.h"
+#include <memory.h> /* for memset */
 
 /* Default timeout can be changed using clnt_control() */
 static struct timeval TIMEOUT = {25, 0};

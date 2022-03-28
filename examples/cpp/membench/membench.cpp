@@ -343,7 +343,8 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
          printf("Usage: vmcl_membench <options>\n\n");
          printf("  --help               Help and usage information\n");
          printf("  -v                   Verbose output\n");
-         printf("  -h <IP>              Host to execute workload on (optional)\n");
+         printf(
+            "  -h <IP>              Host to execute workload on (optional)\n");
          printf("  -i <num iterations>  Number of iterations\n");
          printf("  -l <num passes>      Number of passes within each thread\n");
          printf("  -m <number of rows>  Number of rows in the matrix,\n");
@@ -462,9 +463,9 @@ int main(int argc, char **argv) {
 
    address mgrAddr(host);
    work_topology workTopology({0}, {numRows}, {numColumns});
-   ref_object<accelerator> accel(new accelerator(mgrAddr, VMACCEL_MAX_REF_OBJECTS,
-                                                 ENABLE_VMACCEL_LOCAL && host.empty(),
-                                                 ENABLE_DATA_STREAMING));
+   ref_object<accelerator> accel(new accelerator(
+      mgrAddr, VMACCEL_MAX_REF_OBJECTS, ENABLE_VMACCEL_LOCAL && host.empty(),
+      ENABLE_DATA_STREAMING));
 
    /*
     * Initialize the Compute Kernel.
@@ -474,16 +475,16 @@ int main(int argc, char **argv) {
    /*
     * Setup the working set.
     */
-   size_t matBytes = sizeof(int) * numRows *numColumns *chunkSize;
+   size_t matBytes = sizeof(int) * numRows * numColumns * chunkSize;
    size_t semBytes = sizeof(int) * (numRows * numColumns + 1);
    size_t dimBytes = sizeof(int) * 4;
 
-   ref_object<int> memA(new int[numRows * numColumns * chunkSize],
-                        matBytes, VMACCEL_SURFACE_USAGE_READWRITE);
-   ref_object<int> memB(new int[numRows * numColumns * chunkSize],
-                        matBytes, VMACCEL_SURFACE_USAGE_READWRITE);
-   ref_object<int> memS(new int[numRows * numColumns],
-                        semBytes, VMACCEL_SURFACE_USAGE_READWRITE);
+   ref_object<int> memA(new int[numRows * numColumns * chunkSize], matBytes,
+                        VMACCEL_SURFACE_USAGE_READWRITE);
+   ref_object<int> memB(new int[numRows * numColumns * chunkSize], matBytes,
+                        VMACCEL_SURFACE_USAGE_READWRITE);
+   ref_object<int> memS(new int[numRows * numColumns], semBytes,
+                        VMACCEL_SURFACE_USAGE_READWRITE);
    ref_object<int> memDims(new int[4], dimBytes,
                            VMACCEL_SURFACE_USAGE_READWRITE);
 
@@ -640,8 +641,7 @@ int main(int argc, char **argv) {
             }
 
             if (kernelFunc == MEMSET) {
-               VMAccelSurfaceRegion fillRgn = {
-                  0, {0, 0, 0}, {surfBytes, 0, 0}};
+               VMAccelSurfaceRegion fillRgn = {0, {0, 0, 0}, {surfBytes, 0, 0}};
                unsigned int element = iter;
                // Hard code qid==0
                c->fill_surface(0, bindB->get_surf(), fillRgn, &element,
@@ -654,8 +654,7 @@ int main(int argc, char **argv) {
                c->download_surface(bindA->get_surf(), true);
                downloadBytes += surfBytes;
             } else if (kernelFunc == MEMCPY) {
-               VMAccelSurfaceRegion copyRgn = {
-                  0, {0, 0, 0}, {surfBytes, 0, 0}};
+               VMAccelSurfaceRegion copyRgn = {0, {0, 0, 0}, {surfBytes, 0, 0}};
                // Hard code qid==0
                c->copy_surface(0, bindA->get_surf(), copyRgn, bindB->get_surf(),
                                copyRgn);
@@ -838,8 +837,9 @@ int main(int argc, char **argv) {
          VMACCEL_LOG("Max compute kernel thread pass count = %d\n",
                      maxThreadPassCount);
       } else {
-         VMACCEL_LOG("Working Set Total = %zu bytes, A = %zu bytes, B = %zu bytes\n",
-                     2*matBytes + semBytes + dimBytes, matBytes, matBytes);
+         VMACCEL_LOG(
+            "Working Set Total = %zu bytes, A = %zu bytes, B = %zu bytes\n",
+            2 * matBytes + semBytes + dimBytes, matBytes, matBytes);
          VMACCEL_LOG("Total Referenced = %ld bytes, %lf bytes/ms\n", refBytes,
                      refBytes / totalRuntimeMS);
          VMACCEL_LOG("Total Dirtied = %ld bytes, %lf bytes/ms\n", dirtyBytes,
@@ -850,8 +850,8 @@ int main(int argc, char **argv) {
       if (kernelFunc < 0) {
          VMACCEL_LOG("Total Uploaded = %ld bytes, %lf bytes/ms\n", uploadBytes,
                      uploadBytes / totalRuntimeMS);
-         VMACCEL_LOG("Total Downloaded = %ld bytes, %lf bytes/ms\n", downloadBytes,
-                     downloadBytes / totalRuntimeMS);
+         VMACCEL_LOG("Total Downloaded = %ld bytes, %lf bytes/ms\n",
+                     downloadBytes, downloadBytes / totalRuntimeMS);
       }
       VMACCEL_LOG("\n");
 

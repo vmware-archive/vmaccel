@@ -58,10 +58,7 @@ typedef struct FunctionTableEntry {
    const char *function;
 } FunctionTableEntry;
 
-enum {
-   MATRIX_ADD_2D = 0,
-   MATRIX_FUNCTION_MAX
-} FunctionEnum;
+enum { MATRIX_ADD_2D = 0, MATRIX_FUNCTION_MAX } FunctionEnum;
 
 #define MEMPOOL(_LOC) ((_LOC)&0xff)
 #define MEMDEVICE(_LOC) (((_LOC) >> 16) & 0xffff)
@@ -85,9 +82,9 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
                           int *pNumPasses, int *pNumIterations,
                           int *pMemoryPoolA, int *pMemoryPoolB,
                           int *pMemoryPoolS, int *pKernelFunc,
-                          int *pKernelDevice, int *pDirtyPages,
-                          int *pEarlyInit, int *pFastResume,
-                          int *pCopyToUserMemory, int *pVerbose) {
+                          int *pKernelDevice, int *pDirtyPages, int *pEarlyInit,
+                          int *pFastResume, int *pCopyToUserMemory,
+                          int *pVerbose) {
    int i = 1;
 
    while (i < argc) {
@@ -202,9 +199,12 @@ int ParseCommandArguments(int argc, char **argv, std::string &host,
             "                            x=65536 * device index + pool\n\n");
          printf("  --memoryPoolB <x>    Output memory pool\n");
          printf("  --memoryPoolS <x>    Semaphore memory pool\n");
-         printf("  --earlyInit          Initialize the remote accelerator early\n");
-         printf("  --fastResume         Fast resume of remote accelerator workload\n");
-         printf("  --copyToUserMemory   Copy accelerator state to user memory\n");
+         printf(
+            "  --earlyInit          Initialize the remote accelerator early\n");
+         printf("  --fastResume         Fast resume of remote accelerator "
+                "workload\n");
+         printf(
+            "  --copyToUserMemory   Copy accelerator state to user memory\n");
          printf("  --dirtyPages         Dirty pages each iteration\n");
          printf("\n");
          exit(1);
@@ -222,7 +222,8 @@ int main(int argc, char **argv) {
    struct timespec localDiffTime, localStartTime, localEndTime;
    struct timespec localSetupDiffTime, localSetupStartTime, localSetupEndTime;
    struct timespec remoteDiffTime, remoteStartTime, remoteEndTime;
-   struct timespec remoteSetupDiffTime, remoteSetupStartTime, remoteSetupEndTime;
+   struct timespec remoteSetupDiffTime, remoteSetupStartTime,
+      remoteSetupEndTime;
    struct timespec saveDiffTime, saveStartTime, saveEndTime;
    struct timespec restoreDiffTime, restoreStartTime, restoreEndTime;
    struct timespec stunDiffTime, stunStartTime, stunEndTime;
@@ -280,7 +281,8 @@ int main(int argc, char **argv) {
                MEMPOOL(memoryPoolS));
    VMACCEL_LOG("  Early Initialization:                   %d\n", earlyInit);
    VMACCEL_LOG("  Fast Resume:                            %d\n", fastResume);
-   VMACCEL_LOG("  Copy To User Memory:                    %d\n", copyToUserMemory);
+   VMACCEL_LOG("  Copy To User Memory:                    %d\n",
+               copyToUserMemory);
    VMACCEL_LOG("  Number of Iterations:                   %d\n", numIterations);
    VMACCEL_LOG("\n");
 
@@ -298,10 +300,10 @@ int main(int argc, char **argv) {
    address localAddr(localAddr);
    address mgrAddr(host);
    work_topology workTopology({0}, {numRows}, {numColumns});
-   ref_object<accelerator> localAccel(new accelerator(mgrAddr, VMACCEL_MAX_REF_OBJECTS,
-                                                      true, ENABLE_DATA_STREAMING));
-   ref_object<accelerator> remoteAccel(new accelerator(mgrAddr, VMACCEL_MAX_REF_OBJECTS,
-                                                       false, ENABLE_DATA_STREAMING));
+   ref_object<accelerator> localAccel(new accelerator(
+      mgrAddr, VMACCEL_MAX_REF_OBJECTS, true, ENABLE_DATA_STREAMING));
+   ref_object<accelerator> remoteAccel(new accelerator(
+      mgrAddr, VMACCEL_MAX_REF_OBJECTS, false, ENABLE_DATA_STREAMING));
 
 
    /*
@@ -312,16 +314,16 @@ int main(int argc, char **argv) {
    /*
     * Setup the working set.
     */
-   size_t matBytes = sizeof(int) * numRows *numColumns *chunkSize;
+   size_t matBytes = sizeof(int) * numRows * numColumns * chunkSize;
    size_t semBytes = sizeof(int) * (numRows * numColumns + 1);
    size_t dimBytes = sizeof(int) * 4;
 
-   ref_object<int> memA(new int[numRows * numColumns * chunkSize],
-                        matBytes, VMACCEL_SURFACE_USAGE_READWRITE);
-   ref_object<int> memB(new int[numRows * numColumns * chunkSize],
-                        matBytes, VMACCEL_SURFACE_USAGE_READWRITE);
-   ref_object<int> memS(new int[numRows * numColumns],
-                        semBytes, VMACCEL_SURFACE_USAGE_READWRITE);
+   ref_object<int> memA(new int[numRows * numColumns * chunkSize], matBytes,
+                        VMACCEL_SURFACE_USAGE_READWRITE);
+   ref_object<int> memB(new int[numRows * numColumns * chunkSize], matBytes,
+                        VMACCEL_SURFACE_USAGE_READWRITE);
+   ref_object<int> memS(new int[numRows * numColumns], semBytes,
+                        VMACCEL_SURFACE_USAGE_READWRITE);
    ref_object<int> memDims(new int[4], dimBytes,
                            VMACCEL_SURFACE_USAGE_READWRITE);
 
@@ -363,8 +365,7 @@ int main(int argc, char **argv) {
    VMAccelSurfaceDesc semDesc;
    VMAccelSurfaceRegion rgn = {
       0, {0, 0, 0}, {numRows * numColumns * chunkSize, 0, 0}};
-   VMAccelSurfaceRegion rgnSem = {
-      0, {0, 0, 0}, {numRows * numColumns, 0, 0}};
+   VMAccelSurfaceRegion rgnSem = {0, {0, 0, 0}, {numRows * numColumns, 0, 0}};
    VMAccelSurfaceRegion rgnDims = {0, {0, 0, 0}, {4, 0, 0}};
    size_t surfBytes = (size_t)numRows * numColumns * chunkSize * sizeof(int);
    size_t uploadBytes = 0;
@@ -395,8 +396,9 @@ int main(int argc, char **argv) {
     * the surface download.
     */
    {
-      compute::context c(localAccel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
-                         numSubDevices, numQueues, 0);
+      compute::context c(localAccel.get(), 1,
+                         VMACCEL_CPU_MASK | VMACCEL_GPU_MASK, numSubDevices,
+                         numQueues, 0);
       accelerator_surface localAccelA(
          localAccel.get(),
          MEMDEVICE(memoryPoolA) * numQueues + MEMQUEUE(memoryPoolA), descA);
@@ -406,7 +408,8 @@ int main(int argc, char **argv) {
       accelerator_surface localAccelS(
          localAccel.get(),
          MEMDEVICE(memoryPoolS) * numQueues + MEMQUEUE(memoryPoolS), semDesc);
-      accelerator_surface localAccelDims(localAccel.get(), kernelDevice, descDims);
+      accelerator_surface localAccelDims(localAccel.get(), kernelDevice,
+                                         descDims);
 
       compute::binding bindA(VMACCEL_BIND_UNORDERED_ACCESS_FLAG,
                              VMACCEL_SURFACE_USAGE_READWRITE, localAccelA);
@@ -415,7 +418,8 @@ int main(int argc, char **argv) {
       compute::binding bindS(VMACCEL_BIND_UNORDERED_ACCESS_FLAG,
                              VMACCEL_SURFACE_USAGE_READWRITE, localAccelS);
       compute::binding bindDims(VMACCEL_BIND_UNORDERED_ACCESS_FLAG,
-                                VMACCEL_SURFACE_USAGE_READWRITE, localAccelDims);
+                                VMACCEL_SURFACE_USAGE_READWRITE,
+                                localAccelDims);
 
       /*
        * Phase 1: Upload the working set to the local device
@@ -530,13 +534,15 @@ int main(int argc, char **argv) {
                VMACCEL_LOG("ERROR: Unable to readback S\n");
                return 1;
             }
-            if (localAccelDims->download<int>(rgnDims, memDims) != VMACCEL_SUCCESS) {
+            if (localAccelDims->download<int>(rgnDims, memDims) !=
+                VMACCEL_SUCCESS) {
                VMACCEL_LOG("ERROR: Unable to readback Dims\n");
                return 1;
             }
          }
          clock_gettime(CLOCK_REALTIME, &saveEndTime);
-         downloadBytes += 2 * surfBytes + 2 * numRows * numColumns * sizeof(int);
+         downloadBytes +=
+            2 * surfBytes + 2 * numRows * numColumns * sizeof(int);
       }
 
       clock_gettime(CLOCK_REALTIME, &localEndTime);
@@ -544,8 +550,9 @@ int main(int argc, char **argv) {
       /*
        * Phase 4: Setup the remote compute accelerator.
        */
-      compute::context rc(remoteAccel.get(), 1, VMACCEL_CPU_MASK | VMACCEL_GPU_MASK,
-                          numSubDevices, numQueues, 0);
+      compute::context rc(remoteAccel.get(), 1,
+                          VMACCEL_CPU_MASK | VMACCEL_GPU_MASK, numSubDevices,
+                          numQueues, 0);
       std::shared_ptr<char> localAccelABacking;
       std::shared_ptr<char> localAccelBBacking;
       std::shared_ptr<char> localAccelSBacking;
@@ -555,7 +562,8 @@ int main(int argc, char **argv) {
          localAccelABacking = std::shared_ptr<char>(new char[descA.width]);
          localAccelBBacking = std::shared_ptr<char>(new char[descB.width]);
          localAccelSBacking = std::shared_ptr<char>(new char[semDesc.width]);
-         localAccelDimsBacking = std::shared_ptr<char>(new char[descDims.width]);
+         localAccelDimsBacking =
+            std::shared_ptr<char>(new char[descDims.width]);
       } else {
          localAccelABacking = localAccelA->get_backing();
          localAccelBBacking = localAccelB->get_backing();
@@ -563,20 +571,20 @@ int main(int argc, char **argv) {
          localAccelDimsBacking = localAccelDims->get_backing();
       }
 
-      accelerator_surface remoteAccelA(
-         remoteAccel.get(),
-         MEMDEVICE(memoryPoolA) * numQueues + MEMQUEUE(memoryPoolA), descA,
-         localAccelABacking);
-      accelerator_surface remoteAccelB(
-         remoteAccel.get(),
-         MEMDEVICE(memoryPoolB) * numQueues + MEMQUEUE(memoryPoolB), descB,
-         localAccelBBacking);
-      accelerator_surface remoteAccelS(
-         remoteAccel.get(),
-         MEMDEVICE(memoryPoolS) * numQueues + MEMQUEUE(memoryPoolS), semDesc,
-         localAccelSBacking);
-      accelerator_surface remoteAccelDims(remoteAccel.get(), kernelDevice, descDims,
-         localAccelDimsBacking);
+      accelerator_surface remoteAccelA(remoteAccel.get(),
+                                       MEMDEVICE(memoryPoolA) * numQueues +
+                                          MEMQUEUE(memoryPoolA),
+                                       descA, localAccelABacking);
+      accelerator_surface remoteAccelB(remoteAccel.get(),
+                                       MEMDEVICE(memoryPoolB) * numQueues +
+                                          MEMQUEUE(memoryPoolB),
+                                       descB, localAccelBBacking);
+      accelerator_surface remoteAccelS(remoteAccel.get(),
+                                       MEMDEVICE(memoryPoolS) * numQueues +
+                                          MEMQUEUE(memoryPoolS),
+                                       semDesc, localAccelSBacking);
+      accelerator_surface remoteAccelDims(remoteAccel.get(), kernelDevice,
+                                          descDims, localAccelDimsBacking);
 
       compute::binding rBindA(VMACCEL_BIND_UNORDERED_ACCESS_FLAG,
                               VMACCEL_SURFACE_USAGE_READWRITE, remoteAccelA);
@@ -585,7 +593,8 @@ int main(int argc, char **argv) {
       compute::binding rBindS(VMACCEL_BIND_UNORDERED_ACCESS_FLAG,
                               VMACCEL_SURFACE_USAGE_READWRITE, remoteAccelS);
       compute::binding rBindDims(VMACCEL_BIND_UNORDERED_ACCESS_FLAG,
-                                 VMACCEL_SURFACE_USAGE_READWRITE, remoteAccelDims);
+                                 VMACCEL_SURFACE_USAGE_READWRITE,
+                                 remoteAccelDims);
 
       if (earlyInit) {
          clock_gettime(CLOCK_REALTIME, &remoteSetupStartTime);
@@ -605,12 +614,14 @@ int main(int argc, char **argv) {
          for (int i = 0; i < numRows; i++) {
             for (int j = 0; j < numColumns; j++) {
                for (int k = 0; k < chunkSize; k++) {
-                  int val = memB[i * numColumns * chunkSize + j * chunkSize + k];
+                  int val =
+                     memB[i * numColumns * chunkSize + j * chunkSize + k];
                   int exp;
 
-                  VMACCEL_LOG("memA[%d][%d][%d]=%d memB[%d][%d][%d]=%d\n", i, j,
-                              k, memA[i * numColumns * chunkSize + j * chunkSize + k],
-                              i, j, k, memB[i * numColumns * chunkSize + j * chunkSize + k]);
+                  VMACCEL_LOG(
+                     "memA[%d][%d][%d]=%d memB[%d][%d][%d]=%d\n", i, j, k,
+                     memA[i * numColumns * chunkSize + j * chunkSize + k], i, j,
+                     k, memB[i * numColumns * chunkSize + j * chunkSize + k]);
 
                   if (kernelFunc == MATRIX_ADD_2D) {
                      exp = numPasses * (i * numColumns + j);
@@ -618,8 +629,8 @@ int main(int argc, char **argv) {
                      continue;
                   }
                   if (val != exp) {
-                     VMACCEL_LOG("ERROR: Mismatch i=%d j=%d k=%d %d != %d\n", i, j,
-                                 k, val, exp);
+                     VMACCEL_LOG("ERROR: Mismatch i=%d j=%d k=%d %d != %d\n", i,
+                                 j, k, val, exp);
                   }
                }
             }
@@ -663,7 +674,8 @@ int main(int argc, char **argv) {
             VMACCEL_LOG("ERROR: Unable to upload S\n");
             return 1;
          }
-         if (remoteAccelDims->upload<int>(rgnDims, memDims) != VMACCEL_SUCCESS) {
+         if (remoteAccelDims->upload<int>(rgnDims, memDims) !=
+             VMACCEL_SUCCESS) {
             VMACCEL_LOG("ERROR: Unable to upload Dims\n");
             return 1;
          }
@@ -692,7 +704,8 @@ int main(int argc, char **argv) {
 
          if (fastResume) {
             memDims[3] = 0;
-            if (remoteAccelDims->upload<int>(rgnDims, memDims) != VMACCEL_SUCCESS) {
+            if (remoteAccelDims->upload<int>(rgnDims, memDims) !=
+                VMACCEL_SUCCESS) {
                VMACCEL_LOG("ERROR: Unable to upload dims\n");
                return 1;
             }
@@ -751,42 +764,44 @@ int main(int argc, char **argv) {
    totalRuntimeMS =
       e2eDiffTime.tv_sec * 1000.0f +
       ((e2eDiffTime.tv_nsec != 0) ? (double)e2eDiffTime.tv_nsec / 1000000.0f
-                                     : 0.0f);
+                                  : 0.0f);
 
    totalLocalRuntimeMS =
       localDiffTime.tv_sec * 1000.0f +
       ((localDiffTime.tv_nsec != 0) ? (double)localDiffTime.tv_nsec / 1000000.0f
-                                     : 0.0f);
+                                    : 0.0f);
 
    totalLocalSetupRuntimeMS =
       localSetupDiffTime.tv_sec * 1000.0f +
-      ((localSetupDiffTime.tv_nsec != 0) ? (double)localSetupDiffTime.tv_nsec / 1000000.0f
-                                     : 0.0f);
+      ((localSetupDiffTime.tv_nsec != 0)
+          ? (double)localSetupDiffTime.tv_nsec / 1000000.0f
+          : 0.0f);
 
-   totalRemoteRuntimeMS =
-      remoteDiffTime.tv_sec * 1000.0f +
-      ((remoteDiffTime.tv_nsec != 0) ? (double)remoteDiffTime.tv_nsec / 1000000.0f
-                                     : 0.0f);
+   totalRemoteRuntimeMS = remoteDiffTime.tv_sec * 1000.0f +
+                          ((remoteDiffTime.tv_nsec != 0)
+                              ? (double)remoteDiffTime.tv_nsec / 1000000.0f
+                              : 0.0f);
 
    totalRemoteSetupRuntimeMS =
       remoteSetupDiffTime.tv_sec * 1000.0f +
-      ((remoteSetupDiffTime.tv_nsec != 0) ? (double)remoteSetupDiffTime.tv_nsec / 1000000.0f
-                                     : 0.0f);
+      ((remoteSetupDiffTime.tv_nsec != 0)
+          ? (double)remoteSetupDiffTime.tv_nsec / 1000000.0f
+          : 0.0f);
 
    totalSaveTimeMS =
       saveDiffTime.tv_sec * 1000.0f +
       ((saveDiffTime.tv_nsec != 0) ? (double)saveDiffTime.tv_nsec / 1000000.0f
-                                     : 0.0f);
+                                   : 0.0f);
 
-   totalRestoreTimeMS =
-      restoreDiffTime.tv_sec * 1000.0f +
-      ((restoreDiffTime.tv_nsec != 0) ? (double)restoreDiffTime.tv_nsec / 1000000.0f
-                                     : 0.0f);
+   totalRestoreTimeMS = restoreDiffTime.tv_sec * 1000.0f +
+                        ((restoreDiffTime.tv_nsec != 0)
+                            ? (double)restoreDiffTime.tv_nsec / 1000000.0f
+                            : 0.0f);
 
    totalStunTimeMS =
       stunDiffTime.tv_sec * 1000.0f +
       ((stunDiffTime.tv_nsec != 0) ? (double)stunDiffTime.tv_nsec / 1000000.0f
-                                     : 0.0f);
+                                   : 0.0f);
 
    VMACCEL_LOG("\n");
    VMACCEL_LOG("End-to-end Time = %lf ms\n", totalRuntimeMS);
@@ -798,13 +813,13 @@ int main(int argc, char **argv) {
    VMACCEL_LOG("Restore Time = %lf ms\n", totalRestoreTimeMS);
    VMACCEL_LOG("Stun Time = %lf ms\n", totalStunTimeMS);
    VMACCEL_LOG("Working Set Total = %zu bytes, A = %zu bytes, B = %zu bytes\n",
-               2*matBytes + semBytes + dimBytes, matBytes, matBytes);
+               2 * matBytes + semBytes + dimBytes, matBytes, matBytes);
    VMACCEL_LOG("Total Referenced = %ld bytes, %lf bytes/ms\n", refBytes,
                refBytes / totalRuntimeMS);
    VMACCEL_LOG("Total Dirtied = %ld bytes, %lf bytes/ms\n", dirtyBytes,
                dirtyBytes / totalRuntimeMS);
-   VMACCEL_LOG("Compute Throughput = %ld bytes, %lf bytes/ms\n",
-               computeBytes, computeBytes / totalRuntimeMS);
+   VMACCEL_LOG("Compute Throughput = %ld bytes, %lf bytes/ms\n", computeBytes,
+               computeBytes / totalRuntimeMS);
    VMACCEL_LOG("\n");
 
    if (fastResume) {
@@ -822,9 +837,10 @@ int main(int argc, char **argv) {
             int exp;
 
             if (verbose) {
-               VMACCEL_LOG("memA[%d][%d][%d]=%d memB[%d][%d][%d]=%d\n", i, j,
-                           k, memA[i * numColumns * chunkSize + j * chunkSize + k],
-                           i, j, k, memB[i * numColumns * chunkSize + j * chunkSize + k]);
+               VMACCEL_LOG(
+                  "memA[%d][%d][%d]=%d memB[%d][%d][%d]=%d\n", i, j, k,
+                  memA[i * numColumns * chunkSize + j * chunkSize + k], i, j, k,
+                  memB[i * numColumns * chunkSize + j * chunkSize + k]);
             }
             if (kernelFunc == MATRIX_ADD_2D) {
                exp = 2 * numPasses * (i * numColumns + j);
@@ -832,8 +848,8 @@ int main(int argc, char **argv) {
                continue;
             }
             if (val != exp) {
-               VMACCEL_LOG("ERROR: Mismatch i=%d j=%d k=%d %d != %d\n", i, j,
-                           k, val, exp);
+               VMACCEL_LOG("ERROR: Mismatch i=%d j=%d k=%d %d != %d\n", i, j, k,
+                           val, exp);
                pass = false;
             }
          }

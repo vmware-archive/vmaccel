@@ -79,9 +79,9 @@ void Log_cl_device_exec_capabilities(char *prefix,
 }
 
 void Log_cl_device_fp_config(char *prefix, cl_device_fp_config val) {
-   const char *typeStr[] = {"CL_FP_DENORM", "CL_FP_FMA", "CL_FP_INF_NAN",
-                            "CL_FP_ROUND_TO_INF", "CL_FP_ROUND_TO_NEAREST",
-                            "CL_FP_ROUND_TO_ZERO"};
+   const char *typeStr[] = {"CL_FP_DENORM",           "CL_FP_FMA",
+                            "CL_FP_INF_NAN",          "CL_FP_ROUND_TO_INF",
+                            "CL_FP_ROUND_TO_NEAREST", "CL_FP_ROUND_TO_ZERO"};
    if (val < sizeof(typeStr) / sizeof(const char *)) {
       VMACCEL_LOG("%s: %s\n", prefix, typeStr[val]);
    } else {

@@ -26,28 +26,31 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ******************************************************************************/
 
+#include "vmaccel_stream.h"
+#include "log_level.h"
+#include "vmaccel_rpc.h"
+#include "vmaccel_types_address.h"
+#include "vmaccel_utils.h"
+#include <arpa/inet.h>
 #include <assert.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <sys/socket.h>
-#include <arpa/inet.h>
 #include <unistd.h>
-#include "vmaccel_rpc.h"
-#include "vmaccel_types_address.h"
-#include "vmaccel_stream.h"
-#include "vmaccel_utils.h"
-#include "log_level.h"
 
 #define TCP_RCV_BUFFER_SIZE 1024 * 128
 #define TCP_SND_BUFFER_SIZE 1024 * 16
-#define SCRATCH_BUFFER_SIZE 1024 * 1024 * 2
 
-volatile int g_initThreads = 0;
-volatile int g_exitThreads = 0;
+volatile int g_init = 0;
+volatile int g_initClntThreads = 0;
+volatile int g_initSvrThreads = 0;
+volatile int g_exitClntThreads = 0;
+volatile int g_exitSvrThreads = 0;
 IdentifierDB *g_svrDB[VMACCEL_STREAM_TYPE_MAX];
+int g_clntFD[VMACCEL_STREAM_TYPE_MAX][VMACCEL_MAX_STREAMS];
 int g_svrFD[VMACCEL_STREAM_TYPE_MAX][VMACCEL_MAX_STREAMS];
-pthread_t g_svrThread[VMACCEL_STREAM_TYPE_MAX][VMACCEL_MAX_STREAMS];
 pthread_t g_clntThread[VMACCEL_STREAM_TYPE_MAX][VMACCEL_MAX_STREAMS];
+pthread_t g_svrThread[VMACCEL_STREAM_TYPE_MAX][VMACCEL_MAX_STREAMS];
 
 DECLARE_TIME_STAT(vmaccel_stream_send_async);
 DECLARE_TIME_STAT(StreamTCPServerThread);
@@ -68,9 +71,9 @@ static void LogThreadScheduleAttr(const char *prefix, int policy,
    VMACCEL_LOG("%s: policy=%s, priority=%d\n", prefix,
                (policy == SCHED_FIFO)
                   ? "SCHED_FIFO"
-                  : (policy == SCHED_RR) ? "SCHED_RR" : (policy == SCHED_OTHER)
-                                                           ? "SCHED_OTHER"
-                                                           : "?",
+                  : (policy == SCHED_RR)
+                       ? "SCHED_RR"
+                       : (policy == SCHED_OTHER) ? "SCHED_OTHER" : "?",
                param->sched_priority);
 }
 
@@ -78,13 +81,14 @@ int vmaccel_stream_poweron() {
    for (int j = 0; j < VMACCEL_STREAM_TYPE_MAX; j++) {
       g_svrDB[j] = IdentifierDB_Alloc(VMACCEL_MAX_STREAMS);
       for (int i = 0; i < VMACCEL_MAX_STREAMS; i++) {
+         g_clntFD[j][i] = -1;
          g_svrFD[j][i] = -1;
-         g_svrThread[j][i] = 0;
          g_clntThread[j][i] = 0;
+         g_svrThread[j][i] = 0;
       }
    }
 
-   g_initThreads = 1;
+   g_init = 1;
 
    return VMACCEL_SUCCESS;
 }
@@ -169,7 +173,8 @@ static void *StreamTCPServerThread(void *args) {
       return args;
    }
 
-   VMACCEL_LOG("Created TCP stream server type=%d...\n", s->stream.type);
+   VMACCEL_LOG("Created TCP stream server type=%d, port=%d...\n",
+               s->stream.type, port);
 
    svr.sin_family = AF_INET;
    svr.sin_addr.s_addr = INADDR_ANY;
@@ -189,16 +194,16 @@ static void *StreamTCPServerThread(void *args) {
 
    g_svrFD[s->stream.type][s->stream.index] = svrFD;
 
-   while (g_exitThreads == 0) {
+   g_initSvrThreads++;
+
+   while (g_exitSvrThreads == 0) {
 #if DEBUG_STREAMS
       VMACCEL_LOG("Listening for connection %d\n", svrFD);
 #endif
 
       if (listen(svrFD, 3) != 0) {
          VMACCEL_WARNING("Failed to listen\n");
-         close(svrFD);
-         END_TIME_STAT(StreamTCPServerThread);
-         return args;
+         goto exit_server;
       }
 
       clntFD = accept(g_svrFD[s->stream.type][s->stream.index],
@@ -206,17 +211,14 @@ static void *StreamTCPServerThread(void *args) {
 
       if (clntFD < 0) {
          VMACCEL_WARNING("Unable to accept client connection\n");
-         close(g_svrFD[s->stream.type][s->stream.index]);
-         g_svrFD[s->stream.type][s->stream.index] = -1;
-         END_TIME_STAT(StreamTCPServerThread);
-         return args;
+         goto exit_server;
       }
 
 #if DEBUG_STREAMS
       VMACCEL_LOG("Accepted client connection %d\n", clntFD);
 #endif
 
-      while (g_exitThreads == 0 &&
+      while (g_exitSvrThreads == 0 &&
              (rxSize = recv(clntFD, &p, sizeof(VMAccelStreamPacket), 0)) > 0) {
          VMCLSurfaceUnmapOp unmapOp;
          VMAccelSurfaceMapStatus *mapStatus;
@@ -257,7 +259,7 @@ static void *StreamTCPServerThread(void *args) {
                break;
             }
 
-            while (g_exitThreads == 0 && rxLen > 0 &&
+            while (g_exitSvrThreads == 0 && rxLen > 0 &&
                    ((rxSize = recv(clntFD, mapStatus->ptr.ptr_val + rxOffset,
                                    rxLen, 0)) > 0)) {
                if (rxLen - rxSize < 0) {
@@ -294,10 +296,20 @@ static void *StreamTCPServerThread(void *args) {
       close(clntFD);
    }
 
+exit_server:
+
    VMACCEL_LOG("Exiting TCP stream server thread for port %d\n", port);
+   assert(g_svrFD[s->stream.type][s->stream.index] != -1);
    close(g_svrFD[s->stream.type][s->stream.index]);
    g_svrFD[s->stream.type][s->stream.index] = -1;
    IdentifierDB_ReleaseId(g_svrDB[s->stream.type], s->stream.index);
+
+   if (g_exitSvrThreads > 0) {
+      g_exitSvrThreads--;
+   } else {
+      g_initSvrThreads--;
+   }
+
    END_TIME_STAT(StreamTCPServerThread);
 
    return args;
@@ -315,7 +327,7 @@ int vmaccel_stream_server(unsigned int type, unsigned int port,
       LogThreadScheduleAttr(__FUNCTION__, policy, &param);
    }
 
-   if (g_initThreads == 0) {
+   if (g_init == 0) {
       VMACCEL_WARNING("%s: vmaccel_stream_poweron not called...\n",
                       __FUNCTION__);
       return VMACCEL_FAIL;
@@ -352,7 +364,7 @@ static int StreamTCPClientSend(VMAccelStreamSend *s) {
    START_TIME_STAT(StreamTCPClientSend);
 
    // Find socket...
-   if (g_svrFD[s->type][s->index] == -1) {
+   if (g_clntFD[s->type][s->index] == -1) {
       VMACCEL_WARNING("No server socket open\n");
       END_TIME_STAT(StreamTCPClientSend);
       return VMACCEL_FAIL;
@@ -362,7 +374,8 @@ static int StreamTCPClientSend(VMAccelStreamSend *s) {
    p.desc.cl = s->desc.cl;
    p.len = s->ptr.ptr_len;
 
-   if (send(g_svrFD[s->type][s->index], &p, sizeof(p), 0) != sizeof(p)) {
+   // Mutex the client FD for the time of the transmission
+   if (send(g_clntFD[s->type][s->index], &p, sizeof(p), 0) != sizeof(p)) {
       VMACCEL_WARNING("Unable to send packet\n");
       END_TIME_STAT(StreamTCPClientSend);
       return VMACCEL_FAIL;
@@ -374,9 +387,9 @@ static int StreamTCPClientSend(VMAccelStreamSend *s) {
 
    txLen = s->ptr.ptr_len;
 
-   while (g_exitThreads == 0 && txLen > 0 &&
-          (txSize =
-              send(g_svrFD[s->type][s->index], s->ptr.ptr_val, txLen, 0) < 0)) {
+   while (g_exitClntThreads == 0 && txLen > 0 &&
+          (txSize = send(g_clntFD[s->type][s->index], s->ptr.ptr_val, txLen,
+                         0) < 0)) {
       txLen -= txSize;
       numPasses++;
    }
@@ -409,57 +422,64 @@ static void *StreamTCPClientThread(void *args) {
    }
 #endif
 
-   if (g_svrFD[s->type][s->index] == -1) {
+   if (g_clntFD[s->type][s->index] == -1) {
       char host[4 * VMACCEL_MAX_LOCATION_SIZE];
 
       sprintf(host, "127.0.0.1");
 
       if (!VMAccel_AddressOpaqueAddrToString(&s->accel, host, sizeof(host))) {
-         VMACCEL_WARNING("Unable to translate VMAccelAddress host=%s\n",
-                         host);
+         VMACCEL_WARNING("Unable to translate VMAccelAddress host=%s\n", host);
          END_TIME_STAT(StreamTCPClientThread);
          return args;
       }
 
-      struct sockaddr_in svr;
-      unsigned int svrFD;
+      struct sockaddr_in clnt;
+      unsigned int clntFD;
 
-      svrFD = socket(AF_INET, SOCK_STREAM, 0);
+      clntFD = socket(AF_INET, SOCK_STREAM, 0);
 
-      if (svrFD == -1) {
+      if (clntFD == -1) {
          VMACCEL_WARNING("Server connection unavailable.\n");
          END_TIME_STAT(StreamTCPClientThread);
          return args;
       }
 
-      svr.sin_addr.s_addr = inet_addr(host);
-      svr.sin_family = AF_INET;
-      svr.sin_port = htons(s->accel.port + s->index);
+      clnt.sin_addr.s_addr = inet_addr(host);
+      clnt.sin_family = AF_INET;
+      clnt.sin_port = htons(s->accel.port + s->index);
 
-      ConfigureSocket(svrFD, TCP_RCV_BUFFER_SIZE, TCP_SND_BUFFER_SIZE);
+      ConfigureSocket(clntFD, TCP_RCV_BUFFER_SIZE, TCP_SND_BUFFER_SIZE);
 
-      if (connect(svrFD, (struct sockaddr *)&svr, sizeof(svr)) < 0) {
+      if (connect(clntFD, (struct sockaddr *)&clnt, sizeof(clnt)) < 0) {
          VMACCEL_WARNING("Unable to connect to server %s:%d\n",
                          s->accel.addr.addr_val, s->accel.port + s->index);
-         close(svrFD);
-         svrFD = -1;
+         close(clntFD);
+         clntFD = -1;
          END_TIME_STAT(StreamTCPClientThread);
          return args;
       }
 
-      g_svrFD[s->type][s->index] = svrFD;
+      g_clntFD[s->type][s->index] = clntFD;
    } else {
 #if DEBUG_STREAMS
       VMACCEL_WARNING("Re-using server connection.\n");
 #endif
    }
 
+   g_initClntThreads++;
+
    StreamTCPClientSend(s);
 
 #if DEBUG_STREAMS
-   close(g_svrFD[s->type][s->index]);
-   g_svrFD[s->type][s->index] = -1;
+   close(g_clntFD[s->type][s->index]);
+   g_clntFD[s->type][s->index] = -1;
 #endif
+
+   if (g_exitClntThreads > 0) {
+      g_exitClntThreads--;
+   } else {
+      g_initClntThreads--;
+   }
 
    END_TIME_STAT(StreamTCPClientThread);
 
@@ -497,13 +517,16 @@ int vmaccel_stream_send_async(VMAccelAddress *a, unsigned int type, void *args,
    }
 #endif
 
-   if (g_initThreads == 0) {
+   if (g_init == 0) {
       VMACCEL_WARNING("%s: vmaccel_stream_poweron not called...\n",
                       __FUNCTION__);
       assert(0);
    }
 
    if (!IdentifierDB_AllocId(g_svrDB[type], &index)) {
+      VMACCEL_LOG("%s: Identifier unavailable, flushing active"
+                  " client threads...\n",
+                  __FUNCTION__);
       for (int i = 0; i < VMACCEL_MAX_STREAMS; i++) {
          if (pthread_join(g_clntThread[type][i], &res)) {
             VMACCEL_WARNING("Unable to join thread 0x%lx\n",
@@ -516,7 +539,11 @@ int vmaccel_stream_send_async(VMAccelAddress *a, unsigned int type, void *args,
          }
       }
 
-      IdentifierDB_AcquireId(g_svrDB[type], index);
+      ret = IdentifierDB_AcquireId(g_svrDB[type], index);
+      if (!ret) {
+         VMACCEL_WARNING("%s: Unable to acquire ID on retry\n", __FUNCTION__);
+         assert(0);
+      }
    }
 
    pthread_t t;
@@ -561,21 +588,26 @@ int vmaccel_stream_send_async(VMAccelAddress *a, unsigned int type, void *args,
 
 
 void vmaccel_stream_poweroff() {
-   g_exitThreads = 1;
+   if ((g_initClntThreads > 0 || g_initSvrThreads > 0) &&
+       (g_exitClntThreads > 0 || g_exitSvrThreads > 0)) {
+      VMACCEL_WARNING("%s: Called poweroff multiple times for the process\n",
+                      __FUNCTION__);
+      assert(0);
+   }
+
+   g_exitClntThreads = g_initClntThreads;
+   g_exitSvrThreads = g_initSvrThreads;
+
+   while (g_exitClntThreads != 0 && g_exitSvrThreads != 0) {
+      sleep(1);
+   }
 
    for (int j = 0; j < VMACCEL_STREAM_TYPE_MAX; j++) {
       for (int i = 0; i < VMACCEL_MAX_STREAMS; i++) {
          void *res = NULL;
-         if (g_svrThread[j][i] != 0) {
-            if (pthread_join(g_svrThread[j][i], &res)) {
-               VMACCEL_WARNING("Unable to join server thread %d,%d\n", j, i);
-            } else {
-               free(res);
-            }
-            g_svrThread[j][i] = 0;
-         }
-
          if (g_clntThread[j][i] != 0) {
+            VMACCEL_WARNING("Client thread type=%d, stream=%d not cleaned up\n",
+                            j, i);
             if (pthread_join(g_clntThread[j][i], &res)) {
                VMACCEL_WARNING("Unable to join client thread %d,%d\n", j, i);
             } else {
@@ -584,18 +616,27 @@ void vmaccel_stream_poweroff() {
             g_clntThread[j][i] = 0;
          }
 
+         if (g_svrThread[j][i] != 0) {
+            VMACCEL_WARNING("Server thread type=%d, stream=%d not cleaned up\n",
+                            j, i);
+            if (pthread_join(g_svrThread[j][i], &res)) {
+               VMACCEL_WARNING("Unable to join server thread %d,%d\n", j, i);
+            } else {
+               free(res);
+            }
+            g_svrThread[j][i] = 0;
+         }
+
          if (g_svrFD[j][i] != -1) {
+            VMACCEL_WARNING("Server FD type=%d, stream=%d not cleaned up\n", j,
+                            i);
             close(g_svrFD[j][i]);
             g_svrFD[j][i] = -1;
          }
 
          if (g_svrDB[j] != NULL && IdentifierDB_ActiveId(g_svrDB[j], i)) {
-            if (pthread_join(g_clntThread[j][i], NULL)) {
-#if DEBUG_STREAMS
-               VMACCEL_WARNING("Unable to join thread 0x%lx\n",
-                               g_clntThread[j][i]);
-#endif
-            }
+            VMACCEL_WARNING("Server DB type=%d, stream=%d not cleaned up\n", j,
+                            i);
             IdentifierDB_ReleaseId(g_svrDB[j], i);
          }
       }

@@ -93,8 +93,7 @@ static void Constructor(AllocRange &obj) {
    obj.begin = obj.end = 0;
 }
 
-static void Destructor(AllocRange &obj) {
-}
+static void Destructor(AllocRange &obj) {}
 
 static void DeepCopy(AllocRange &lhs, const AllocRange &rhs) {
    if (&lhs != &rhs) {

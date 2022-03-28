@@ -26,9 +26,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ******************************************************************************/
 
+#include "vmaccel.hpp"
 #include "vmaccel_mgr.h"
 #include "vmaccel_rpc.h"
-#include "vmaccel.hpp"
 
 namespace vmaccel {
 /**
@@ -49,4 +49,4 @@ void surface::destroy() {
       it->second->destroy_surface(id);
    }
 }
-};
+}; // namespace vmaccel

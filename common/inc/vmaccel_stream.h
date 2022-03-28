@@ -29,10 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _VMACCEL_STREAM_H_
 #define _VMACCEL_STREAM_H_ 1
 
-#include <stdbool.h>
 #include "vmaccel_defs.h"
 #include "vmaccel_rpc.h"
 #include "vmcl_rpc.h"
+#include <stdbool.h>
 
 typedef enum {
    VMACCEL_STREAM_TYPE_VMCL_UPLOAD = 0,

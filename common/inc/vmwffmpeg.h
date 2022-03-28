@@ -29,8 +29,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _VMWFFMPEG_H_
 #define _VMWFFMPEG_H_
 
-#include "vmcodec_rpc.h"
 #include "vmcodec_ops.h"
+#include "vmcodec_rpc.h"
 
 VMCODECOps vmwffmpegOps;
 

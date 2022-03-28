@@ -26,8 +26,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ******************************************************************************/
 
-#include <memory.h>
 #include "vmxc.h"
+#include <memory.h>
 
 /* Default timeout can be changed using clnt_control() */
 static struct timeval TIMEOUT = {25, 0};

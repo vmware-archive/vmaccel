@@ -30,22 +30,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmcl_ops.h"
 #include "vmcl_rpc.h"
 #include <assert.h>
+#include <ifaddrs.h>
+#include <memory.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <rpc/pmap_clnt.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <rpc/pmap_clnt.h>
 #include <string.h>
-#include <memory.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <ifaddrs.h>
-#include <netdb.h>
 #include <syslog.h>
 
-#include "vmaccel_types_address.h"
+#include "log_level.h"
 #include "vmaccel_mgr_utils.h"
 #include "vmaccel_stream.h"
-#include "log_level.h"
+#include "vmaccel_types_address.h"
 
 #ifndef SIG_PF
 #define SIG_PF void (*)(int)
@@ -125,8 +125,9 @@ static void vmcl_1(struct svc_req *rqstp, register SVCXPRT *transp) {
       case VMCL_SURFACERELEASESHAREDHANDLE:
          _xdr_argument = (xdrproc_t)xdr_VMCLSharedHandle;
          _xdr_result = (xdrproc_t)xdr_VMAccelReturnStatus;
-         local = (char *(
-            *)(char *, struct svc_req *))vmcl_surfacereleasesharedhandle_1_svc;
+         local =
+            (char *(*)(char *,
+                       struct svc_req *))vmcl_surfacereleasesharedhandle_1_svc;
          break;
 
       case VMCL_QUEUEALLOC:

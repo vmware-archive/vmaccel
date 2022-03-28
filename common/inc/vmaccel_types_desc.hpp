@@ -29,9 +29,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _VMACCEL_TYPES_DESC_HPP_
 #define _VMACCEL_TYPES_DESC_HPP_ 1
 
-#include <cstring>
 #include "vmaccel_types_address.h"
 #include "vmaccel_types_address.hpp"
+#include <cstring>
 
 #include "log_level.h"
 

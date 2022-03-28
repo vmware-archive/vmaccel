@@ -29,9 +29,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _VMACCEL_TYPES_ADDRESS_H_
 #define _VMACCEL_TYPES_ADDRESS_H_ 1
 
+#include <arpa/inet.h>
 #include <assert.h>
 #include <string.h>
-#include <arpa/inet.h>
 
 #include "log_level.h"
 
