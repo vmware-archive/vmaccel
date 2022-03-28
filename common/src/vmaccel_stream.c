@@ -248,10 +248,12 @@ static void *StreamTCPServerThread(void *args) {
             unmapOp.op.ptr.ptr_val = mapStatus->ptr.ptr_val;
 
 #if DEBUG_STREAMS
-            VMACCEL_LOG("Stream[%d]: Rx %d bytes\n", p.type, p.len);
+            VMACCEL_LOG("Stream[%d][%d]: Type=%d Rx %d bytes\n", s->stream.type,
+                        s->stream.index, p.type, p.len);
             VMACCEL_LOG(
-               "Stream[%d]: Mapped sid=%d, generation=%d -> %p len=%d\n",
-               p.type, p.desc.cl.op.surf.id, p.desc.cl.op.surf.generation,
+               "Stream[%d][%d]: Type=%d Mapped sid=%d, generation=%d -> %p len=%d\n",
+               s->stream.type, s->stream.index, p.type, p.desc.cl.op.surf.id,
+               p.desc.cl.op.surf.generation,
                mapStatus->ptr.ptr_val, mapStatus->ptr.ptr_len);
 #endif
 
@@ -281,7 +283,8 @@ static void *StreamTCPServerThread(void *args) {
             INC_COUNTER_STAT(RxPassesPerSend, numPasses);
 
 #if DEBUG_STREAMS
-            VMACCEL_LOG("Stream[%d]: Rx complete in %d passes\n", p.type,
+            VMACCEL_LOG("Stream[%d][%d]: Type=%d Rx complete in %d passes\n",
+                        s->stream.type, s->stream.index, p.type,
                         numPasses);
 #endif
 
@@ -386,7 +389,7 @@ static int StreamTCPClientSend(VMAccelStreamSend *s) {
    }
 
 #if DEBUG_STREAMS
-   VMACCEL_LOG("Stream[%d]: Client Tx len=%d\n", p.type, p.len);
+   VMACCEL_LOG("Stream[%d][%d]: Client Tx len=%d\n", s->type, s->index, p.len);
 #endif
 
    txLen = s->ptr.ptr_len;
