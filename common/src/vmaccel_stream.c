@@ -206,6 +206,10 @@ static void *StreamTCPServerThread(void *args) {
          goto exit_server;
       }
 
+#if DEBUG_STREAMS
+      VMACCEL_LOG("Accepting connection %d\n", svrFD);
+#endif
+
       clntFD = accept(g_svrFD[s->stream.type][s->stream.index],
                       (struct sockaddr *)&clnt, &len);
 
@@ -376,7 +380,7 @@ static int StreamTCPClientSend(VMAccelStreamSend *s) {
 
    // Mutex the client FD for the time of the transmission
    if (send(g_clntFD[s->type][s->index], &p, sizeof(p), 0) != sizeof(p)) {
-      VMACCEL_WARNING("Unable to send packet\n");
+      VMACCEL_WARNING("Unable to send packet type=%d index=%d\n", s->type, s->index);
       END_TIME_STAT(StreamTCPClientSend);
       return VMACCEL_FAIL;
    }
@@ -409,6 +413,10 @@ static void *StreamTCPClientThread(void *args) {
    struct sched_param param;
    START_TIME_STAT(StreamTCPClientThread);
 
+#if DEBUG_STREAMS
+   VMACCEL_LOG("%s: Starting thread\n", __FUNCTION__);
+#endif
+
    ret = pthread_getschedparam(pthread_self(), &policy, &param);
 
    if (ret != 0) {
@@ -432,6 +440,8 @@ static void *StreamTCPClientThread(void *args) {
          END_TIME_STAT(StreamTCPClientThread);
          return args;
       }
+
+      VMACCEL_LOG("%s: Connecting to %s\n", __FUNCTION__, host);
 
       struct sockaddr_in clnt;
       unsigned int clntFD;
@@ -473,6 +483,7 @@ static void *StreamTCPClientThread(void *args) {
 #if DEBUG_STREAMS
    close(g_clntFD[s->type][s->index]);
    g_clntFD[s->type][s->index] = -1;
+   VMACCEL_LOG("%s: Exiting thread\n", __FUNCTION__);
 #endif
 
    if (g_exitClntThreads > 0) {
@@ -565,11 +576,13 @@ int vmaccel_stream_send_async(VMAccelAddress *a, unsigned int type, void *args,
 #if ENABLE_ROUND_ROBIN_STREAM_SCHEDULING
    policy = SCHED_RR;
    param.sched_priority += VMACCEL_STREAM_PRIORITY_DELTA;
-#endif
 
    if (pthread_attr_init(&attr) == 0 &&
        pthread_attr_setschedpolicy(&attr, policy) == 0 &&
        pthread_attr_setschedparam(&attr, &param) == 0) {
+#else
+   if (pthread_attr_init(&attr) == 0) {
+#endif
       if (pthread_create(&t, &attr, StreamTCPClientThread, s)) {
          VMACCEL_WARNING("Unable to create thread for stream\n");
          END_TIME_STAT(vmaccel_stream_send_async);
@@ -619,11 +632,13 @@ void vmaccel_stream_poweroff() {
          if (g_svrThread[j][i] != 0) {
             VMACCEL_WARNING("Server thread type=%d, stream=%d not cleaned up\n",
                             j, i);
+#if ENABLE_NON_BLOCKING_SOCKET
             if (pthread_join(g_svrThread[j][i], &res)) {
                VMACCEL_WARNING("Unable to join server thread %d,%d\n", j, i);
             } else {
                free(res);
             }
+#endif
             g_svrThread[j][i] = 0;
          }
 

@@ -33,6 +33,7 @@ function(add_unittest)
       ARG "" "${one_value_args}" "${multi_value_args}" ${ARGN})
    set(target test_${ARG_TARGET})
    add_executable(${target} ${ARG_SRCS})
+   target_compile_definitions(${target} PUBLIC ${ARG_DEFS})
    target_link_libraries(${target} PRIVATE ${ARG_LIBS})
    set_target_properties(${target}
       PROPERTIES
@@ -44,26 +45,40 @@ set(GLOBAL_INC ../common/inc)
 include_directories(${GLOBAL_INC})
 
 set(TEST_SOURCES
-  vmaccel_allocator_int_test.cpp
-  vmaccel_allocator_desc_test.cpp
+   identifier_db_test.cpp
+   vmaccel_allocator_int_test.cpp
+   vmaccel_allocator_desc_test.cpp
+   vmaccel_allocator_allocrange_test.cpp
+   vmaccel_stream_test.cpp
 )
 
 add_unittest(
-  TARGET vmaccel_allocator_int_test
-  SRCS vmaccel_allocator_int_test.cpp
-  LIBS vmaccelmgr_server vmaccel_utils)
+   TARGET identifier_db_test
+   SRCS identifier_db_test.cpp
+   LIBS vmaccelmgr_server vmaccel_utils)
 
 add_unittest(
-  TARGET vmaccel_allocator_desc_test
-  SRCS vmaccel_allocator_desc_test.cpp
-  LIBS vmaccelmgr_server vmaccel_utils)
+   TARGET vmaccel_allocator_int_test
+   SRCS vmaccel_allocator_int_test.cpp
+   LIBS vmaccelmgr_server vmaccel_utils)
 
 add_unittest(
-  TARGET vmaccel_allocator_allocrange_test
-  SRCS vmaccel_allocator_allocrange_test.cpp
-  LIBS vmaccelmgr_server vmaccel_utils)
+   TARGET vmaccel_allocator_desc_test
+   SRCS vmaccel_allocator_desc_test.cpp
+   LIBS vmaccelmgr_server vmaccel_utils)
 
 add_unittest(
-  TARGET identifier_db_test
-  SRCS identifier_db_test.cpp
-  LIBS vmaccelmgr_server vmaccel_utils)
+   TARGET vmaccel_allocator_allocrange_test
+   SRCS vmaccel_allocator_allocrange_test.cpp
+   LIBS vmaccelmgr_server vmaccel_utils)
+
+add_unittest(
+   TARGET vmaccel_stream_client_test
+   SRCS vmaccel_stream_client_test.cpp
+   LIBS vmaccelmgr_server vmaccel_utils)
+
+add_unittest(
+   TARGET vmaccel_stream_server_test
+   SRCS vmaccel_stream_server_test.cpp
+   LIBS vmaccelmgr_server vmaccel_utils)
+

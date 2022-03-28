@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2021 VMware, Inc.
+Copyright (c) 2016-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -32,13 +32,28 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*
  * VMAccelerator features
  */
+#ifndef ENABLE_NON_BLOCKING_SOCKETS
+#define ENABLE_NON_BLOCKING_SOCKETS 0
+#endif
+
+#ifndef ENABLE_DATA_STREAMING
 #define ENABLE_DATA_STREAMING 0
+#endif
+
+#ifndef VMACCEL_VMCL_BASE_PORT
 #define VMACCEL_VMCL_BASE_PORT 5100
+#endif
+
+#ifndef VMACCEL_MAX_STREAMS
 #define VMACCEL_MAX_STREAMS 1
+#endif
+
 #define VMACCEL_MAX_SURFACE_INSTANCE 1
 #define VMACCEL_STREAM_PRIORITY_DELTA 1
 
+#ifndef ENABLE_IMAGE_DOWNLOAD
 #define ENABLE_IMAGE_DOWNLOAD 0
+#endif
 
 /*
  * VMAccelerator global definitions.

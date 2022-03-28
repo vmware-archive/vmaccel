@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2020 VMware, Inc.
+Copyright (c) 2020-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmaccel_rpc.h"
 #include "vmcl_rpc.h"
 #include <stdbool.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum {
    VMACCEL_STREAM_TYPE_VMCL_UPLOAD = 0,
@@ -83,5 +87,9 @@ int vmaccel_stream_server(unsigned int type, unsigned int port,
 int vmaccel_stream_send_async(VMAccelAddress *s, unsigned int type, void *args,
                               char *ptr_val, size_t ptr_len);
 void vmaccel_stream_poweroff();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _VMACCEL_STREAM_H_ */

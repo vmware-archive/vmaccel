@@ -40,8 +40,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DEBUG_PERSISTENT_SURFACES 0
 #define DEBUG_SURFACE_CONSISTENCY 0
 #define DEBUG_FORCE_SURFACE_CONSISTENCY 0
-#define DEBUG_STREAMS 0
+
+#ifndef DEBUG_STREAMS
+#define DEBUG_STREAMS 1
+#endif
+
 #define DEBUG_STATISTICS 0
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if DEBUG_ASYNC_COMPUTE || DEBUG_OBJECT_LIFETIME
 #define LOG_ENTRY(_ARGS) printf _ARGS
@@ -164,5 +172,9 @@ bool VMAccel_AddressOpaqueAddrToString(const VMAccelAddress *addr, char *out,
 bool VMAccel_AddressStringToOpaqueAddr(const char *addr, char *out, int len);
 
 void vmaccel_xdr_free(xdrproc_t proc, caddr_t ptr);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _VMACCEL_UTILS_H_ */
