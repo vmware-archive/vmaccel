@@ -26,29 +26,45 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ******************************************************************************/
 
+#include "log_level.h"
+#include "vmaccel_ops.h"
 #include "vmaccel_rpc.h"
 #include <memory.h> /* for memset */
+#include <pthread.h>
 
 /* Default timeout can be changed using clnt_control() */
 static struct timeval TIMEOUT = {25, 0};
+extern pthread_mutex_t svc_mutex;
 
 VMAccelResourceAllocateReturnStatus *
 vmaccel_resourcealloc_1(VMAccelResourceDesc *argp, CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
-      return vmaccel_resourcealloc_1_svc(argp, NULL);
+      VMAccelResourceAllocateReturnStatus *ret;
+      if (pthread_mutex_lock(&svc_mutex) != 0) {
+         VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
+         return (NULL);
+      }
+      ret = vmaccel_resourcealloc_1_svc(argp, NULL);
+      pthread_mutex_unlock(&svc_mutex);
+      return ret;
    }
 #endif
 #if ENABLE_VMACCEL_RPC
    static VMAccelResourceAllocateReturnStatus clnt_res;
-
+   if (pthread_mutex_lock(&svc_mutex) != 0) {
+      VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
+      return (NULL);
+   }
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
    if (clnt_call(clnt, VMACCEL_RESOURCEALLOC,
                  (xdrproc_t)xdr_VMAccelResourceDesc, (caddr_t)argp,
                  (xdrproc_t)xdr_VMAccelResourceAllocateReturnStatus,
                  (caddr_t)&clnt_res, TIMEOUT) != RPC_SUCCESS) {
+      pthread_mutex_unlock(&svc_mutex);
       return (NULL);
    }
+   pthread_mutex_unlock(&svc_mutex);
    return (&clnt_res);
 #else
    return (NULL);
@@ -58,18 +74,30 @@ vmaccel_resourcealloc_1(VMAccelResourceDesc *argp, CLIENT *clnt) {
 VMAccelReturnStatus *vmaccel_resourcerelease_1(VMAccelId *argp, CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
-      return vmaccel_resourcerelease_1_svc(argp, NULL);
+      VMAccelReturnStatus *ret;
+      if (pthread_mutex_lock(&svc_mutex) != 0) {
+         VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
+         return (NULL);
+      }
+      ret = vmaccel_resourcerelease_1_svc(argp, NULL);
+      pthread_mutex_unlock(&svc_mutex);
+      return ret;
    }
 #endif
 #if ENABLE_VMACCEL_RPC
    static VMAccelReturnStatus clnt_res;
-
+   if (pthread_mutex_lock(&svc_mutex) != 0) {
+      VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
+      return (NULL);
+   }
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
    if (clnt_call(clnt, VMACCEL_RESOURCERELEASE, (xdrproc_t)xdr_VMAccelId,
                  (caddr_t)argp, (xdrproc_t)xdr_VMAccelReturnStatus,
                  (caddr_t)&clnt_res, TIMEOUT) != RPC_SUCCESS) {
+      pthread_mutex_unlock(&svc_mutex);
       return (NULL);
    }
+   pthread_mutex_unlock(&svc_mutex);
    return (&clnt_res);
 #else
    return (NULL);
@@ -80,18 +108,30 @@ VMAccelComputeReturnStatus *vmaccel_compute_1(VMAccelComputeOp *argp,
                                               CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
-      return vmaccel_compute_1_svc(argp, NULL);
+      VMAccelComputeReturnStatus *ret;
+      if (pthread_mutex_lock(&svc_mutex) != 0) {
+         VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
+         return (NULL);
+      }
+      ret = vmaccel_compute_1_svc(argp, NULL);
+      pthread_mutex_unlock(&svc_mutex);
+      return ret;
    }
 #endif
 #if ENABLE_VMACCEL_RPC
    static VMAccelComputeReturnStatus clnt_res;
-
+   if (pthread_mutex_lock(&svc_mutex) != 0) {
+      VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
+      return (NULL);
+   }
    memset((char *)&clnt_res, 0, sizeof(clnt_res));
    if (clnt_call(clnt, VMACCEL_COMPUTE, (xdrproc_t)xdr_VMAccelComputeOp,
                  (caddr_t)argp, (xdrproc_t)xdr_VMAccelComputeReturnStatus,
                  (caddr_t)&clnt_res, TIMEOUT) != RPC_SUCCESS) {
+      pthread_mutex_unlock(&svc_mutex);
       return (NULL);
    }
+   pthread_mutex_unlock(&svc_mutex);
    return (&clnt_res);
 #else
    return (NULL);

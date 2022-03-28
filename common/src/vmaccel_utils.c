@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2019 VMware, Inc.
+Copyright (c) 2016-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmaccel_types_address.h"
 #include <assert.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 /**
  * @brief Takes a difference of two timespec structures per the example
@@ -271,6 +272,37 @@ bool VMAccel_AddressStringToOpaqueAddr(const char *addr, char *out, int len) {
       return true;
    }
    return false;
+}
+
+pthread_mutex_t svc_mutex;
+
+VMAccelAllocateStatus *
+vmaccel_utils_poweron_svc() {
+   static VMAccelAllocateStatus clnt_res;
+   pthread_mutexattr_t attr;
+   if (pthread_mutexattr_init(&attr) != 0) {
+      VMACCEL_WARNING("%s: Unable to initialize service mutex attributes\n", __FUNCTION__);
+      return (NULL);
+   }
+   if (pthread_mutex_init(&svc_mutex, &attr) != 0) {
+      VMACCEL_WARNING("%s: Unable to initialize service mutex\n", __FUNCTION__);
+      pthread_mutexattr_destroy(&attr);
+      return (NULL);
+   }
+   pthread_mutexattr_destroy(&attr);
+   clnt_res.status = VMACCEL_SUCCESS;
+   return (&clnt_res);
+}
+
+VMAccelStatus *
+vmaccel_utils_poweroff_svc() {
+   static VMAccelStatus clnt_res;
+   if (pthread_mutex_destroy(&svc_mutex) != 0) {
+      VMACCEL_WARNING("%s: Unable to destroy service mutex\n", __FUNCTION__);
+      return (NULL);
+   }
+   clnt_res.status = VMACCEL_SUCCESS;
+   return (&clnt_res);
 }
 
 void vmaccel_xdr_free(xdrproc_t proc, caddr_t ptr) {

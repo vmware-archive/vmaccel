@@ -44,8 +44,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #include "vmaccel_defs.h"
 #include "vmaccel_mgr.h"
-#if ENABLE_VMACCEL_LOCAL
 #include "vmaccel_ops.h"
+#if ENABLE_VMACCEL_LOCAL
 #include "vmcl_ops.h"
 #endif
 #include "vmaccel_rpc.h"
@@ -347,14 +347,24 @@ public:
       char host[256];
       localBackend = false;
       dataStreaming = false;
+      if (vmaccel_utils_poweron_svc() == NULL) {
+          throw exception(VMACCEL_FAIL,
+                          "Failed to power on vmaccel utils service.");
+      }
 #if ENABLE_VMACCEL_LOCAL
       if (useLocalBackend) {
-         vmcl_poweron_svc(NULL);
+         if (vmcl_poweron_svc(NULL) == NULL) {
+            throw exception(VMACCEL_FAIL,
+                            "Failed to power on vmcl service.");
+         }
          localBackend = true;
       }
 #endif
       if (useDataStreaming) {
-         vmaccel_stream_poweron();
+         if (vmaccel_stream_poweron() == NULL) {
+            throw exception(VMACCEL_FAIL,
+                            "Failed to power on vmaccel stream service.");
+         }
          dataStreaming = true;
       }
       if (!useLocalBackend && VMAccel_AddressOpaqueAddrToString(
@@ -411,6 +421,7 @@ public:
       if (dataStreaming) {
          vmaccel_stream_poweroff();
       }
+      vmaccel_utils_poweroff_svc();
    }
 
    /**

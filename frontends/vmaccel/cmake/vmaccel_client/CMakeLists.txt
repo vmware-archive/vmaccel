@@ -25,4 +25,4 @@
 #
 
 add_executable(vmaccel_clnt ../../src/vmaccel_rpc_client.c)
-target_link_libraries(vmaccel_clnt vmaccel_rpc_client)
+target_link_libraries(vmaccel_clnt vmaccel_rpc_client vmaccel_utils)

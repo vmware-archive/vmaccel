@@ -171,6 +171,9 @@ bool VMAccel_AddressOpaqueAddrToString(const VMAccelAddress *addr, char *out,
                                        int len);
 bool VMAccel_AddressStringToOpaqueAddr(const char *addr, char *out, int len);
 
+VMAccelAllocateStatus *vmaccel_utils_poweron_svc();
+VMAccelStatus *vmaccel_utils_poweroff_svc();
+
 void vmaccel_xdr_free(xdrproc_t proc, caddr_t ptr);
 
 #ifdef __cplusplus
