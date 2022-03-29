@@ -274,7 +274,12 @@ bool VMAccel_AddressStringToOpaqueAddr(const char *addr, char *out, int len) {
    return false;
 }
 
-pthread_mutex_t svc_mutex;
+/*
+ * Mutexes used by various vmaccel modules.
+ */
+pthread_mutex_t svc_compute_mutex;
+pthread_mutex_t svc_data_mutex;
+pthread_mutex_t svc_state_mutex;
 
 VMAccelAllocateStatus *
 vmaccel_utils_poweron_svc() {
@@ -284,8 +289,18 @@ vmaccel_utils_poweron_svc() {
       VMACCEL_WARNING("%s: Unable to initialize service mutex attributes\n", __FUNCTION__);
       return (NULL);
    }
-   if (pthread_mutex_init(&svc_mutex, &attr) != 0) {
-      VMACCEL_WARNING("%s: Unable to initialize service mutex\n", __FUNCTION__);
+   if (pthread_mutex_init(&svc_compute_mutex, &attr) != 0) {
+      VMACCEL_WARNING("%s: Unable to initialize service compute mutex\n", __FUNCTION__);
+      pthread_mutexattr_destroy(&attr);
+      return (NULL);
+   }
+   if (pthread_mutex_init(&svc_data_mutex, &attr) != 0) {
+      VMACCEL_WARNING("%s: Unable to initialize service data mutex\n", __FUNCTION__);
+      pthread_mutexattr_destroy(&attr);
+      return (NULL);
+   }
+   if (pthread_mutex_init(&svc_state_mutex, &attr) != 0) {
+      VMACCEL_WARNING("%s: Unable to initialize service state mutex\n", __FUNCTION__);
       pthread_mutexattr_destroy(&attr);
       return (NULL);
    }
@@ -297,8 +312,16 @@ vmaccel_utils_poweron_svc() {
 VMAccelStatus *
 vmaccel_utils_poweroff_svc() {
    static VMAccelStatus clnt_res;
-   if (pthread_mutex_destroy(&svc_mutex) != 0) {
-      VMACCEL_WARNING("%s: Unable to destroy service mutex\n", __FUNCTION__);
+   if (pthread_mutex_destroy(&svc_state_mutex) != 0) {
+      VMACCEL_WARNING("%s: Unable to destroy service state mutex\n", __FUNCTION__);
+      return (NULL);
+   }
+   if (pthread_mutex_destroy(&svc_data_mutex) != 0) {
+      VMACCEL_WARNING("%s: Unable to destroy service data mutex\n", __FUNCTION__);
+      return (NULL);
+   }
+   if (pthread_mutex_destroy(&svc_compute_mutex) != 0) {
+      VMACCEL_WARNING("%s: Unable to destroy service compute mutex\n", __FUNCTION__);
       return (NULL);
    }
    clnt_res.status = VMACCEL_SUCCESS;
