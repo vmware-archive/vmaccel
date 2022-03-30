@@ -348,28 +348,32 @@ public:
       localBackend = false;
       dataStreaming = false;
       if (vmaccel_utils_poweron_svc() == NULL) {
-          throw exception(VMACCEL_FAIL,
-                          "Failed to power on vmaccel utils service.");
+         VMACCEL_WARNING("Failed to power on vmaccel utils service.");
+         throw exception(VMACCEL_FAIL,
+                         "Failed to power on vmaccel utils service.");
+      }
+      if (useDataStreaming) {
+         if (vmaccel_stream_poweron() != VMACCEL_SUCCESS) {
+            VMACCEL_WARNING("Failed to power on vmaccel stream service.");
+            throw exception(VMACCEL_FAIL,
+                            "Failed to power on vmaccel stream service.");
+         }
+         dataStreaming = true;
       }
 #if ENABLE_VMACCEL_LOCAL
       if (useLocalBackend) {
-         if (vmcl_poweron_svc(NULL) == NULL) {
+         if (vmcl_poweron_svc(NULL, dataStreaming) == NULL) {
+            VMACCEL_WARNING("Failed to power on vmcl service.");
             throw exception(VMACCEL_FAIL,
                             "Failed to power on vmcl service.");
          }
          localBackend = true;
       }
 #endif
-      if (useDataStreaming) {
-         if (vmaccel_stream_poweron() == NULL) {
-            throw exception(VMACCEL_FAIL,
-                            "Failed to power on vmaccel stream service.");
-         }
-         dataStreaming = true;
-      }
       if (!useLocalBackend && VMAccel_AddressOpaqueAddrToString(
                                  mgr.get_accel_addr(), host, sizeof(host))) {
          VMACCEL_LOG("vmaccel: Connecting to Accelerator manager %s\n", host);
+         DeepCopy(mgrAddr, mgr.ref_accel_addr());
          mgrClnt = clnt_create(host, VMACCELMGR, VMACCELMGR_VERSION, "tcp");
          if (mgrClnt != NULL) {
             /*
@@ -385,8 +389,6 @@ public:
 
             if (!clnt_control(mgrClnt, CLSET_TIMEOUT, (char *)&tv)) {
                VMACCEL_WARNING("vmaccel: Unable to set timeout..\n");
-            } else {
-               DeepCopy(mgrAddr, mgr.ref_accel_addr());
             }
          }
       }

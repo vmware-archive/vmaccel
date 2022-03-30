@@ -136,7 +136,8 @@ VMAccelSurfaceMapStatus *vmwopencl_surfacemap_1(VMCLSurfaceMapOp *argp);
 VMAccelStatus *vmwopencl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp);
 
 VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
-                                         unsigned int accelIndex) {
+                                         unsigned int accelIndex,
+                                         unsigned int useDataStreaming) {
    static VMAccelAllocateStatus result;
    size_t sizeRet;
    cl_platform_id platforms[16];
@@ -406,11 +407,13 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
    result.desc.maxMappings = VMCL_MAX_SURFACES;
 
 #if ENABLE_DATA_STREAMING
-   VMAccelStreamCallbacks cb;
-   cb.clSurfacemap_1 = vmwopencl_surfacemap_1;
-   cb.clSurfaceunmap_1 = vmwopencl_surfaceunmap_1;
-   vmaccel_stream_server(VMACCEL_STREAM_TYPE_VMCL_UPLOAD,
-                         VMACCEL_VMCL_BASE_PORT, &cb);
+   if (useDataStreaming) {
+      VMAccelStreamCallbacks cb;
+      cb.clSurfacemap_1 = vmwopencl_surfacemap_1;
+      cb.clSurfaceunmap_1 = vmwopencl_surfaceunmap_1;
+      vmaccel_stream_server(VMACCEL_STREAM_TYPE_VMCL_UPLOAD,
+                            VMACCEL_VMCL_BASE_PORT, &cb);
+   }
 #endif
 
    return (&result);
@@ -713,6 +716,10 @@ vmwopencl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp) {
       return (&result);
    }
 
+#if DEBUG_STREAMS
+   VMACCEL_LOG("%s: sid=%d...\n", __FUNCTION__, sid);
+#endif
+
    if (argp->desc.usage == VMACCEL_SURFACE_USAGE_READONLY) {
       clMemFlags |= CL_MEM_READ_ONLY;
    } else if (argp->desc.usage == VMACCEL_SURFACE_USAGE_WRITEONLY) {
@@ -791,12 +798,20 @@ vmwopencl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp) {
       result.status = VMACCEL_RESOURCE_UNAVAILABLE;
    }
 
+#if DEBUG_STREAMS
+   VMACCEL_LOG("%s: sid=%d allocated\n", __FUNCTION__, sid);
+#endif
+
    return (&result);
 }
 
 VMAccelStatus *vmwopencl_surfacedestroy_1(VMCLSurfaceId *argp) {
    static VMAccelStatus result;
    unsigned int sid = (unsigned int)argp->accel.id;
+
+#if DEBUG_STREAMS
+   VMACCEL_LOG("%s: Destroying sid=%d...\n", __FUNCTION__, sid);
+#endif
 
    pthread_mutex_lock(&surfaces[sid].mutex);
 
@@ -828,6 +843,10 @@ VMAccelStatus *vmwopencl_surfacedestroy_1(VMCLSurfaceId *argp) {
 
    IdentifierDB_ReleaseId(surfaceIds, sid);
    result.status = VMACCEL_SUCCESS;
+
+#if DEBUG_STREAMS
+   VMACCEL_LOG("%s: sid=%d released...\n", __FUNCTION__, sid);
+#endif
 
    return (&result);
 }

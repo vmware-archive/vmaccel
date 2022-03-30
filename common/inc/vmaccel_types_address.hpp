@@ -43,8 +43,10 @@ static void Destructor(VMAccelAddress &obj) {
 
 static void DeepCopy(VMAccelAddress &lhs, const VMAccelAddress &rhs) {
    if (&lhs != &rhs) {
+      if (lhs.addr.addr_len != 0) {
+         free(lhs.addr.addr_val);
+      }
       lhs.addr.addr_len = rhs.addr.addr_len;
-      free(lhs.addr.addr_val);
       if (rhs.addr.addr_len != 0) {
          lhs.addr.addr_val = (char *)malloc(rhs.addr.addr_len * sizeof(char));
          if (lhs.addr.addr_val != NULL) {

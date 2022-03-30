@@ -37,14 +37,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static VMCLOps *cl = &vmwopenclOps;
 static volatile unsigned long clRefCount = 0;
 
-VMAccelAllocateStatus *vmcl_poweron_svc(VMCLOps *ops) {
+VMAccelAllocateStatus *vmcl_poweron_svc(VMCLOps *ops, unsigned int useDataStreaming) {
    VMAccelAllocateStatus *ret = NULL;
    /*
     * Loop through all the Accelerator architectures until one powers on.
     */
    assert(VMACCEL_SELECT_MAX > 0);
    for (int i = 0; i < VMACCEL_SELECT_MAX; i++) {
-      ret = cl->poweron(NULL, i, 0);
+      ret = cl->poweron(NULL, i, 0, useDataStreaming);
       if (ret->status == VMACCEL_SUCCESS) {
          clRefCount++;
          return ret;
