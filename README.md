@@ -64,13 +64,6 @@ The following steps assume paths relative to the project's root directory.
     $ git submodule update
 ```
 
-SPIR-V for VMXC module:
-
-``` shell
-    $ cd external/spirv-llvm/tools
-    $ git clone -b spirv-1.1 https://github.com/KhronosGroup/SPIR clang
-```
-
 2. To build binaries, launch the make command
 
 ``` shell
