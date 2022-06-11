@@ -26,4 +26,3 @@
 
 add_subdirectory(vmaccel)
 add_subdirectory(vmcl)
-#add_subdirectory(vmxc)
