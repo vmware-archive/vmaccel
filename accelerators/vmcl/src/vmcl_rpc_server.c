@@ -116,34 +116,6 @@ VMAccelReturnStatus *vmcl_surfacedestroy_1_svc(VMCLSurfaceId *argp,
    return (&result);
 }
 
-VMAccelSharedHandleReturnStatus *
-vmcl_surfacegetsharedhandle_1_svc(VMCLSurfaceId *argp, struct svc_req *rqstp) {
-
-   static VMAccelSharedHandleReturnStatus result;
-
-   /*
-    * insert server code here
-    */
-   result.VMAccelSharedHandleReturnStatus_u.ret =
-      cl->surfacegetsharedhandle_1(argp);
-
-   return (&result);
-}
-
-VMAccelReturnStatus *
-vmcl_surfacereleasesharedhandle_1_svc(VMCLSharedHandle *argp,
-                                      struct svc_req *rqstp) {
-
-   static VMAccelReturnStatus result;
-
-   /*
-    * insert server code here
-    */
-   result.VMAccelReturnStatus_u.ret = cl->surfacereleasesharedhandle_1(argp);
-
-   return (&result);
-}
-
 VMAccelQueueReturnStatus *vmcl_queuealloc_1_svc(VMCLQueueAllocateDesc *argp,
                                                 struct svc_req *rqstp) {
 
@@ -170,84 +142,6 @@ VMAccelReturnStatus *vmcl_queuedestroy_1_svc(VMCLQueueId *argp,
    return (&result);
 }
 
-VMAccelEventReturnStatus *vmcl_eventalloc_1_svc(VMCLEventAllocateDesc *argp,
-                                                struct svc_req *rqstp) {
-
-   static VMAccelEventReturnStatus result;
-
-   /*
-    * insert server code here
-    */
-   result.VMAccelEventReturnStatus_u.ret = cl->eventalloc_1(argp);
-
-   return (&result);
-}
-
-VMAccelEventReturnStatus *vmcl_eventgetstatus_1_svc(VMCLEventId *argp,
-                                                    struct svc_req *rqstp) {
-
-   static VMAccelEventReturnStatus result;
-
-   /*
-    * insert server code here
-    */
-   result.VMAccelEventReturnStatus_u.ret = cl->eventgetstatus_1(argp);
-
-   return (&result);
-}
-
-VMAccelEventReturnStatus *vmcl_eventdestroy_1_svc(VMCLEventId *argp,
-                                                  struct svc_req *rqstp) {
-
-   static VMAccelEventReturnStatus result;
-
-   /*
-    * insert server code here
-    */
-   result.VMAccelEventReturnStatus_u.ret = cl->eventdestroy_1(argp);
-
-   return (&result);
-}
-
-VMAccelFenceReturnStatus *vmcl_fencealloc_1_svc(VMCLFenceAllocateDesc *argp,
-                                                struct svc_req *rqstp) {
-
-   static VMAccelFenceReturnStatus result;
-
-   /*
-    * insert server code here
-    */
-   result.VMAccelFenceReturnStatus_u.ret = cl->fencealloc_1(argp);
-
-   return (&result);
-}
-
-VMAccelFenceReturnStatus *vmcl_fencegetstatus_1_svc(VMCLFenceId *argp,
-                                                    struct svc_req *rqstp) {
-
-   static VMAccelFenceReturnStatus result;
-
-   /*
-    * insert server code here
-    */
-   result.VMAccelFenceReturnStatus_u.ret = cl->fencegetstatus_1(argp);
-
-   return (&result);
-}
-
-VMAccelFenceReturnStatus *vmcl_fencedestroy_1_svc(VMCLFenceId *argp,
-                                                  struct svc_req *rqstp) {
-
-   static VMAccelFenceReturnStatus result;
-
-   /*
-    * insert server code here
-    */
-   result.VMAccelFenceReturnStatus_u.ret = cl->fencedestroy_1(argp);
-
-   return (&result);
-}
-
 VMAccelReturnStatus *vmcl_queueflush_1_svc(VMCLQueueId *argp,
                                            struct svc_req *rqstp) {
 
@@ -257,32 +151,6 @@ VMAccelReturnStatus *vmcl_queueflush_1_svc(VMCLQueueId *argp,
     * insert server code here
     */
    result.VMAccelReturnStatus_u.ret = cl->queueflush_1(argp);
-
-   return (&result);
-}
-
-VMAccelReturnStatus *vmcl_eventinsert_1_svc(VMCLEventInsertOp *argp,
-                                            struct svc_req *rqstp) {
-
-   static VMAccelReturnStatus result;
-
-   /*
-    * insert server code here
-    */
-   result.VMAccelReturnStatus_u.ret = cl->eventinsert_1(argp);
-
-   return (&result);
-}
-
-VMAccelReturnStatus *vmcl_fenceinsert_1_svc(VMCLFenceInsertOp *argp,
-                                            struct svc_req *rqstp) {
-
-   static VMAccelReturnStatus result;
-
-   /*
-    * insert server code here
-    */
-   result.VMAccelReturnStatus_u.ret = cl->fenceinsert_1(argp);
 
    return (&result);
 }

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016-2019 VMware, Inc.
+# Copyright (c) 2016-2022 VMware, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,5 +26,4 @@
 
 add_subdirectory(vmaccel)
 add_subdirectory(vmcl)
-#add_subdirectory(vmcodec)
 #add_subdirectory(vmxc)

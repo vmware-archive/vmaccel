@@ -52,14 +52,8 @@ typedef struct VMCLOps {
    VMAccelStatus *(*contextdestroy_1)(VMCLContextId *);
    VMAccelSurfaceAllocateStatus *(*surfacealloc_1)(VMCLSurfaceAllocateDesc *);
    VMAccelStatus *(*surfacedestroy_1)(VMCLSurfaceId *);
-   VMAccelSharedHandleStatus *(*surfacegetsharedhandle_1)(VMCLSurfaceId *);
-   VMAccelStatus *(*surfacereleasesharedhandle_1)(VMCLSharedHandle *);
    VMAccelQueueStatus *(*queuealloc_1)(VMCLQueueAllocateDesc *);
    VMAccelStatus *(*queuedestroy_1)(VMCLQueueId *);
-   VMAccelEventStatus *(*eventalloc_1)(VMCLEventAllocateDesc *);
-   VMAccelEventStatus *(*eventdestroy_1)(VMCLEventId *);
-   VMAccelFenceStatus *(*fencealloc_1)(VMCLFenceAllocateDesc *);
-   VMAccelFenceStatus *(*fencedestroy_1)(VMCLFenceId *);
    VMCLSamplerAllocateStatus *(*sampleralloc_1)(VMCLSamplerAllocateDesc *);
    VMAccelStatus *(*samplerdestroy_1)(VMCLSamplerId *);
    VMCLKernelAllocateStatus *(*kernelalloc_1)(VMCLKernelAllocateDesc *);
@@ -69,10 +63,6 @@ typedef struct VMCLOps {
     * Control Flow
     */
    VMAccelStatus *(*queueflush_1)(VMCLQueueId *);
-   VMAccelStatus *(*eventinsert_1)(VMCLEventInsertOp *);
-   VMAccelEventStatus *(*eventgetstatus_1)(VMCLEventId *);
-   VMAccelStatus *(*fenceinsert_1)(VMCLFenceInsertOp *);
-   VMAccelFenceStatus *(*fencegetstatus_1)(VMCLFenceId *);
 
    /*
     * Operations

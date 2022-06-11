@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2020 VMware, Inc.
+Copyright (c) 2016-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -89,14 +89,6 @@ struct VMCLSurfaceAllocateDesc {
 };
 
 /*
- * Accelerator shared handle structure.
- */
-struct VMCLSharedHandle {
-   VMCLContextId             cid;
-   VMAccelSurfaceId          surf;
-};
-
-/*
  * Accelerator flow control primitives
  */
 struct VMCLQueueId {
@@ -108,26 +100,6 @@ struct VMCLQueueAllocateDesc {
    VMCLQueueId               client;
    unsigned int              subDevice;
    VMAccelQueueDesc          desc;
-};
-
-struct VMCLEventId {
-   VMCLContextId             cid;
-   VMAccelId                 id;
-};
-
-struct VMCLEventAllocateDesc {
-   VMCLEventId               client;
-   VMAccelEventDesc          desc;
-};
-
-struct VMCLFenceId {
-   VMCLContextId             cid;
-   VMAccelId                 id;
-};
-
-struct VMCLFenceAllocateDesc {
-   VMCLFenceId               client;
-   VMAccelFenceDesc          desc;
 };
 
 /*
@@ -145,21 +117,6 @@ struct VMCLQueueFlushOp {
  * immediately, otherwise operation is inserted into the supplied queue
  * and deferred.
  */
-/*
- * Accelerator event insertion operation.
- */
-struct VMCLEventInsertOp {
-   VMCLQueueId               queue;
-   VMAccelId                 id;
-};
-
-/*
- * Accelerator fence insertion operation.
- */
-struct VMCLFenceInsertOp {
-   VMCLQueueId               queue;
-   VMAccelId                 id;
-};
 
 /*
  * Accelerator surface copy operation.
@@ -401,85 +358,53 @@ program VMCL {
          VMCL_SURFACEDESTROY(VMCLSurfaceId) = 4;
  
       /*
-       * Shared surface interop support.
-       */
-      VMAccelSharedHandleReturnStatus
-         VMCL_SURFACEGETSHAREDHANDLE(VMCLSurfaceId) = 5;
-      VMAccelReturnStatus
-         VMCL_SURFACERELEASESHAREDHANDLE(VMCLSharedHandle) = 6;
-
-      /*
        * Flow control primitives allocation/destruction.
        */
       VMAccelQueueReturnStatus
-         VMCL_QUEUEALLOC(VMCLQueueAllocateDesc) = 7;
+         VMCL_QUEUEALLOC(VMCLQueueAllocateDesc) = 5;
       VMAccelReturnStatus
-         VMCL_QUEUEDESTROY(VMCLQueueId) = 8;
-
-      VMAccelEventReturnStatus
-         VMCL_EVENTALLOC(VMCLEventAllocateDesc) = 9;
-      VMAccelEventReturnStatus
-         VMCL_EVENTGETSTATUS(VMCLEventId) = 10;
-      VMAccelEventReturnStatus
-         VMCL_EVENTDESTROY(VMCLEventId) = 11;
-
-      VMAccelFenceReturnStatus
-         VMCL_FENCEALLOC(VMCLFenceAllocateDesc) = 12;
-      VMAccelFenceReturnStatus
-         VMCL_FENCEGETSTATUS(VMCLFenceId) = 13;
-      VMAccelFenceReturnStatus
-         VMCL_FENCEDESTROY(VMCLFenceId) = 14;
-
+         VMCL_QUEUEDESTROY(VMCLQueueId) = 6;
       VMAccelReturnStatus
-         VMCL_QUEUEFLUSH(VMCLQueueId) = 15;
-
-      /*
-       * Accelerator basic flow control operations.
-       */
-      VMAccelReturnStatus
-         VMCL_EVENTINSERT(VMCLEventInsertOp) = 16;
-      VMAccelReturnStatus
-         VMCL_FENCEINSERT(VMCLFenceInsertOp) = 17;
-
+         VMCL_QUEUEFLUSH(VMCLQueueId) = 7;
 
       /*
        * Basic surface content operations.
        */
       VMAccelReturnStatus
-         VMCL_IMAGEUPLOAD(VMCLImageUploadOp) = 18;
+         VMCL_IMAGEUPLOAD(VMCLImageUploadOp) = 8;
       VMAccelDownloadReturnStatus
-         VMCL_IMAGEDOWNLOAD(VMCLImageDownloadOp) = 19;
+         VMCL_IMAGEDOWNLOAD(VMCLImageDownloadOp) = 9;
 
       VMAccelSurfaceMapReturnStatus
-         VMCL_SURFACEMAP(VMCLSurfaceMapOp) = 20;
+         VMCL_SURFACEMAP(VMCLSurfaceMapOp) = 10;
       VMAccelReturnStatus
-         VMCL_SURFACEUNMAP(VMCLSurfaceUnmapOp) = 21;
+         VMCL_SURFACEUNMAP(VMCLSurfaceUnmapOp) = 11;
 
       /*
        * Accelerated surface content operations.
        */
       VMAccelReturnStatus
-         VMCL_SURFACECOPY(VMCLSurfaceCopyOp) = 22;
+         VMCL_SURFACECOPY(VMCLSurfaceCopyOp) = 12;
       VMAccelReturnStatus
-         VMCL_IMAGEFILL(VMCLImageFillOp) = 23;
+         VMCL_IMAGEFILL(VMCLImageFillOp) = 13;
 
       /*
        * Accelerator specific operations.
        */
       VMCLSamplerAllocateReturnStatus
-         VMCL_SAMPLERALLOC(VMCLSamplerAllocateDesc) = 24;
+         VMCL_SAMPLERALLOC(VMCLSamplerAllocateDesc) = 14;
       VMAccelReturnStatus
-         VMCL_SAMPLERDESTROY(VMCLSamplerId) = 25;
+         VMCL_SAMPLERDESTROY(VMCLSamplerId) = 15;
 
       VMCLKernelAllocateReturnStatus
-         VMCL_KERNELALLOC(VMCLKernelAllocateDesc) = 26;
+         VMCL_KERNELALLOC(VMCLKernelAllocateDesc) = 16;
       VMAccelReturnStatus
-         VMCL_KERNELDESTROY(VMCLKernelId) = 27;
+         VMCL_KERNELDESTROY(VMCLKernelId) = 17;
 
       /*
        * Compute Kernel dispatch operation.
        */
       VMAccelReturnStatus
-         VMCL_DISPATCH(VMCLDispatchOp) = 28;
-  } = 1;
+         VMCL_DISPATCH(VMCLDispatchOp) = 18;
+  } = 2;
 } = 0x20000081;

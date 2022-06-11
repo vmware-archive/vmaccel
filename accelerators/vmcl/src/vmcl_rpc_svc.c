@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2019 VMware, Inc.
+Copyright (c) 2016-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -115,21 +115,6 @@ static void vmcl_1(struct svc_req *rqstp, register SVCXPRT *transp) {
          local = (char *(*)(char *, struct svc_req *))vmcl_surfacedestroy_1_svc;
          break;
 
-      case VMCL_SURFACEGETSHAREDHANDLE:
-         _xdr_argument = (xdrproc_t)xdr_VMCLSurfaceId;
-         _xdr_result = (xdrproc_t)xdr_VMAccelSharedHandleReturnStatus;
-         local = (char *(*)(char *,
-                            struct svc_req *))vmcl_surfacegetsharedhandle_1_svc;
-         break;
-
-      case VMCL_SURFACERELEASESHAREDHANDLE:
-         _xdr_argument = (xdrproc_t)xdr_VMCLSharedHandle;
-         _xdr_result = (xdrproc_t)xdr_VMAccelReturnStatus;
-         local =
-            (char *(*)(char *,
-                       struct svc_req *))vmcl_surfacereleasesharedhandle_1_svc;
-         break;
-
       case VMCL_QUEUEALLOC:
          _xdr_argument = (xdrproc_t)xdr_VMCLQueueAllocateDesc;
          _xdr_result = (xdrproc_t)xdr_VMAccelQueueReturnStatus;
@@ -142,58 +127,10 @@ static void vmcl_1(struct svc_req *rqstp, register SVCXPRT *transp) {
          local = (char *(*)(char *, struct svc_req *))vmcl_queuedestroy_1_svc;
          break;
 
-      case VMCL_EVENTALLOC:
-         _xdr_argument = (xdrproc_t)xdr_VMCLEventAllocateDesc;
-         _xdr_result = (xdrproc_t)xdr_VMAccelEventReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_eventalloc_1_svc;
-         break;
-
-      case VMCL_EVENTGETSTATUS:
-         _xdr_argument = (xdrproc_t)xdr_VMCLEventId;
-         _xdr_result = (xdrproc_t)xdr_VMAccelEventReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_eventgetstatus_1_svc;
-         break;
-
-      case VMCL_EVENTDESTROY:
-         _xdr_argument = (xdrproc_t)xdr_VMCLEventId;
-         _xdr_result = (xdrproc_t)xdr_VMAccelEventReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_eventdestroy_1_svc;
-         break;
-
-      case VMCL_FENCEALLOC:
-         _xdr_argument = (xdrproc_t)xdr_VMCLFenceAllocateDesc;
-         _xdr_result = (xdrproc_t)xdr_VMAccelFenceReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_fencealloc_1_svc;
-         break;
-
-      case VMCL_FENCEGETSTATUS:
-         _xdr_argument = (xdrproc_t)xdr_VMCLFenceId;
-         _xdr_result = (xdrproc_t)xdr_VMAccelFenceReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_fencegetstatus_1_svc;
-         break;
-
-      case VMCL_FENCEDESTROY:
-         _xdr_argument = (xdrproc_t)xdr_VMCLFenceId;
-         _xdr_result = (xdrproc_t)xdr_VMAccelFenceReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_fencedestroy_1_svc;
-         break;
-
       case VMCL_QUEUEFLUSH:
          _xdr_argument = (xdrproc_t)xdr_VMCLQueueId;
          _xdr_result = (xdrproc_t)xdr_VMAccelReturnStatus;
          local = (char *(*)(char *, struct svc_req *))vmcl_queueflush_1_svc;
-         break;
-
-      case VMCL_EVENTINSERT:
-         _xdr_argument = (xdrproc_t)xdr_VMCLEventInsertOp;
-         _xdr_result = (xdrproc_t)xdr_VMAccelReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_eventinsert_1_svc;
-         break;
-
-      case VMCL_FENCEINSERT:
-         _xdr_argument = (xdrproc_t)xdr_VMCLFenceInsertOp;
-         _xdr_result = (xdrproc_t)xdr_VMAccelReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_fenceinsert_1_svc;
          break;
 
       case VMCL_IMAGEUPLOAD:

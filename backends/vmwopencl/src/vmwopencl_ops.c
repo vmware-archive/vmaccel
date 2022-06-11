@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2021 VMware, Inc.
+Copyright (c) 2016-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -79,16 +79,6 @@ typedef struct VMWOpenCLQueue {
    cl_command_queue queue;
 } VMWOpenCLQueue;
 
-typedef struct VMWOpenCLFence {
-   VMAccelFenceDesc desc;
-   unsigned int pad;
-} VMWOpenCLFence;
-
-typedef struct VMWOpenCLEvent {
-   VMAccelEventDesc desc;
-   unsigned int pad;
-} VMWOpenCLEvent;
-
 typedef struct VMWOpenCLSampler {
    cl_sampler sampler;
 } VMWOpenCLSampler;
@@ -111,12 +101,6 @@ static IdentifierDB *surfaceIds = NULL;
 
 static VMWOpenCLQueue *queues = NULL;
 static IdentifierDB *queueIds = NULL;
-
-static VMWOpenCLFence *fences = NULL;
-static IdentifierDB *fenceIds = NULL;
-
-static VMWOpenCLEvent *events = NULL;
-static IdentifierDB *eventIds = NULL;
 
 static VMWOpenCLSampler *samplers = NULL;
 static IdentifierDB *samplerIds = NULL;
@@ -371,12 +355,6 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
    queues = calloc(VMCL_MAX_QUEUES, sizeof(VMWOpenCLQueue));
    queueIds = IdentifierDB_Alloc(VMCL_MAX_QUEUES);
 
-   fences = calloc(VMCL_MAX_FENCES, sizeof(VMWOpenCLFence));
-   fenceIds = IdentifierDB_Alloc(VMCL_MAX_FENCES);
-
-   events = calloc(VMCL_MAX_EVENTS, sizeof(VMWOpenCLEvent));
-   eventIds = IdentifierDB_Alloc(VMCL_MAX_EVENTS);
-
    samplers = calloc(VMCL_MAX_SAMPLERS, sizeof(VMWOpenCLSampler));
    samplerIds = IdentifierDB_Alloc(VMCL_MAX_SAMPLERS);
 
@@ -388,8 +366,7 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
     */
    if ((contexts == NULL) || (contextIds == NULL) || (surfaces == NULL) ||
        (surfaceIds == NULL) || (queues == NULL) || (queueIds == NULL) ||
-       (fences == NULL) || (fenceIds == NULL) || (events == NULL) ||
-       (eventIds == NULL) || (samplers == NULL) || (samplerIds == NULL) ||
+       (samplers == NULL) || (samplerIds == NULL) ||
        (kernels == NULL) || (kernelIds == NULL)) {
       VMACCEL_WARNING("Unable to allocate object database...\n");
       result.status = VMACCEL_FAIL;
@@ -400,8 +377,6 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
 
    result.desc.maxContexts = VMCL_MAX_CONTEXTS;
    result.desc.maxQueues = VMCL_MAX_QUEUES;
-   result.desc.maxFences = VMCL_MAX_FENCES;
-   result.desc.maxEvents = VMCL_MAX_EVENTS;
    result.desc.maxSurfaces = VMCL_MAX_SURFACES;
    result.desc.maxMappings = VMCL_MAX_SURFACES;
 
@@ -436,12 +411,6 @@ VMAccelStatus *vmwopencl_poweroff() {
 
    IdentifierDB_Free(queueIds);
    free(queues);
-
-   IdentifierDB_Free(fenceIds);
-   free(fences);
-
-   IdentifierDB_Free(eventIds);
-   free(events);
 
    IdentifierDB_Free(samplerIds);
    free(samplers);
@@ -658,20 +627,6 @@ VMAccelStatus *vmwopencl_contextdestroy_1(VMCLContextId *argp) {
             __FUNCTION__, IdentifierDB_Count(queueIds));
       }
 
-      if (IdentifierDB_Count(fenceIds) != 0) {
-         VMACCEL_WARNING(
-            "%s: Semantic error: Missing destructor call, %d fences "
-            "still active...\n",
-            __FUNCTION__, IdentifierDB_Count(fenceIds));
-      }
-
-      if (IdentifierDB_Count(eventIds) != 0) {
-         VMACCEL_WARNING(
-            "%s: Semantic error: Missing destructor call, %d events "
-            "still active...\n",
-            __FUNCTION__, IdentifierDB_Count(eventIds));
-      }
-
       if (IdentifierDB_Count(samplerIds) != 0) {
          VMACCEL_WARNING(
             "%s: Semantic error: Missing destructor call, %d samplers "
@@ -832,31 +787,6 @@ VMAccelStatus *vmwopencl_surfacedestroy_1(VMCLSurfaceId *argp) {
    return (&result);
 }
 
-VMAccelSharedHandleStatus *
-vmwopencl_surfacegetsharedhandle_1(VMCLSurfaceId *argp) {
-   static VMAccelSharedHandleStatus result;
-
-   memset(&result, 0, sizeof(result));
-
-   assert(0);
-
-   result.status = VMACCEL_FAIL;
-
-   return (&result);
-}
-
-VMAccelStatus *vmwopencl_surfacereleasesharedhandle_1(VMCLSharedHandle *argp) {
-   static VMAccelStatus result;
-
-   memset(&result, 0, sizeof(result));
-
-   assert(0);
-
-   result.status = VMACCEL_FAIL;
-
-   return (&result);
-}
-
 VMAccelQueueStatus *vmwopencl_queuealloc_1(VMCLQueueAllocateDesc *argp) {
    static VMAccelQueueStatus result;
    unsigned int cid = (unsigned int)argp->client.cid;
@@ -952,78 +882,6 @@ VMAccelStatus *vmwopencl_queuedestroy_1(VMCLQueueId *argp) {
    return (&result);
 }
 
-VMAccelEventStatus *vmwopencl_eventalloc_1(VMCLEventAllocateDesc *argp) {
-   static VMAccelEventStatus result;
-
-   memset(&result, 0, sizeof(result));
-
-   assert(0);
-
-   result.status = VMACCEL_FAIL;
-
-   return (&result);
-}
-
-VMAccelEventStatus *vmwopencl_eventgetstatus_1(VMCLEventId *argp) {
-   static VMAccelEventStatus result;
-
-   memset(&result, 0, sizeof(result));
-
-   assert(0);
-
-   result.status = VMACCEL_FAIL;
-
-   return (&result);
-}
-
-VMAccelEventStatus *vmwopencl_eventdestroy_1(VMCLEventId *argp) {
-   static VMAccelEventStatus result;
-
-   memset(&result, 0, sizeof(result));
-
-   assert(0);
-
-   result.status = VMACCEL_FAIL;
-
-   return (&result);
-}
-
-VMAccelFenceStatus *vmwopencl_fencealloc_1(VMCLFenceAllocateDesc *argp) {
-   static VMAccelFenceStatus result;
-
-   memset(&result, 0, sizeof(result));
-
-   assert(0);
-
-   result.status = VMACCEL_FAIL;
-
-   return (&result);
-}
-
-VMAccelFenceStatus *vmwopencl_fencegetstatus_1(VMCLFenceId *argp) {
-   static VMAccelFenceStatus result;
-
-   memset(&result, 0, sizeof(result));
-
-   assert(0);
-
-   result.status = VMACCEL_FAIL;
-
-   return (&result);
-}
-
-VMAccelFenceStatus *vmwopencl_fencedestroy_1(VMCLFenceId *argp) {
-   static VMAccelFenceStatus result;
-
-   memset(&result, 0, sizeof(result));
-
-   assert(0);
-
-   result.status = VMACCEL_FAIL;
-
-   return (&result);
-}
-
 VMAccelStatus *vmwopencl_queueflush_1(VMCLQueueId *argp) {
    static VMAccelStatus result;
    unsigned int qid = (unsigned int)argp->id;
@@ -1040,30 +898,6 @@ VMAccelStatus *vmwopencl_queueflush_1(VMCLQueueId *argp) {
    if (errNum != CL_SUCCESS) {
       result.status = VMACCEL_FAIL;
    }
-
-   return (&result);
-}
-
-VMAccelStatus *vmwopencl_eventinsert_1(VMCLEventInsertOp *argp) {
-   static VMAccelStatus result;
-
-   memset(&result, 0, sizeof(result));
-
-   assert(0);
-
-   result.status = VMACCEL_FAIL;
-
-   return (&result);
-}
-
-VMAccelStatus *vmwopencl_fenceinsert_1(VMCLFenceInsertOp *argp) {
-   static VMAccelStatus result;
-
-   memset(&result, 0, sizeof(result));
-
-   assert(0);
-
-   result.status = VMACCEL_FAIL;
 
    return (&result);
 }
@@ -1872,23 +1706,13 @@ VMCLOps vmwopenclOps = {
    vmwopencl_contextdestroy_1,
    vmwopencl_surfacealloc_1,
    vmwopencl_surfacedestroy_1,
-   vmwopencl_surfacegetsharedhandle_1,
-   vmwopencl_surfacereleasesharedhandle_1,
    vmwopencl_queuealloc_1,
    vmwopencl_queuedestroy_1,
-   vmwopencl_eventalloc_1,
-   vmwopencl_eventdestroy_1,
-   vmwopencl_fencealloc_1,
-   vmwopencl_fencedestroy_1,
    vmwopencl_sampleralloc_1,
    vmwopencl_samplerdestroy_1,
    vmwopencl_kernelalloc_1,
    vmwopencl_kerneldestroy_1,
    vmwopencl_queueflush_1,
-   vmwopencl_eventinsert_1,
-   vmwopencl_eventgetstatus_1,
-   vmwopencl_fenceinsert_1,
-   vmwopencl_fencegetstatus_1,
    vmwopencl_imageupload_1,
    vmwopencl_imagedownload_1,
    vmwopencl_surfacemap_1,

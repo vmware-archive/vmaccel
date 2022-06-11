@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2020 VMware, Inc.
+Copyright (c) 2016-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -400,11 +400,6 @@ struct VMAccelSurfaceAllocateStatus {
    VMAccelSurfaceDesc        surfaceDesc;
 };
 
-struct VMAccelSharedHandleStatus {
-   VMAccelStatusCode         status;
-   VMAccelSurfaceId          shared;
-};
-
 /*
  * Accelerator flow control primitives and operations.
  */
@@ -424,59 +419,6 @@ struct VMAccelQueueDesc {
 
 struct VMAccelQueueStatus {
    VMAccelStatusCode         status;
-};
-
-/*
- * Events are synchronous non-blocking enqueued objects
- * which describe the extent of the associated operation.
- */
-typedef unsigned int VMAccelEnqueuedStatusCode;
-typedef unsigned int VMAccelEventType;
-typedef VMAccelId VMAccelEventId;
-
-/*
- * CT_ASSERT(VMAccelEventTypeEnum << 31);
- */
-struct VMAccelEventDesc {
-   VMAccelEventType          type;
-
-   /*
-    * Callbacks to a driver, callbacks to other accelerators are forbidden for
-    * at least the following reasons:
-    *
-    * - Avoid unbounded execution expansion.
-    * - Security risk with Denial Of Service attacks.
-    * - Non-deterministic execution within the pipeline.
-    * - Lack of context for state, parameters, and execution requests.
-    */
-   VMAccelCallback           callbacks<>;
-};
-
-struct VMAccelEventStatus {
-   VMAccelStatusCode         status;
-   VMAccelEnqueuedStatusCode eventStatus;
-};
-
-/*
- * Fences are synchronous blocking enqueued objects.
- */
-typedef unsigned int VMAccelFenceType;
-
-struct VMAccelFenceDesc {
-   VMAccelFenceType          type;
-
-   /*
-    * Value assigned to the notifier memory address.
-    */
-   VMAccelSurfaceId          notifyMemory;
-   VMAccelCoordinate3DUINT   elementLocation;
-   unsigned int              markerValue;
-};
-
-struct VMAccelFenceStatus {
-   VMAccelStatusCode         status;
-   VMAccelEnqueuedStatusCode fenceStatus;
-   VMAccelId                 id;
 };
 
 /*
@@ -523,19 +465,6 @@ struct VMAccelImageTransferOp {
     * Callback address that would receive the data.
     */
    VMAccelCallback           callbacks<>;
-};
-
-/*
- * Accelerator DMA operation status.
- */
-struct VMAccelDMAStatus {
-   VMAccelStatusCode         status;
-
-   /*
-    * Fence used to determine completion of the DMA operation. Non-local
-    * fences must be queried through their VMAccel server.
-    */   
-   VMAccelId                 fence;
 };
 
 /*
@@ -695,41 +624,11 @@ union VMAccelQueueReturnStatus switch (int errno) {
 };
 
 /*
- * The result of a VMAccel event operation.
- */
-union VMAccelEventReturnStatus switch (int errno) {
-   case 0:
-      VMAccelEventStatus *ret;
-   default:
-      void;
-};
-
-/*
- * The result of a VMAccel fence operation.
- */
-union VMAccelFenceReturnStatus switch (int errno) {
-   case 0:
-      VMAccelFenceStatus *ret;
-   default:
-      void;
-};
-
-/*
  * The result of a VMAccel surface allocation.
  */
 union VMAccelSurfaceAllocateReturnStatus switch (int errno) {
    case 0:
       VMAccelSurfaceAllocateStatus *ret;
-   default:
-      void;
-};
-
-/*
- * The result of a VMAccel shared handle operation.
- */
-union VMAccelSharedHandleReturnStatus switch (int errno) {
-   case 0:
-      VMAccelSharedHandleStatus *ret;
    default:
       void;
 };

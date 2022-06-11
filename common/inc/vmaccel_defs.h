@@ -105,12 +105,7 @@ typedef enum VMAccelResourceTypeEnum {
    VMACCEL_MEMORY = 3,
    VMACCEL_SURFACE = 4,
    VMACCEL_COMPUTE_ACCELERATOR = 5,
-   VMACCEL_AI_ACCELERATOR = 6,
-   VMACCEL_ML_ACCELERATOR = 7,
-   VMACCEL_GRAPHICS_ACCELERATOR = 8,
-   VMACCEL_CODEC_ACCELERATOR = 9,
-   VMACCEL_CONSOLE_ACCELERATOR = 10,
-   VMACCEL_TYPE_MAX = 11,
+   VMACCEL_TYPE_MAX = 6,
 } VMAccelResourceTypeEnum;
 
 #define VMACCEL_CALLBACK_MASK (1 << VMACCEL_CALLBACK)
@@ -118,11 +113,6 @@ typedef enum VMAccelResourceTypeEnum {
 #define VMACCEL_MEMORY_MASK (1 << VMACCEL_MEMORY)
 #define VMACCEL_SURFACE_MASK (1 << VMACCEL_SURFACE)
 #define VMACCEL_COMPUTE_ACCELERATOR_MASK (1 << VMACCEL_COMPUTE_ACCELERATOR)
-#define VMACCEL_AI_ACCELERATOR_MASK (1 << VMACCEL_AI_ACCELERATOR)
-#define VMACCEL_ML_ACCELERATOR_MASK (1 << VMACCEL_ML_ACCELERATOR)
-#define VMACCEL_GRAPHICS_ACCELERATOR_MASK (1 << VMACCEL_GRAPHICS_ACCELERATOR)
-#define VMACCEL_CODEC_ACCELERATOR_MASK (1 << VMACCEL_CODEC_ACCELERATOR)
-#define VMACCEL_CONSOLE_ACCELERATOR_MASK (1 << VMACCEL_CONSOLE_ACCELERATOR)
 
 typedef enum VMAccelArchitectureEnum {
    VMACCEL_GPU = 0,
@@ -146,24 +136,19 @@ typedef enum VMAccelCapsEnum {
    VMACCEL_INTEROP = 0,
 
    /*
-    * Events are supported for asynchronous flow control.
-    */
-   VMACCEL_EVENTS = 1,
-
-   /*
     * Callbacks supported for asynchronous feedback from events.
     */
-   VMACCEL_CALLBACKS = 2,
+   VMACCEL_CALLBACKS = 1,
 
    /*
     * Arbitrary halting is available for an accelerator.
     */
-   VMACCEL_HALT = 3,
+   VMACCEL_HALT = 2,
 
    /*
     * Support for surfaces and images.
     */
-   VMACCEL_IMAGE = 4,
+   VMACCEL_IMAGE = 3,
 
    /*
     * Mapping of a surface to the client's address space, and the necessary
@@ -172,7 +157,7 @@ typedef enum VMAccelCapsEnum {
     * Note: Servers must handle garbage collection of open surface
     *       mappings.
     */
-   VMACCEL_SURFACEMAP = 5,
+   VMACCEL_SURFACEMAP = 4,
 
    /*
     * Shared Virtual Memory is available when defining/using a surface.
@@ -180,20 +165,19 @@ typedef enum VMAccelCapsEnum {
     * Fine-grained SVM is an optimization to this if the server and client
     * exist on the same host.
     */
-   VMACCEL_SVM = 6,
+   VMACCEL_SVM = 5,
 
    /*
     * Peer-to-peer communication between servers.
     *
     * Requires secure tokens...
     */
-   VMACCEL_P2P = 7,
+   VMACCEL_P2P = 6,
 
-   VMACCEL_CAP_MAX = 8,
+   VMACCEL_CAP_MAX = 7,
 } VMAccelCapsEnum;
 
 #define VMACCEL_INTEROP_CAP (1 << VMACCEL_INTEROP)
-#define VMACCEL_EVENTS_CAP (1 << VMACCEL_EVENTS)
 #define VMACCEL_CALLBACKS_CAP (1 << VMACCEL_CALLBACKS)
 #define VMACCEL_HALT_CAP (1 << VMACCEL_HALT)
 #define VMACCEL_IMAGE_CAP (1 << VMACCEL_IMAGE)
@@ -295,22 +279,6 @@ typedef enum VMAccelPipelineBindPointsEnum {
    VMACCEL_BIND_SHADER_RESOURCE,
    VMACCEL_BIND_UNORDERED_ACCESS,
 
-   /*
-    * 3D pipeline stages.
-    */
-   VMACCEL_BIND_SCREEN_TARGET,
-   VMACCEL_BIND_RENDER_TARGET,
-   VMACCEL_BIND_DEPTH_STENCIL,
-   VMACCEL_BIND_VERTEX_BUFFER,
-   VMACCEL_BIND_INDEX_BUFFER,
-   VMACCEL_BIND_STREAM_OUT,
-
-   /*
-    * Video pipeline stages.
-    */
-   VMACCEL_BIND_VIDEO_DECODER,
-   VMACCEL_BIND_VIDEO_ENCODER,
-
    VMACCEL_BIND_MAX,
 } VMAccelPipelineBindPointsEnum;
 
@@ -323,14 +291,6 @@ typedef enum VMAccelPipelineBindPointsEnum {
 #define VMACCEL_BIND_CONSTANT_BUFFER_FLAG (1 << VMACCEL_BIND_CONSTANT_BUFFER)
 #define VMACCEL_BIND_SHADER_RESOURCE_FLAG (1 << VMACCEL_BIND_SHADER_RESOURCE)
 #define VMACCEL_BIND_UNORDERED_ACCESS_FLAG (1 << VMACCEL_BIND_UNORDERED_ACCESS)
-#define VMACCEL_BIND_SCREEN_TARGET_FLAG (1 << VMACCEL_BIND_SCREEN_TARGET)
-#define VMACCEL_BIND_RENDER_TARGET_FLAG (1 << VMACCEL_BIND_RENDER_TARGET)
-#define VMACCEL_BIND_DEPTH_STENCIL_FLAG (1 << VMACCEL_BIND_DEPTH_STENCIL)
-#define VMACCEL_BIND_VERTEX_BUFFER_FLAG (1 << VMACCEL_BIND_VERTEX_BUFFER)
-#define VMACCEL_BIND_INDEX_BUFFER_FLAG (1 << VMACCEL_BIND_INDEX_BUFFER)
-#define VMACCEL_BIND_STREAM_OUT_FLAG (1 << VMACCEL_BIND_STREAM_OUT)
-#define VMACCEL_BIND_VIDEO_DECODER_FLAG (1 << VMACCEL_BIND_VIDEO_DECODER)
-#define VMACCEL_BIND_VIDEO_ENCODER_FLAG (1 << VMACCEL_BIND_VIDEO_ENCODER)
 #define VMACCEL_BIND_MASK ((1 << VMACCEL_BIND_MAX) - 1)
 
 typedef enum VMAccelHandleTypeEnum {
@@ -391,23 +351,5 @@ typedef enum VMAccelQueueFlagsEnum {
 #define VMACCEL_QUEUE_ENABLE_PROFILING_FLAG                                    \
    (1 << VMACCEL_QUEUE_ENABLE_PROFILING)
 #define VMACCEL_QUEUE_FLAG_MASK ((1 << VMACCEL_QUEUE_MAX_FLAGS) - 1)
-
-typedef enum VMAccelEventStatusEnum {
-   VMACCEL_EVENT_QUEUED = 0,
-   VMACCEL_EVENT_SUBMITTED = 1,
-   VMACCEL_EVENT_RUNNING = 2,
-   VMACCEL_EVENT_COMPLETED = 3,
-   VMACCEL_EVENT_ERROR = 4,
-} VMAccelEventStatusEnum;
-
-typedef enum VMAccelFenceTypeEnum {
-   VMACCEL_FENCE_MARKER,
-   VMACCEL_FENCE_MARKER_ATOMIC_INC,
-   VMACCEL_FENCE_MARKER_ATOMIC_DEC,
-   /* BARRIER? */
-   VMACCEL_FENCE_IMAGE_MEM,
-   VMACCEL_FENCE_GLOBAL_MEM,
-   VMACCEL_FENCE_LOCAL_MEM,
-} VMAccelFenceTypeEnum;
 
 #endif /* _VMACCEL_DEFS_H_ */
