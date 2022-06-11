@@ -57,19 +57,9 @@ static void vmcl_1(struct svc_req *rqstp, register SVCXPRT *transp) {
       VMCLContextId vmcl_contextdestroy_1_arg;
       VMCLSurfaceAllocateDesc vmcl_surfacealloc_1_arg;
       VMCLSurfaceId vmcl_surfacedestroy_1_arg;
-      VMCLSurfaceId vmcl_surfacegetsharedhandle_1_arg;
-      VMCLSharedHandle vmcl_surfacereleasesharedhandle_1_arg;
       VMCLQueueAllocateDesc vmcl_queuealloc_1_arg;
       VMCLQueueId vmcl_queuedestroy_1_arg;
-      VMCLEventAllocateDesc vmcl_eventalloc_1_arg;
-      VMCLEventId vmcl_eventgetstatus_1_arg;
-      VMCLEventId vmcl_eventdestroy_1_arg;
-      VMCLFenceAllocateDesc vmcl_fencealloc_1_arg;
-      VMCLFenceId vmcl_fencegetstatus_1_arg;
-      VMCLFenceId vmcl_fencedestroy_1_arg;
       VMCLQueueId vmcl_queueflush_1_arg;
-      VMCLEventInsertOp vmcl_eventinsert_1_arg;
-      VMCLFenceInsertOp vmcl_fenceinsert_1_arg;
       VMCLImageUploadOp vmcl_imageupload_1_arg;
       VMCLImageDownloadOp vmcl_imagedownload_1_arg;
       VMCLSurfaceMapOp vmcl_surfacemap_1_arg;
@@ -94,109 +84,109 @@ static void vmcl_1(struct svc_req *rqstp, register SVCXPRT *transp) {
       case VMCL_CONTEXTALLOC:
          _xdr_argument = (xdrproc_t)xdr_VMCLContextAllocateDesc;
          _xdr_result = (xdrproc_t)xdr_VMCLContextAllocateReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_contextalloc_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_contextalloc_2_svc;
          break;
 
       case VMCL_CONTEXTDESTROY:
          _xdr_argument = (xdrproc_t)xdr_VMCLContextId;
          _xdr_result = (xdrproc_t)xdr_VMAccelReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_contextdestroy_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_contextdestroy_2_svc;
          break;
 
       case VMCL_SURFACEALLOC:
          _xdr_argument = (xdrproc_t)xdr_VMCLSurfaceAllocateDesc;
          _xdr_result = (xdrproc_t)xdr_VMAccelSurfaceAllocateReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_surfacealloc_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_surfacealloc_2_svc;
          break;
 
       case VMCL_SURFACEDESTROY:
          _xdr_argument = (xdrproc_t)xdr_VMCLSurfaceId;
          _xdr_result = (xdrproc_t)xdr_VMAccelReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_surfacedestroy_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_surfacedestroy_2_svc;
          break;
 
       case VMCL_QUEUEALLOC:
          _xdr_argument = (xdrproc_t)xdr_VMCLQueueAllocateDesc;
          _xdr_result = (xdrproc_t)xdr_VMAccelQueueReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_queuealloc_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_queuealloc_2_svc;
          break;
 
       case VMCL_QUEUEDESTROY:
          _xdr_argument = (xdrproc_t)xdr_VMCLQueueId;
          _xdr_result = (xdrproc_t)xdr_VMAccelReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_queuedestroy_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_queuedestroy_2_svc;
          break;
 
       case VMCL_QUEUEFLUSH:
          _xdr_argument = (xdrproc_t)xdr_VMCLQueueId;
          _xdr_result = (xdrproc_t)xdr_VMAccelReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_queueflush_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_queueflush_2_svc;
          break;
 
       case VMCL_IMAGEUPLOAD:
          _xdr_argument = (xdrproc_t)xdr_VMCLImageUploadOp;
          _xdr_result = (xdrproc_t)xdr_VMAccelReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_imageupload_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_imageupload_2_svc;
          break;
 
       case VMCL_IMAGEDOWNLOAD:
          _xdr_argument = (xdrproc_t)xdr_VMCLImageDownloadOp;
          _xdr_result = (xdrproc_t)xdr_VMAccelDownloadReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_imagedownload_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_imagedownload_2_svc;
          break;
 
       case VMCL_SURFACEMAP:
          _xdr_argument = (xdrproc_t)xdr_VMCLSurfaceMapOp;
          _xdr_result = (xdrproc_t)xdr_VMAccelSurfaceMapReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_surfacemap_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_surfacemap_2_svc;
          break;
 
       case VMCL_SURFACEUNMAP:
          _xdr_argument = (xdrproc_t)xdr_VMCLSurfaceUnmapOp;
          _xdr_result = (xdrproc_t)xdr_VMAccelReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_surfaceunmap_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_surfaceunmap_2_svc;
          break;
 
       case VMCL_SURFACECOPY:
          _xdr_argument = (xdrproc_t)xdr_VMCLSurfaceCopyOp;
          _xdr_result = (xdrproc_t)xdr_VMAccelReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_surfacecopy_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_surfacecopy_2_svc;
          break;
 
       case VMCL_IMAGEFILL:
          _xdr_argument = (xdrproc_t)xdr_VMCLImageFillOp;
          _xdr_result = (xdrproc_t)xdr_VMAccelReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_imagefill_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_imagefill_2_svc;
          break;
 
       case VMCL_SAMPLERALLOC:
          _xdr_argument = (xdrproc_t)xdr_VMCLSamplerAllocateDesc;
          _xdr_result = (xdrproc_t)xdr_VMCLSamplerAllocateReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_sampleralloc_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_sampleralloc_2_svc;
          break;
 
       case VMCL_SAMPLERDESTROY:
          _xdr_argument = (xdrproc_t)xdr_VMCLSamplerId;
          _xdr_result = (xdrproc_t)xdr_VMAccelReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_samplerdestroy_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_samplerdestroy_2_svc;
          break;
 
       case VMCL_KERNELALLOC:
          _xdr_argument = (xdrproc_t)xdr_VMCLKernelAllocateDesc;
          _xdr_result = (xdrproc_t)xdr_VMCLKernelAllocateReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_kernelalloc_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_kernelalloc_2_svc;
          break;
 
       case VMCL_KERNELDESTROY:
          _xdr_argument = (xdrproc_t)xdr_VMCLKernelId;
          _xdr_result = (xdrproc_t)xdr_VMAccelReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_kerneldestroy_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_kerneldestroy_2_svc;
          break;
 
       case VMCL_DISPATCH:
          _xdr_argument = (xdrproc_t)xdr_VMCLDispatchOp;
          _xdr_result = (xdrproc_t)xdr_VMAccelReturnStatus;
-         local = (char *(*)(char *, struct svc_req *))vmcl_dispatch_1_svc;
+         local = (char *(*)(char *, struct svc_req *))vmcl_dispatch_2_svc;
          break;
 
       default:

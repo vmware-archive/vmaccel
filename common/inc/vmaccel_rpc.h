@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2020 VMware, Inc.
+Copyright (c) 2016-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -271,12 +271,6 @@ struct VMAccelSurfaceAllocateStatus {
 };
 typedef struct VMAccelSurfaceAllocateStatus VMAccelSurfaceAllocateStatus;
 
-struct VMAccelSharedHandleStatus {
-   VMAccelStatusCode status;
-   VMAccelSurfaceId shared;
-};
-typedef struct VMAccelSharedHandleStatus VMAccelSharedHandleStatus;
-
 typedef u_int VMAccelQueueFlags;
 
 struct VMAccelQueueDesc {
@@ -289,44 +283,6 @@ struct VMAccelQueueStatus {
    VMAccelStatusCode status;
 };
 typedef struct VMAccelQueueStatus VMAccelQueueStatus;
-
-typedef u_int VMAccelEnqueuedStatusCode;
-
-typedef u_int VMAccelEventType;
-
-typedef VMAccelId VMAccelEventId;
-
-struct VMAccelEventDesc {
-   VMAccelEventType type;
-   struct {
-      u_int callbacks_len;
-      VMAccelCallback *callbacks_val;
-   } callbacks;
-};
-typedef struct VMAccelEventDesc VMAccelEventDesc;
-
-struct VMAccelEventStatus {
-   VMAccelStatusCode status;
-   VMAccelEnqueuedStatusCode eventStatus;
-};
-typedef struct VMAccelEventStatus VMAccelEventStatus;
-
-typedef u_int VMAccelFenceType;
-
-struct VMAccelFenceDesc {
-   VMAccelFenceType type;
-   VMAccelSurfaceId notifyMemory;
-   VMAccelCoordinate3DUINT elementLocation;
-   u_int markerValue;
-};
-typedef struct VMAccelFenceDesc VMAccelFenceDesc;
-
-struct VMAccelFenceStatus {
-   VMAccelStatusCode status;
-   VMAccelEnqueuedStatusCode fenceStatus;
-   VMAccelId id;
-};
-typedef struct VMAccelFenceStatus VMAccelFenceStatus;
 
 struct VMAccelSurfaceRegion {
    u_int mipLevel;
@@ -361,12 +317,6 @@ struct VMAccelImageTransferOp {
    } callbacks;
 };
 typedef struct VMAccelImageTransferOp VMAccelImageTransferOp;
-
-struct VMAccelDMAStatus {
-   VMAccelStatusCode status;
-   VMAccelId fence;
-};
-typedef struct VMAccelDMAStatus VMAccelDMAStatus;
 
 struct VMAccelDownloadStatus {
    VMAccelStatusCode status;
@@ -504,22 +454,6 @@ struct VMAccelQueueReturnStatus {
 };
 typedef struct VMAccelQueueReturnStatus VMAccelQueueReturnStatus;
 
-struct VMAccelEventReturnStatus {
-   int errno;
-   union {
-      VMAccelEventStatus *ret;
-   } VMAccelEventReturnStatus_u;
-};
-typedef struct VMAccelEventReturnStatus VMAccelEventReturnStatus;
-
-struct VMAccelFenceReturnStatus {
-   int errno;
-   union {
-      VMAccelFenceStatus *ret;
-   } VMAccelFenceReturnStatus_u;
-};
-typedef struct VMAccelFenceReturnStatus VMAccelFenceReturnStatus;
-
 struct VMAccelSurfaceAllocateReturnStatus {
    int errno;
    union {
@@ -528,14 +462,6 @@ struct VMAccelSurfaceAllocateReturnStatus {
 };
 typedef struct VMAccelSurfaceAllocateReturnStatus
    VMAccelSurfaceAllocateReturnStatus;
-
-struct VMAccelSharedHandleReturnStatus {
-   int errno;
-   union {
-      VMAccelSharedHandleStatus *ret;
-   } VMAccelSharedHandleReturnStatus_u;
-};
-typedef struct VMAccelSharedHandleReturnStatus VMAccelSharedHandleReturnStatus;
 
 struct VMAccelDownloadReturnStatus {
    int errno;
@@ -640,23 +566,13 @@ extern bool_t xdr_VMAccelHandleType(XDR *, VMAccelHandleType *);
 extern bool_t xdr_VMAccelSurfaceId(XDR *, VMAccelSurfaceId *);
 extern bool_t xdr_VMAccelSurfaceAllocateStatus(XDR *,
                                                VMAccelSurfaceAllocateStatus *);
-extern bool_t xdr_VMAccelSharedHandleStatus(XDR *, VMAccelSharedHandleStatus *);
 extern bool_t xdr_VMAccelQueueFlags(XDR *, VMAccelQueueFlags *);
 extern bool_t xdr_VMAccelQueueDesc(XDR *, VMAccelQueueDesc *);
 extern bool_t xdr_VMAccelQueueStatus(XDR *, VMAccelQueueStatus *);
-extern bool_t xdr_VMAccelEnqueuedStatusCode(XDR *, VMAccelEnqueuedStatusCode *);
-extern bool_t xdr_VMAccelEventType(XDR *, VMAccelEventType *);
-extern bool_t xdr_VMAccelEventId(XDR *, VMAccelEventId *);
-extern bool_t xdr_VMAccelEventDesc(XDR *, VMAccelEventDesc *);
-extern bool_t xdr_VMAccelEventStatus(XDR *, VMAccelEventStatus *);
-extern bool_t xdr_VMAccelFenceType(XDR *, VMAccelFenceType *);
-extern bool_t xdr_VMAccelFenceDesc(XDR *, VMAccelFenceDesc *);
-extern bool_t xdr_VMAccelFenceStatus(XDR *, VMAccelFenceStatus *);
 extern bool_t xdr_VMAccelSurfaceRegion(XDR *, VMAccelSurfaceRegion *);
 extern bool_t xdr_VMAccelSurfaceCopyOp(XDR *, VMAccelSurfaceCopyOp *);
 extern bool_t xdr_VMAccelImageFillOp(XDR *, VMAccelImageFillOp *);
 extern bool_t xdr_VMAccelImageTransferOp(XDR *, VMAccelImageTransferOp *);
-extern bool_t xdr_VMAccelDMAStatus(XDR *, VMAccelDMAStatus *);
 extern bool_t xdr_VMAccelDownloadStatus(XDR *, VMAccelDownloadStatus *);
 extern bool_t xdr_VMAccelSurfaceMapOp(XDR *, VMAccelSurfaceMapOp *);
 extern bool_t xdr_VMAccelSurfaceUnmapOp(XDR *, VMAccelSurfaceUnmapOp *);
@@ -673,13 +589,9 @@ xdr_VMAccelResourceAllocateReturnStatus(XDR *,
 extern bool_t xdr_VMAccelRegisterReturnStatus(XDR *,
                                               VMAccelRegisterReturnStatus *);
 extern bool_t xdr_VMAccelQueueReturnStatus(XDR *, VMAccelQueueReturnStatus *);
-extern bool_t xdr_VMAccelEventReturnStatus(XDR *, VMAccelEventReturnStatus *);
-extern bool_t xdr_VMAccelFenceReturnStatus(XDR *, VMAccelFenceReturnStatus *);
 extern bool_t
 xdr_VMAccelSurfaceAllocateReturnStatus(XDR *,
                                        VMAccelSurfaceAllocateReturnStatus *);
-extern bool_t
-xdr_VMAccelSharedHandleReturnStatus(XDR *, VMAccelSharedHandleReturnStatus *);
 extern bool_t xdr_VMAccelDownloadReturnStatus(XDR *,
                                               VMAccelDownloadReturnStatus *);
 extern bool_t
@@ -726,23 +638,13 @@ extern bool_t xdr_VMAccelSurfaceDesc();
 extern bool_t xdr_VMAccelHandleType();
 extern bool_t xdr_VMAccelSurfaceId();
 extern bool_t xdr_VMAccelSurfaceAllocateStatus();
-extern bool_t xdr_VMAccelSharedHandleStatus();
 extern bool_t xdr_VMAccelQueueFlags();
 extern bool_t xdr_VMAccelQueueDesc();
 extern bool_t xdr_VMAccelQueueStatus();
-extern bool_t xdr_VMAccelEnqueuedStatusCode();
-extern bool_t xdr_VMAccelEventType();
-extern bool_t xdr_VMAccelEventId();
-extern bool_t xdr_VMAccelEventDesc();
-extern bool_t xdr_VMAccelEventStatus();
-extern bool_t xdr_VMAccelFenceType();
-extern bool_t xdr_VMAccelFenceDesc();
-extern bool_t xdr_VMAccelFenceStatus();
 extern bool_t xdr_VMAccelSurfaceRegion();
 extern bool_t xdr_VMAccelSurfaceCopyOp();
 extern bool_t xdr_VMAccelImageFillOp();
 extern bool_t xdr_VMAccelImageTransferOp();
-extern bool_t xdr_VMAccelDMAStatus();
 extern bool_t xdr_VMAccelDownloadStatus();
 extern bool_t xdr_VMAccelSurfaceMapOp();
 extern bool_t xdr_VMAccelSurfaceUnmapOp();
@@ -755,10 +657,7 @@ extern bool_t xdr_VMAccelAllocateReturnStatus();
 extern bool_t xdr_VMAccelResourceAllocateReturnStatus();
 extern bool_t xdr_VMAccelRegisterReturnStatus();
 extern bool_t xdr_VMAccelQueueReturnStatus();
-extern bool_t xdr_VMAccelEventReturnStatus();
-extern bool_t xdr_VMAccelFenceReturnStatus();
 extern bool_t xdr_VMAccelSurfaceAllocateReturnStatus();
-extern bool_t xdr_VMAccelSharedHandleReturnStatus();
 extern bool_t xdr_VMAccelDownloadReturnStatus();
 extern bool_t xdr_VMAccelSurfaceMapReturnStatus();
 extern bool_t xdr_VMAccelComputeReturnStatus();

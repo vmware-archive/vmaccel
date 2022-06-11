@@ -41,7 +41,7 @@ extern pthread_mutex_t svc_data_mutex;
 extern pthread_mutex_t svc_state_mutex;
 
 VMCLContextAllocateReturnStatus *
-vmcl_contextalloc_1(VMCLContextAllocateDesc *argp, CLIENT *clnt) {
+vmcl_contextalloc_2(VMCLContextAllocateDesc *argp, CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
       VMCLContextAllocateReturnStatus *ret;
@@ -49,7 +49,7 @@ vmcl_contextalloc_1(VMCLContextAllocateDesc *argp, CLIENT *clnt) {
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_contextalloc_1_svc(argp, NULL);
+      ret = vmcl_contextalloc_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_state_mutex);
       return ret;
    }
@@ -75,7 +75,7 @@ vmcl_contextalloc_1(VMCLContextAllocateDesc *argp, CLIENT *clnt) {
 #endif
 }
 
-VMAccelReturnStatus *vmcl_contextdestroy_1(VMCLContextId *argp, CLIENT *clnt) {
+VMAccelReturnStatus *vmcl_contextdestroy_2(VMCLContextId *argp, CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
       VMAccelReturnStatus *ret;
@@ -83,7 +83,7 @@ VMAccelReturnStatus *vmcl_contextdestroy_1(VMCLContextId *argp, CLIENT *clnt) {
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_contextdestroy_1_svc(argp, NULL);
+      ret = vmcl_contextdestroy_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_state_mutex);
       return ret;
    }
@@ -109,7 +109,7 @@ VMAccelReturnStatus *vmcl_contextdestroy_1(VMCLContextId *argp, CLIENT *clnt) {
 }
 
 VMAccelSurfaceAllocateReturnStatus *
-vmcl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp, CLIENT *clnt) {
+vmcl_surfacealloc_2(VMCLSurfaceAllocateDesc *argp, CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
       VMAccelSurfaceAllocateReturnStatus *ret;
@@ -117,7 +117,7 @@ vmcl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp, CLIENT *clnt) {
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_surfacealloc_1_svc(argp, NULL);
+      ret = vmcl_surfacealloc_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_state_mutex);
       return ret;
    }
@@ -143,7 +143,7 @@ vmcl_surfacealloc_1(VMCLSurfaceAllocateDesc *argp, CLIENT *clnt) {
 #endif
 }
 
-VMAccelReturnStatus *vmcl_surfacedestroy_1(VMCLSurfaceId *argp, CLIENT *clnt) {
+VMAccelReturnStatus *vmcl_surfacedestroy_2(VMCLSurfaceId *argp, CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
       VMAccelReturnStatus *ret;
@@ -151,7 +151,7 @@ VMAccelReturnStatus *vmcl_surfacedestroy_1(VMCLSurfaceId *argp, CLIENT *clnt) {
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_surfacedestroy_1_svc(argp, NULL);
+      ret = vmcl_surfacedestroy_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_state_mutex);
       return ret;
    }
@@ -176,7 +176,7 @@ VMAccelReturnStatus *vmcl_surfacedestroy_1(VMCLSurfaceId *argp, CLIENT *clnt) {
 #endif
 }
 
-VMAccelQueueReturnStatus *vmcl_queuealloc_1(VMCLQueueAllocateDesc *argp,
+VMAccelQueueReturnStatus *vmcl_queuealloc_2(VMCLQueueAllocateDesc *argp,
                                             CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
@@ -185,7 +185,7 @@ VMAccelQueueReturnStatus *vmcl_queuealloc_1(VMCLQueueAllocateDesc *argp,
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_queuealloc_1_svc(argp, NULL);
+      ret = vmcl_queuealloc_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_state_mutex);
       return ret;
    }
@@ -200,8 +200,8 @@ VMAccelQueueReturnStatus *vmcl_queuealloc_1(VMCLQueueAllocateDesc *argp,
    if (clnt_call(clnt, VMCL_QUEUEALLOC, (xdrproc_t)xdr_VMCLQueueAllocateDesc,
                  (caddr_t)argp, (xdrproc_t)xdr_VMAccelQueueReturnStatus,
                  (caddr_t)&clnt_res, TIMEOUT) != RPC_SUCCESS) {
-       pthread_mutex_unlock(&svc_state_mutex);
-       return (NULL);
+      pthread_mutex_unlock(&svc_state_mutex);
+      return (NULL);
    }
    pthread_mutex_unlock(&svc_state_mutex);
    return (&clnt_res);
@@ -210,7 +210,7 @@ VMAccelQueueReturnStatus *vmcl_queuealloc_1(VMCLQueueAllocateDesc *argp,
 #endif
 }
 
-VMAccelReturnStatus *vmcl_queuedestroy_1(VMCLQueueId *argp, CLIENT *clnt) {
+VMAccelReturnStatus *vmcl_queuedestroy_2(VMCLQueueId *argp, CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
       VMAccelReturnStatus *ret;
@@ -218,7 +218,7 @@ VMAccelReturnStatus *vmcl_queuedestroy_1(VMCLQueueId *argp, CLIENT *clnt) {
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_queuedestroy_1_svc(argp, NULL);
+      ret = vmcl_queuedestroy_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_state_mutex);
       return ret;
    }
@@ -243,7 +243,7 @@ VMAccelReturnStatus *vmcl_queuedestroy_1(VMCLQueueId *argp, CLIENT *clnt) {
 #endif
 }
 
-VMAccelReturnStatus *vmcl_queueflush_1(VMCLQueueId *argp, CLIENT *clnt) {
+VMAccelReturnStatus *vmcl_queueflush_2(VMCLQueueId *argp, CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
       VMAccelReturnStatus *ret;
@@ -251,7 +251,7 @@ VMAccelReturnStatus *vmcl_queueflush_1(VMCLQueueId *argp, CLIENT *clnt) {
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_queueflush_1_svc(argp, NULL);
+      ret = vmcl_queueflush_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_state_mutex);
       return ret;
    }
@@ -276,7 +276,7 @@ VMAccelReturnStatus *vmcl_queueflush_1(VMCLQueueId *argp, CLIENT *clnt) {
 #endif
 }
 
-VMAccelReturnStatus *vmcl_imageupload_1(VMCLImageUploadOp *argp, CLIENT *clnt) {
+VMAccelReturnStatus *vmcl_imageupload_2(VMCLImageUploadOp *argp, CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
       VMAccelReturnStatus *ret;
@@ -284,7 +284,7 @@ VMAccelReturnStatus *vmcl_imageupload_1(VMCLImageUploadOp *argp, CLIENT *clnt) {
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_imageupload_1_svc(argp, NULL);
+      ret = vmcl_imageupload_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_data_mutex);
       return ret;
    }
@@ -309,7 +309,7 @@ VMAccelReturnStatus *vmcl_imageupload_1(VMCLImageUploadOp *argp, CLIENT *clnt) {
 #endif
 }
 
-VMAccelDownloadReturnStatus *vmcl_imagedownload_1(VMCLImageDownloadOp *argp,
+VMAccelDownloadReturnStatus *vmcl_imagedownload_2(VMCLImageDownloadOp *argp,
                                                   CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
@@ -318,7 +318,7 @@ VMAccelDownloadReturnStatus *vmcl_imagedownload_1(VMCLImageDownloadOp *argp,
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_imagedownload_1_svc(argp, NULL);
+      ret = vmcl_imagedownload_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_data_mutex);
       return ret;
    }
@@ -343,7 +343,7 @@ VMAccelDownloadReturnStatus *vmcl_imagedownload_1(VMCLImageDownloadOp *argp,
 #endif
 }
 
-VMAccelSurfaceMapReturnStatus *vmcl_surfacemap_1(VMCLSurfaceMapOp *argp,
+VMAccelSurfaceMapReturnStatus *vmcl_surfacemap_2(VMCLSurfaceMapOp *argp,
                                                  CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
@@ -352,7 +352,7 @@ VMAccelSurfaceMapReturnStatus *vmcl_surfacemap_1(VMCLSurfaceMapOp *argp,
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_surfacemap_1_svc(argp, NULL);
+      ret = vmcl_surfacemap_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_data_mutex);
       return ret;
    }
@@ -377,7 +377,7 @@ VMAccelSurfaceMapReturnStatus *vmcl_surfacemap_1(VMCLSurfaceMapOp *argp,
 #endif
 }
 
-VMAccelReturnStatus *vmcl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp,
+VMAccelReturnStatus *vmcl_surfaceunmap_2(VMCLSurfaceUnmapOp *argp,
                                          CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
@@ -386,7 +386,7 @@ VMAccelReturnStatus *vmcl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp,
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_surfaceunmap_1_svc(argp, NULL);
+      ret = vmcl_surfaceunmap_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_data_mutex);
       return ret;
    }
@@ -411,7 +411,7 @@ VMAccelReturnStatus *vmcl_surfaceunmap_1(VMCLSurfaceUnmapOp *argp,
 #endif
 }
 
-VMAccelReturnStatus *vmcl_surfacecopy_1(VMCLSurfaceCopyOp *argp, CLIENT *clnt) {
+VMAccelReturnStatus *vmcl_surfacecopy_2(VMCLSurfaceCopyOp *argp, CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
       VMAccelReturnStatus *ret;
@@ -419,7 +419,7 @@ VMAccelReturnStatus *vmcl_surfacecopy_1(VMCLSurfaceCopyOp *argp, CLIENT *clnt) {
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_surfacecopy_1_svc(argp, NULL);
+      ret = vmcl_surfacecopy_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_data_mutex);
       return ret;
    }
@@ -444,7 +444,7 @@ VMAccelReturnStatus *vmcl_surfacecopy_1(VMCLSurfaceCopyOp *argp, CLIENT *clnt) {
 #endif
 }
 
-VMAccelReturnStatus *vmcl_imagefill_1(VMCLImageFillOp *argp, CLIENT *clnt) {
+VMAccelReturnStatus *vmcl_imagefill_2(VMCLImageFillOp *argp, CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
       VMAccelReturnStatus *ret;
@@ -452,7 +452,7 @@ VMAccelReturnStatus *vmcl_imagefill_1(VMCLImageFillOp *argp, CLIENT *clnt) {
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_imagefill_1_svc(argp, NULL);
+      ret = vmcl_imagefill_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_data_mutex);
       return ret;
    }
@@ -478,7 +478,7 @@ VMAccelReturnStatus *vmcl_imagefill_1(VMCLImageFillOp *argp, CLIENT *clnt) {
 }
 
 VMCLSamplerAllocateReturnStatus *
-vmcl_sampleralloc_1(VMCLSamplerAllocateDesc *argp, CLIENT *clnt) {
+vmcl_sampleralloc_2(VMCLSamplerAllocateDesc *argp, CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
       VMCLSamplerAllocateReturnStatus *ret;
@@ -486,7 +486,7 @@ vmcl_sampleralloc_1(VMCLSamplerAllocateDesc *argp, CLIENT *clnt) {
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_sampleralloc_1_svc(argp, NULL);
+      ret = vmcl_sampleralloc_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_state_mutex);
       return ret;
    }
@@ -512,7 +512,7 @@ vmcl_sampleralloc_1(VMCLSamplerAllocateDesc *argp, CLIENT *clnt) {
 #endif
 }
 
-VMAccelReturnStatus *vmcl_samplerdestroy_1(VMCLSamplerId *argp, CLIENT *clnt) {
+VMAccelReturnStatus *vmcl_samplerdestroy_2(VMCLSamplerId *argp, CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
       VMAccelReturnStatus *ret;
@@ -520,7 +520,7 @@ VMAccelReturnStatus *vmcl_samplerdestroy_1(VMCLSamplerId *argp, CLIENT *clnt) {
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_samplerdestroy_1_svc(argp, NULL);
+      ret = vmcl_samplerdestroy_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_state_mutex);
       return ret;
    }
@@ -545,7 +545,7 @@ VMAccelReturnStatus *vmcl_samplerdestroy_1(VMCLSamplerId *argp, CLIENT *clnt) {
 #endif
 }
 
-VMCLKernelAllocateReturnStatus *vmcl_kernelalloc_1(VMCLKernelAllocateDesc *argp,
+VMCLKernelAllocateReturnStatus *vmcl_kernelalloc_2(VMCLKernelAllocateDesc *argp,
                                                    CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
@@ -554,7 +554,7 @@ VMCLKernelAllocateReturnStatus *vmcl_kernelalloc_1(VMCLKernelAllocateDesc *argp,
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_kernelalloc_1_svc(argp, NULL);
+      ret = vmcl_kernelalloc_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_state_mutex);
       return ret;
    }
@@ -579,7 +579,7 @@ VMCLKernelAllocateReturnStatus *vmcl_kernelalloc_1(VMCLKernelAllocateDesc *argp,
 #endif
 }
 
-VMAccelReturnStatus *vmcl_kerneldestroy_1(VMCLKernelId *argp, CLIENT *clnt) {
+VMAccelReturnStatus *vmcl_kerneldestroy_2(VMCLKernelId *argp, CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
       VMAccelReturnStatus *ret;
@@ -587,7 +587,7 @@ VMAccelReturnStatus *vmcl_kerneldestroy_1(VMCLKernelId *argp, CLIENT *clnt) {
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_kerneldestroy_1_svc(argp, NULL);
+      ret = vmcl_kerneldestroy_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_state_mutex);
       return ret;
    }
@@ -612,7 +612,7 @@ VMAccelReturnStatus *vmcl_kerneldestroy_1(VMCLKernelId *argp, CLIENT *clnt) {
 #endif
 }
 
-VMAccelReturnStatus *vmcl_dispatch_1(VMCLDispatchOp *argp, CLIENT *clnt) {
+VMAccelReturnStatus *vmcl_dispatch_2(VMCLDispatchOp *argp, CLIENT *clnt) {
 #if ENABLE_VMACCEL_LOCAL
    if (clnt == NULL) {
       VMAccelReturnStatus *ret;
@@ -620,7 +620,7 @@ VMAccelReturnStatus *vmcl_dispatch_1(VMCLDispatchOp *argp, CLIENT *clnt) {
          VMACCEL_WARNING("%s: Unable to acquire svc lock\n", __FUNCTION__);
          return (NULL);
       }
-      ret = vmcl_dispatch_1_svc(argp, NULL);
+      ret = vmcl_dispatch_2_svc(argp, NULL);
       pthread_mutex_unlock(&svc_compute_mutex);
       return ret;
    }

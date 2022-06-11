@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
    VMACCEL_LOG("%s: Running self-test of streaming...\n", __FUNCTION__);
 
    for (i = 0; i < VMACCEL_MAX_STREAMS; i++) {
-      clientState[i] = i+1;
+      clientState[i] = i + 1;
    }
 
    VMACCEL_LOG("%s: Powering on VMAccel stream module...\n", __FUNCTION__);
@@ -79,18 +79,18 @@ int main(int argc, char **argv) {
       a.addr.addr_val =
          (char *)malloc(VMACCEL_MAX_LOCATION_SIZE * sizeof(char));
       a.addr.addr_len = VMACCEL_MAX_LOCATION_SIZE;
-      
-      if (!VMAccel_AddressStringToOpaqueAddr(
-              "127.0.0.1", a.addr.addr_val, a.addr.addr_len)) {
+
+      if (!VMAccel_AddressStringToOpaqueAddr("127.0.0.1", a.addr.addr_val,
+                                             a.addr.addr_len)) {
          VMACCEL_WARNING("%s: Failed to translate address\n", __FUNCTION__);
-	 assert(0);
+         assert(0);
       }
- 
+
       a.port = VMACCEL_VMCL_BASE_PORT;
 
-      if (!VMAccel_AddressOpaqueAddrToString(
-             &a, host, sizeof(host))) {
-         VMACCEL_WARNING("%s: Unable to translate address to string\n", __FUNCTION__);
+      if (!VMAccel_AddressOpaqueAddrToString(&a, host, sizeof(host))) {
+         VMACCEL_WARNING("%s: Unable to translate address to string\n",
+                         __FUNCTION__);
          assert(0);
       }
 
@@ -98,8 +98,8 @@ int main(int argc, char **argv) {
                   __FUNCTION__, i, host, a.port);
 
       ret = vmaccel_stream_send_async(
-               &a, VMACCEL_STREAM_TYPE_VMCL_UPLOAD, &vmcl_surfacemap_1_arg,
-               (char *)&clientState[i], sizeof(unsigned int));
+         &a, VMACCEL_STREAM_TYPE_VMCL_UPLOAD, &vmcl_surfacemap_1_arg,
+         (char *)&clientState[i], sizeof(unsigned int));
    }
 
    vmaccel_stream_poweroff();

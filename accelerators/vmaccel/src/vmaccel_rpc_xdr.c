@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2020 VMware, Inc.
+Copyright (c) 2016-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -753,15 +753,6 @@ bool_t xdr_VMAccelSurfaceAllocateStatus(XDR *xdrs,
    return TRUE;
 }
 
-bool_t xdr_VMAccelSharedHandleStatus(XDR *xdrs,
-                                     VMAccelSharedHandleStatus *objp) {
-   if (!xdr_VMAccelStatusCode(xdrs, &objp->status))
-      return FALSE;
-   if (!xdr_VMAccelSurfaceId(xdrs, &objp->shared))
-      return FALSE;
-   return TRUE;
-}
-
 bool_t xdr_VMAccelQueueFlags(XDR *xdrs, VMAccelQueueFlags *objp) {
    if (!xdr_u_int(xdrs, objp))
       return FALSE;
@@ -778,71 +769,6 @@ bool_t xdr_VMAccelQueueDesc(XDR *xdrs, VMAccelQueueDesc *objp) {
 
 bool_t xdr_VMAccelQueueStatus(XDR *xdrs, VMAccelQueueStatus *objp) {
    if (!xdr_VMAccelStatusCode(xdrs, &objp->status))
-      return FALSE;
-   return TRUE;
-}
-
-bool_t xdr_VMAccelEnqueuedStatusCode(XDR *xdrs,
-                                     VMAccelEnqueuedStatusCode *objp) {
-   if (!xdr_u_int(xdrs, objp))
-      return FALSE;
-   return TRUE;
-}
-
-bool_t xdr_VMAccelEventType(XDR *xdrs, VMAccelEventType *objp) {
-   if (!xdr_u_int(xdrs, objp))
-      return FALSE;
-   return TRUE;
-}
-
-bool_t xdr_VMAccelEventId(XDR *xdrs, VMAccelEventId *objp) {
-   if (!xdr_VMAccelId(xdrs, objp))
-      return FALSE;
-   return TRUE;
-}
-
-bool_t xdr_VMAccelEventDesc(XDR *xdrs, VMAccelEventDesc *objp) {
-   if (!xdr_VMAccelEventType(xdrs, &objp->type))
-      return FALSE;
-   if (!xdr_array(xdrs, (char **)&objp->callbacks.callbacks_val,
-                  (u_int *)&objp->callbacks.callbacks_len, ~0,
-                  sizeof(VMAccelCallback), (xdrproc_t)xdr_VMAccelCallback))
-      return FALSE;
-   return TRUE;
-}
-
-bool_t xdr_VMAccelEventStatus(XDR *xdrs, VMAccelEventStatus *objp) {
-   if (!xdr_VMAccelStatusCode(xdrs, &objp->status))
-      return FALSE;
-   if (!xdr_VMAccelEnqueuedStatusCode(xdrs, &objp->eventStatus))
-      return FALSE;
-   return TRUE;
-}
-
-bool_t xdr_VMAccelFenceType(XDR *xdrs, VMAccelFenceType *objp) {
-   if (!xdr_u_int(xdrs, objp))
-      return FALSE;
-   return TRUE;
-}
-
-bool_t xdr_VMAccelFenceDesc(XDR *xdrs, VMAccelFenceDesc *objp) {
-   if (!xdr_VMAccelFenceType(xdrs, &objp->type))
-      return FALSE;
-   if (!xdr_VMAccelSurfaceId(xdrs, &objp->notifyMemory))
-      return FALSE;
-   if (!xdr_VMAccelCoordinate3DUINT(xdrs, &objp->elementLocation))
-      return FALSE;
-   if (!xdr_u_int(xdrs, &objp->markerValue))
-      return FALSE;
-   return TRUE;
-}
-
-bool_t xdr_VMAccelFenceStatus(XDR *xdrs, VMAccelFenceStatus *objp) {
-   if (!xdr_VMAccelStatusCode(xdrs, &objp->status))
-      return FALSE;
-   if (!xdr_VMAccelEnqueuedStatusCode(xdrs, &objp->fenceStatus))
-      return FALSE;
-   if (!xdr_VMAccelId(xdrs, &objp->id))
       return FALSE;
    return TRUE;
 }
@@ -886,14 +812,6 @@ bool_t xdr_VMAccelImageTransferOp(XDR *xdrs, VMAccelImageTransferOp *objp) {
    if (!xdr_array(xdrs, (char **)&objp->callbacks.callbacks_val,
                   (u_int *)&objp->callbacks.callbacks_len, ~0,
                   sizeof(VMAccelCallback), (xdrproc_t)xdr_VMAccelCallback))
-      return FALSE;
-   return TRUE;
-}
-
-bool_t xdr_VMAccelDMAStatus(XDR *xdrs, VMAccelDMAStatus *objp) {
-   if (!xdr_VMAccelStatusCode(xdrs, &objp->status))
-      return FALSE;
-   if (!xdr_VMAccelId(xdrs, &objp->fence))
       return FALSE;
    return TRUE;
 }
@@ -1087,38 +1005,6 @@ bool_t xdr_VMAccelQueueReturnStatus(XDR *xdrs, VMAccelQueueReturnStatus *objp) {
    return TRUE;
 }
 
-bool_t xdr_VMAccelEventReturnStatus(XDR *xdrs, VMAccelEventReturnStatus *objp) {
-   if (!xdr_int(xdrs, &objp->errno))
-      return FALSE;
-   switch (objp->errno) {
-      case 0:
-         if (!xdr_pointer(xdrs, (char **)&objp->VMAccelEventReturnStatus_u.ret,
-                          sizeof(VMAccelEventStatus),
-                          (xdrproc_t)xdr_VMAccelEventStatus))
-            return FALSE;
-         break;
-      default:
-         break;
-   }
-   return TRUE;
-}
-
-bool_t xdr_VMAccelFenceReturnStatus(XDR *xdrs, VMAccelFenceReturnStatus *objp) {
-   if (!xdr_int(xdrs, &objp->errno))
-      return FALSE;
-   switch (objp->errno) {
-      case 0:
-         if (!xdr_pointer(xdrs, (char **)&objp->VMAccelFenceReturnStatus_u.ret,
-                          sizeof(VMAccelFenceStatus),
-                          (xdrproc_t)xdr_VMAccelFenceStatus))
-            return FALSE;
-         break;
-      default:
-         break;
-   }
-   return TRUE;
-}
-
 bool_t xdr_VMAccelSurfaceAllocateReturnStatus(
    XDR *xdrs, VMAccelSurfaceAllocateReturnStatus *objp) {
    if (!xdr_int(xdrs, &objp->errno))
@@ -1129,25 +1015,6 @@ bool_t xdr_VMAccelSurfaceAllocateReturnStatus(
                 xdrs, (char **)&objp->VMAccelSurfaceAllocateReturnStatus_u.ret,
                 sizeof(VMAccelSurfaceAllocateStatus),
                 (xdrproc_t)xdr_VMAccelSurfaceAllocateStatus))
-            return FALSE;
-         break;
-      default:
-         break;
-   }
-   return TRUE;
-}
-
-bool_t
-xdr_VMAccelSharedHandleReturnStatus(XDR *xdrs,
-                                    VMAccelSharedHandleReturnStatus *objp) {
-   if (!xdr_int(xdrs, &objp->errno))
-      return FALSE;
-   switch (objp->errno) {
-      case 0:
-         if (!xdr_pointer(xdrs,
-                          (char **)&objp->VMAccelSharedHandleReturnStatus_u.ret,
-                          sizeof(VMAccelSharedHandleStatus),
-                          (xdrproc_t)xdr_VMAccelSharedHandleStatus))
             return FALSE;
          break;
       default:

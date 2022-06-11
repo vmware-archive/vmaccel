@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2020 VMware, Inc.
+Copyright (c) 2016-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -90,14 +90,6 @@ bool_t xdr_VMCLSurfaceAllocateDesc(XDR *xdrs, VMCLSurfaceAllocateDesc *objp) {
    return TRUE;
 }
 
-bool_t xdr_VMCLSharedHandle(XDR *xdrs, VMCLSharedHandle *objp) {
-   if (!xdr_VMCLContextId(xdrs, &objp->cid))
-      return FALSE;
-   if (!xdr_VMAccelSurfaceId(xdrs, &objp->surf))
-      return FALSE;
-   return TRUE;
-}
-
 bool_t xdr_VMCLQueueId(XDR *xdrs, VMCLQueueId *objp) {
    if (!xdr_VMCLContextId(xdrs, &objp->cid))
       return FALSE;
@@ -116,56 +108,8 @@ bool_t xdr_VMCLQueueAllocateDesc(XDR *xdrs, VMCLQueueAllocateDesc *objp) {
    return TRUE;
 }
 
-bool_t xdr_VMCLEventId(XDR *xdrs, VMCLEventId *objp) {
-   if (!xdr_VMCLContextId(xdrs, &objp->cid))
-      return FALSE;
-   if (!xdr_VMAccelId(xdrs, &objp->id))
-      return FALSE;
-   return TRUE;
-}
-
-bool_t xdr_VMCLEventAllocateDesc(XDR *xdrs, VMCLEventAllocateDesc *objp) {
-   if (!xdr_VMCLEventId(xdrs, &objp->client))
-      return FALSE;
-   if (!xdr_VMAccelEventDesc(xdrs, &objp->desc))
-      return FALSE;
-   return TRUE;
-}
-
-bool_t xdr_VMCLFenceId(XDR *xdrs, VMCLFenceId *objp) {
-   if (!xdr_VMCLContextId(xdrs, &objp->cid))
-      return FALSE;
-   if (!xdr_VMAccelId(xdrs, &objp->id))
-      return FALSE;
-   return TRUE;
-}
-
-bool_t xdr_VMCLFenceAllocateDesc(XDR *xdrs, VMCLFenceAllocateDesc *objp) {
-   if (!xdr_VMCLFenceId(xdrs, &objp->client))
-      return FALSE;
-   if (!xdr_VMAccelFenceDesc(xdrs, &objp->desc))
-      return FALSE;
-   return TRUE;
-}
-
 bool_t xdr_VMCLQueueFlushOp(XDR *xdrs, VMCLQueueFlushOp *objp) {
    if (!xdr_VMCLQueueId(xdrs, &objp->queue))
-      return FALSE;
-   return TRUE;
-}
-
-bool_t xdr_VMCLEventInsertOp(XDR *xdrs, VMCLEventInsertOp *objp) {
-   if (!xdr_VMCLQueueId(xdrs, &objp->queue))
-      return FALSE;
-   if (!xdr_VMAccelId(xdrs, &objp->id))
-      return FALSE;
-   return TRUE;
-}
-
-bool_t xdr_VMCLFenceInsertOp(XDR *xdrs, VMCLFenceInsertOp *objp) {
-   if (!xdr_VMCLQueueId(xdrs, &objp->queue))
-      return FALSE;
-   if (!xdr_VMAccelId(xdrs, &objp->id))
       return FALSE;
    return TRUE;
 }

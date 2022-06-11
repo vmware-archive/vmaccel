@@ -31,8 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vmaccel_rpc.h"
 #include "vmaccel_types_address.h"
 #include <assert.h>
-#include <stdlib.h>
 #include <pthread.h>
+#include <stdlib.h>
 
 /**
  * @brief Takes a difference of two timespec structures per the example
@@ -251,8 +251,8 @@ bool VMAccel_AddressOpaqueAddrToString(const VMAccelAddress *addr, char *out,
                                        int len) {
    // Enough to hold three digits per byte
    if (len < 4 * addr->addr.addr_len) {
-      VMACCEL_LOG("%s: len=%d addr_len=%d\n", __FUNCTION__,
-                  len, addr->addr.addr_len);
+      VMACCEL_LOG("%s: len=%d addr_len=%d\n", __FUNCTION__, len,
+                  addr->addr.addr_len);
       return false;
    }
    if (addr->addr.addr_len == 4) {
@@ -262,15 +262,14 @@ bool VMAccel_AddressOpaqueAddrToString(const VMAccelAddress *addr, char *out,
       strcpy(out, inet_ntoa(inetaddr));
       return true;
    }
-   VMACCEL_LOG("%s: len=%d addr_val=%p addr_len=%d\n", __FUNCTION__,
-               len, addr->addr.addr_val, addr->addr.addr_len);
+   VMACCEL_LOG("%s: len=%d addr_val=%p addr_len=%d\n", __FUNCTION__, len,
+               addr->addr.addr_val, addr->addr.addr_len);
    memset(out, 0, len);
    return false;
 }
 
 bool VMAccel_AddressStringToOpaqueAddr(const char *addr, char *out, int len) {
-   VMACCEL_LOG("%s: addr=%s len=%d\n", __FUNCTION__,
-               addr, len);
+   VMACCEL_LOG("%s: addr=%s len=%d\n", __FUNCTION__, addr, len);
    if (len == 4) {
       // IPV4
       assert(sizeof(in_addr_t) == 4);
@@ -287,26 +286,29 @@ pthread_mutex_t svc_compute_mutex;
 pthread_mutex_t svc_data_mutex;
 pthread_mutex_t svc_state_mutex;
 
-VMAccelAllocateStatus *
-vmaccel_utils_poweron_svc() {
+VMAccelAllocateStatus *vmaccel_utils_poweron_svc() {
    static VMAccelAllocateStatus clnt_res;
    pthread_mutexattr_t attr;
    if (pthread_mutexattr_init(&attr) != 0) {
-      VMACCEL_WARNING("%s: Unable to initialize service mutex attributes\n", __FUNCTION__);
+      VMACCEL_WARNING("%s: Unable to initialize service mutex attributes\n",
+                      __FUNCTION__);
       return (NULL);
    }
    if (pthread_mutex_init(&svc_compute_mutex, &attr) != 0) {
-      VMACCEL_WARNING("%s: Unable to initialize service compute mutex\n", __FUNCTION__);
+      VMACCEL_WARNING("%s: Unable to initialize service compute mutex\n",
+                      __FUNCTION__);
       pthread_mutexattr_destroy(&attr);
       return (NULL);
    }
    if (pthread_mutex_init(&svc_data_mutex, &attr) != 0) {
-      VMACCEL_WARNING("%s: Unable to initialize service data mutex\n", __FUNCTION__);
+      VMACCEL_WARNING("%s: Unable to initialize service data mutex\n",
+                      __FUNCTION__);
       pthread_mutexattr_destroy(&attr);
       return (NULL);
    }
    if (pthread_mutex_init(&svc_state_mutex, &attr) != 0) {
-      VMACCEL_WARNING("%s: Unable to initialize service state mutex\n", __FUNCTION__);
+      VMACCEL_WARNING("%s: Unable to initialize service state mutex\n",
+                      __FUNCTION__);
       pthread_mutexattr_destroy(&attr);
       return (NULL);
    }
@@ -315,19 +317,21 @@ vmaccel_utils_poweron_svc() {
    return (&clnt_res);
 }
 
-VMAccelStatus *
-vmaccel_utils_poweroff_svc() {
+VMAccelStatus *vmaccel_utils_poweroff_svc() {
    static VMAccelStatus clnt_res;
    if (pthread_mutex_destroy(&svc_state_mutex) != 0) {
-      VMACCEL_WARNING("%s: Unable to destroy service state mutex\n", __FUNCTION__);
+      VMACCEL_WARNING("%s: Unable to destroy service state mutex\n",
+                      __FUNCTION__);
       return (NULL);
    }
    if (pthread_mutex_destroy(&svc_data_mutex) != 0) {
-      VMACCEL_WARNING("%s: Unable to destroy service data mutex\n", __FUNCTION__);
+      VMACCEL_WARNING("%s: Unable to destroy service data mutex\n",
+                      __FUNCTION__);
       return (NULL);
    }
    if (pthread_mutex_destroy(&svc_compute_mutex) != 0) {
-      VMACCEL_WARNING("%s: Unable to destroy service compute mutex\n", __FUNCTION__);
+      VMACCEL_WARNING("%s: Unable to destroy service compute mutex\n",
+                      __FUNCTION__);
       return (NULL);
    }
    clnt_res.status = VMACCEL_SUCCESS;

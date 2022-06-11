@@ -37,7 +37,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static VMCLOps *cl = &vmwopenclOps;
 static volatile unsigned long clRefCount = 0;
 
-VMAccelAllocateStatus *vmcl_poweron_svc(VMCLOps *ops, unsigned int useDataStreaming) {
+VMAccelAllocateStatus *vmcl_poweron_svc(VMCLOps *ops,
+                                        unsigned int useDataStreaming) {
    VMAccelAllocateStatus *ret = NULL;
    /*
     * Loop through all the Accelerator architectures until one powers on.
@@ -66,7 +67,7 @@ VMAccelStatus *vmcl_poweroff_svc() {
 }
 
 VMCLContextAllocateReturnStatus *
-vmcl_contextalloc_1_svc(VMCLContextAllocateDesc *argp, struct svc_req *rqstp) {
+vmcl_contextalloc_2_svc(VMCLContextAllocateDesc *argp, struct svc_req *rqstp) {
    static VMCLContextAllocateReturnStatus result;
 
    /*
@@ -77,7 +78,7 @@ vmcl_contextalloc_1_svc(VMCLContextAllocateDesc *argp, struct svc_req *rqstp) {
    return (&result);
 }
 
-VMAccelReturnStatus *vmcl_contextdestroy_1_svc(VMCLContextId *argp,
+VMAccelReturnStatus *vmcl_contextdestroy_2_svc(VMCLContextId *argp,
                                                struct svc_req *rqstp) {
 
    static VMAccelReturnStatus result;
@@ -91,7 +92,7 @@ VMAccelReturnStatus *vmcl_contextdestroy_1_svc(VMCLContextId *argp,
 }
 
 VMAccelSurfaceAllocateReturnStatus *
-vmcl_surfacealloc_1_svc(VMCLSurfaceAllocateDesc *argp, struct svc_req *rqstp) {
+vmcl_surfacealloc_2_svc(VMCLSurfaceAllocateDesc *argp, struct svc_req *rqstp) {
 
    static VMAccelSurfaceAllocateReturnStatus result;
 
@@ -103,7 +104,7 @@ vmcl_surfacealloc_1_svc(VMCLSurfaceAllocateDesc *argp, struct svc_req *rqstp) {
    return (&result);
 }
 
-VMAccelReturnStatus *vmcl_surfacedestroy_1_svc(VMCLSurfaceId *argp,
+VMAccelReturnStatus *vmcl_surfacedestroy_2_svc(VMCLSurfaceId *argp,
                                                struct svc_req *rqstp) {
 
    static VMAccelReturnStatus result;
@@ -116,7 +117,7 @@ VMAccelReturnStatus *vmcl_surfacedestroy_1_svc(VMCLSurfaceId *argp,
    return (&result);
 }
 
-VMAccelQueueReturnStatus *vmcl_queuealloc_1_svc(VMCLQueueAllocateDesc *argp,
+VMAccelQueueReturnStatus *vmcl_queuealloc_2_svc(VMCLQueueAllocateDesc *argp,
                                                 struct svc_req *rqstp) {
 
    static VMAccelQueueReturnStatus result;
@@ -129,7 +130,7 @@ VMAccelQueueReturnStatus *vmcl_queuealloc_1_svc(VMCLQueueAllocateDesc *argp,
    return (&result);
 }
 
-VMAccelReturnStatus *vmcl_queuedestroy_1_svc(VMCLQueueId *argp,
+VMAccelReturnStatus *vmcl_queuedestroy_2_svc(VMCLQueueId *argp,
                                              struct svc_req *rqstp) {
 
    static VMAccelReturnStatus result;
@@ -142,7 +143,7 @@ VMAccelReturnStatus *vmcl_queuedestroy_1_svc(VMCLQueueId *argp,
    return (&result);
 }
 
-VMAccelReturnStatus *vmcl_queueflush_1_svc(VMCLQueueId *argp,
+VMAccelReturnStatus *vmcl_queueflush_2_svc(VMCLQueueId *argp,
                                            struct svc_req *rqstp) {
 
    static VMAccelReturnStatus result;
@@ -155,7 +156,7 @@ VMAccelReturnStatus *vmcl_queueflush_1_svc(VMCLQueueId *argp,
    return (&result);
 }
 
-VMAccelReturnStatus *vmcl_imageupload_1_svc(VMCLImageUploadOp *argp,
+VMAccelReturnStatus *vmcl_imageupload_2_svc(VMCLImageUploadOp *argp,
                                             struct svc_req *rqstp) {
 
    static VMAccelReturnStatus result;
@@ -168,7 +169,7 @@ VMAccelReturnStatus *vmcl_imageupload_1_svc(VMCLImageUploadOp *argp,
    return (&result);
 }
 
-VMAccelDownloadReturnStatus *vmcl_imagedownload_1_svc(VMCLImageDownloadOp *argp,
+VMAccelDownloadReturnStatus *vmcl_imagedownload_2_svc(VMCLImageDownloadOp *argp,
                                                       struct svc_req *rqstp) {
 
    static VMAccelDownloadReturnStatus result;
@@ -181,7 +182,7 @@ VMAccelDownloadReturnStatus *vmcl_imagedownload_1_svc(VMCLImageDownloadOp *argp,
    return (&result);
 }
 
-VMAccelSurfaceMapReturnStatus *vmcl_surfacemap_1_svc(VMCLSurfaceMapOp *argp,
+VMAccelSurfaceMapReturnStatus *vmcl_surfacemap_2_svc(VMCLSurfaceMapOp *argp,
                                                      struct svc_req *rqstp) {
 
    static VMAccelSurfaceMapReturnStatus result;
@@ -202,7 +203,7 @@ VMAccelSurfaceMapReturnStatus *vmcl_surfacemap_1_svc(VMCLSurfaceMapOp *argp,
    return (&result);
 }
 
-VMAccelReturnStatus *vmcl_surfaceunmap_1_svc(VMCLSurfaceUnmapOp *argp,
+VMAccelReturnStatus *vmcl_surfaceunmap_2_svc(VMCLSurfaceUnmapOp *argp,
                                              struct svc_req *rqstp) {
 
    static VMAccelReturnStatus result;
@@ -223,7 +224,7 @@ VMAccelReturnStatus *vmcl_surfaceunmap_1_svc(VMCLSurfaceUnmapOp *argp,
    return (&result);
 }
 
-VMAccelReturnStatus *vmcl_surfacecopy_1_svc(VMCLSurfaceCopyOp *argp,
+VMAccelReturnStatus *vmcl_surfacecopy_2_svc(VMCLSurfaceCopyOp *argp,
                                             struct svc_req *rqstp) {
 
    static VMAccelReturnStatus result;
@@ -236,7 +237,7 @@ VMAccelReturnStatus *vmcl_surfacecopy_1_svc(VMCLSurfaceCopyOp *argp,
    return (&result);
 }
 
-VMAccelReturnStatus *vmcl_imagefill_1_svc(VMCLImageFillOp *argp,
+VMAccelReturnStatus *vmcl_imagefill_2_svc(VMCLImageFillOp *argp,
                                           struct svc_req *rqstp) {
 
    static VMAccelReturnStatus result;
@@ -250,7 +251,7 @@ VMAccelReturnStatus *vmcl_imagefill_1_svc(VMCLImageFillOp *argp,
 }
 
 VMCLSamplerAllocateReturnStatus *
-vmcl_sampleralloc_1_svc(VMCLSamplerAllocateDesc *argp, struct svc_req *rqstp) {
+vmcl_sampleralloc_2_svc(VMCLSamplerAllocateDesc *argp, struct svc_req *rqstp) {
 
    static VMCLSamplerAllocateReturnStatus result;
 
@@ -262,7 +263,7 @@ vmcl_sampleralloc_1_svc(VMCLSamplerAllocateDesc *argp, struct svc_req *rqstp) {
    return (&result);
 }
 
-VMAccelReturnStatus *vmcl_samplerdestroy_1_svc(VMCLSamplerId *argp,
+VMAccelReturnStatus *vmcl_samplerdestroy_2_svc(VMCLSamplerId *argp,
                                                struct svc_req *rqstp) {
 
    static VMAccelReturnStatus result;
@@ -276,7 +277,7 @@ VMAccelReturnStatus *vmcl_samplerdestroy_1_svc(VMCLSamplerId *argp,
 }
 
 VMCLKernelAllocateReturnStatus *
-vmcl_kernelalloc_1_svc(VMCLKernelAllocateDesc *argp, struct svc_req *rqstp) {
+vmcl_kernelalloc_2_svc(VMCLKernelAllocateDesc *argp, struct svc_req *rqstp) {
 
    static VMCLKernelAllocateReturnStatus result;
 
@@ -288,7 +289,7 @@ vmcl_kernelalloc_1_svc(VMCLKernelAllocateDesc *argp, struct svc_req *rqstp) {
    return (&result);
 }
 
-VMAccelReturnStatus *vmcl_kerneldestroy_1_svc(VMCLKernelId *argp,
+VMAccelReturnStatus *vmcl_kerneldestroy_2_svc(VMCLKernelId *argp,
                                               struct svc_req *rqstp) {
 
    static VMAccelReturnStatus result;
@@ -301,7 +302,7 @@ VMAccelReturnStatus *vmcl_kerneldestroy_1_svc(VMCLKernelId *argp,
    return (&result);
 }
 
-VMAccelReturnStatus *vmcl_dispatch_1_svc(VMCLDispatchOp *argp,
+VMAccelReturnStatus *vmcl_dispatch_2_svc(VMCLDispatchOp *argp,
                                          struct svc_req *rqstp) {
 
    static VMAccelReturnStatus result;

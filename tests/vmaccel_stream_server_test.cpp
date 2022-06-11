@@ -72,9 +72,8 @@ VMAccelStatus *null_surfaceunmap_1(VMCLSurfaceUnmapOp *argp) {
 
    memset(&result, 0, sizeof(result));
 
-   VMACCEL_LOG("%s: sid=%d, gen=%d, inst=%d, *ptr=%x\n",
-               __FUNCTION__, sid, gen, inst,
-               ((unsigned int *)argp->op.ptr.ptr_val)[0]);
+   VMACCEL_LOG("%s: sid=%d, gen=%d, inst=%d, *ptr=%x\n", __FUNCTION__, sid, gen,
+               inst, ((unsigned int *)argp->op.ptr.ptr_val)[0]);
 
    assert(argp->op.ptr.ptr_len == (sizeof(clientState) / VMACCEL_MAX_STREAMS));
 
@@ -91,7 +90,7 @@ int main(int argc, char **argv) {
    VMACCEL_LOG("%s: Running self-test of streaming...\n", __FUNCTION__);
 
    for (i = 0; i < VMACCEL_MAX_STREAMS; i++) {
-      clientState[i] = i+1;
+      clientState[i] = i + 1;
       scratchState[i] = 0xbaadf00d;
       serverState[i] = 0;
    }
@@ -126,8 +125,8 @@ int main(int argc, char **argv) {
     */
    for (i = 0; i < VMACCEL_MAX_STREAMS; i++) {
       VMACCEL_LOG("%s: client[%d]=%x scratch[%d]=%x server[%d]=%x\n",
-                  __FUNCTION__, i, clientState[i], i, scratchState[i],
-                  i, serverState[i]);
+                  __FUNCTION__, i, clientState[i], i, scratchState[i], i,
+                  serverState[i]);
    }
 
    /*

@@ -364,8 +364,7 @@ public:
       if (useLocalBackend) {
          if (vmcl_poweron_svc(NULL, dataStreaming) == NULL) {
             VMACCEL_WARNING("Failed to power on vmcl service.");
-            throw exception(VMACCEL_FAIL,
-                            "Failed to power on vmcl service.");
+            throw exception(VMACCEL_FAIL, "Failed to power on vmcl service.");
          }
          localBackend = true;
       }

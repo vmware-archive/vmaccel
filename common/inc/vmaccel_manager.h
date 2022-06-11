@@ -29,8 +29,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #if !defined(_VMACCEL_MANAGER_H_)
 #define _VMACCEL_MANAGER_H_
 
-#include <stdbool.h>
 #include "vmaccel_rpc.h"
+#include <stdbool.h>
 
 /*
  * Functions exported to the C interface from C++.

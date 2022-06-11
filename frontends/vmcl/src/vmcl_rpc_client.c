@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2019 VMware, Inc.
+Copyright (c) 2016-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -102,7 +102,7 @@ static void vmcl_1(char *host, char *spirv) {
    vmcl_contextalloc_1_arg.requiredCaps =
       (spirv != NULL) ? VMCL_SPIRV_1_0_CAP : 0;
 
-   result_1 = vmcl_contextalloc_1(&vmcl_contextalloc_1_arg, clnt);
+   result_1 = vmcl_contextalloc_2(&vmcl_contextalloc_1_arg, clnt);
    if (result_1 == NULL) {
       clnt_perror(clnt, "call failed:");
    }
@@ -116,21 +116,10 @@ static void vmcl_1(char *host, char *spirv) {
    vmcl_surfacealloc_1_arg.desc.usage = VMACCEL_SURFACE_USAGE_READWRITE;
    vmcl_surfacealloc_1_arg.desc.bindFlags = VMACCEL_BIND_UNORDERED_ACCESS_FLAG;
 
-   result_3 = vmcl_surfacealloc_1(&vmcl_surfacealloc_1_arg, clnt);
+   result_3 = vmcl_surfacealloc_2(&vmcl_surfacealloc_1_arg, clnt);
    if (result_3 == NULL) {
       clnt_perror(clnt, "call failed:");
    }
-
-#if 0
-	result_5 = vmcl_surfacegetsharedhandle_1(&vmcl_surfacegetsharedhandle_1_arg, clnt);
-	if (result_5 == NULL) {
-		clnt_perror(clnt, "call failed:");
-	}
-	result_6 = vmcl_surfacereleasesharedhandle_1(&vmcl_surfacereleasesharedhandle_1_arg, clnt);
-	if (result_6 == NULL) {
-		clnt_perror(clnt, "call failed:");
-	}
-#endif
 
    memset(&vmcl_queuealloc_1_arg, 0, sizeof(vmcl_queuealloc_1_arg));
    vmcl_queuealloc_1_arg.client.cid = cid;
@@ -138,49 +127,17 @@ static void vmcl_1(char *host, char *spirv) {
    vmcl_queuealloc_1_arg.desc.flags = VMACCEL_QUEUE_ON_DEVICE_FLAG;
    vmcl_queuealloc_1_arg.desc.size = -1; /* Unbounded? */
 
-   result_7 = vmcl_queuealloc_1(&vmcl_queuealloc_1_arg, clnt);
+   result_7 = vmcl_queuealloc_2(&vmcl_queuealloc_1_arg, clnt);
    if (result_7 == NULL) {
       clnt_perror(clnt, "call failed:");
    }
 
 #if 0
-	result_9 = vmcl_eventalloc_1(&vmcl_eventalloc_1_arg, clnt);
-	if (result_9 == NULL) {
-		clnt_perror(clnt, "call failed:");
-	}
-	result_10 = vmcl_eventgetstatus_1(&vmcl_eventgetstatus_1_arg, clnt);
-	if (result_10 == NULL) {
-		clnt_perror(clnt, "call failed:");
-	}
-	result_11 = vmcl_eventdestroy_1(&vmcl_eventdestroy_1_arg, clnt);
-	if (result_11 == NULL) {
-		clnt_perror(clnt, "call failed:");
-	}
-	result_12 = vmcl_fencealloc_1(&vmcl_fencealloc_1_arg, clnt);
-	if (result_12 == NULL) {
-		clnt_perror(clnt, "call failed:");
-	}
-	result_13 = vmcl_fencegetstatus_1(&vmcl_fencegetstatus_1_arg, clnt);
-	if (result_13 == NULL) {
-		clnt_perror(clnt, "call failed:");
-	}
-	result_14 = vmcl_fencedestroy_1(&vmcl_fencedestroy_1_arg, clnt);
-	if (result_14 == NULL) {
-		clnt_perror(clnt, "call failed:");
-	}
-	result_16 = vmcl_eventinsert_1(&vmcl_eventinsert_1_arg, clnt);
-	if (result_16 == NULL) {
-		clnt_perror(clnt, "call failed:");
-	}
-	result_17 = vmcl_fenceinsert_1(&vmcl_fenceinsert_1_arg, clnt);
-	if (result_17 == NULL) {
-		clnt_perror(clnt, "call failed:");
-	}
-	result_18 = vmcl_imageupload_1(&vmcl_imageupload_1_arg, clnt);
+	result_18 = vmcl_imageupload_2(&vmcl_imageupload_1_arg, clnt);
 	if (result_18 == NULL) {
 		clnt_perror(clnt, "call failed:");
 	}
-	result_19 = vmcl_imagedownload_1(&vmcl_imagedownload_1_arg, clnt);
+	result_19 = vmcl_imagedownload_2(&vmcl_imagedownload_1_arg, clnt);
 	if (result_19 == NULL) {
 		clnt_perror(clnt, "call failed:");
 	}
@@ -194,7 +151,7 @@ static void vmcl_1(char *host, char *spirv) {
    vmcl_surfacemap_1_arg.op.mapFlags =
       VMACCEL_MAP_READ_FLAG | VMACCEL_MAP_WRITE_FLAG;
 
-   result_20 = vmcl_surfacemap_1(&vmcl_surfacemap_1_arg, clnt);
+   result_20 = vmcl_surfacemap_2(&vmcl_surfacemap_1_arg, clnt);
    if (result_20 == NULL) {
       clnt_perror(clnt, "call failed:");
    }
@@ -218,26 +175,26 @@ static void vmcl_1(char *host, char *spirv) {
       vmcl_surfaceunmap_1_arg.op.ptr.ptr_len = vmcl_surfacemap_1_arg.op.size.x;
       vmcl_surfaceunmap_1_arg.op.ptr.ptr_val = ptr;
 
-      result_21 = vmcl_surfaceunmap_1(&vmcl_surfaceunmap_1_arg, clnt);
+      result_21 = vmcl_surfaceunmap_2(&vmcl_surfaceunmap_1_arg, clnt);
       if (result_21 == NULL) {
          clnt_perror(clnt, "call failed:");
       }
    }
 
 #if 0
-	result_22 = vmcl_surfacecopy_1(&vmcl_surfacecopy_1_arg, clnt);
+	result_22 = vmcl_surfacecopy_2(&vmcl_surfacecopy_1_arg, clnt);
 	if (result_22 == NULL) {
 		clnt_perror(clnt, "call failed:");
 	}
-	result_23 = vmcl_imagefill_1(&vmcl_imagefill_1_arg, clnt);
+	result_23 = vmcl_imagefill_2(&vmcl_imagefill_1_arg, clnt);
 	if (result_23 == NULL) {
 		clnt_perror(clnt, "call failed:");
 	}
-	result_24 = vmcl_sampleralloc_1(&vmcl_sampleralloc_1_arg, clnt);
+	result_24 = vmcl_sampleralloc_2(&vmcl_sampleralloc_1_arg, clnt);
 	if (result_24 == NULL) {
 		clnt_perror(clnt, "call failed:");
 	}
-	result_25 = vmcl_samplerdestroy_1(&vmcl_samplerdestroy_1_arg, clnt);
+	result_25 = vmcl_samplerdestroy_2(&vmcl_samplerdestroy_1_arg, clnt);
 	if (result_25 == NULL) {
 		clnt_perror(clnt, "call failed:");
 	}
@@ -284,7 +241,7 @@ static void vmcl_1(char *host, char *spirv) {
       vmcl_kernelalloc_1_arg.source.source_val = (void *)kernelSource;
    }
 
-   result_26 = vmcl_kernelalloc_1(&vmcl_kernelalloc_1_arg, clnt);
+   result_26 = vmcl_kernelalloc_2(&vmcl_kernelalloc_1_arg, clnt);
    if (result_26 == NULL) {
       clnt_perror(clnt, "call failed:");
    }
@@ -324,7 +281,7 @@ static void vmcl_1(char *host, char *spirv) {
       sizeof(kernelArgs) / sizeof(kernelArgs[0]);
    vmcl_dispatch_1_arg.args.args_val = &kernelArgs[0];
 
-   result_28 = vmcl_dispatch_1(&vmcl_dispatch_1_arg, clnt);
+   result_28 = vmcl_dispatch_2(&vmcl_dispatch_1_arg, clnt);
    if (result_28 == NULL) {
       clnt_perror(clnt, "call failed:");
    }
@@ -336,7 +293,7 @@ static void vmcl_1(char *host, char *spirv) {
    vmcl_surfacemap_1_arg.op.size.x = sizeof(buffer);
    vmcl_surfacemap_1_arg.op.mapFlags = VMACCEL_MAP_READ_FLAG;
 
-   result_20 = vmcl_surfacemap_1(&vmcl_surfacemap_1_arg, clnt);
+   result_20 = vmcl_surfacemap_2(&vmcl_surfacemap_1_arg, clnt);
    if (result_20 == NULL) {
       clnt_perror(clnt, "call failed:");
    }
@@ -362,7 +319,7 @@ static void vmcl_1(char *host, char *spirv) {
       vmcl_surfaceunmap_1_arg.op.ptr.ptr_len = vmcl_surfacemap_1_arg.op.size.x;
       vmcl_surfaceunmap_1_arg.op.ptr.ptr_val = (void *)ptr;
 
-      result_21 = vmcl_surfaceunmap_1(&vmcl_surfaceunmap_1_arg, clnt);
+      result_21 = vmcl_surfaceunmap_2(&vmcl_surfaceunmap_1_arg, clnt);
       if (result_21 == NULL) {
          clnt_perror(clnt, "call failed:");
       }
@@ -370,34 +327,34 @@ static void vmcl_1(char *host, char *spirv) {
 
    vmcl_kerneldestroy_1_arg = vmcl_kernelalloc_1_arg.client;
 
-   result_27 = vmcl_kerneldestroy_1(&vmcl_kerneldestroy_1_arg, clnt);
+   result_27 = vmcl_kerneldestroy_2(&vmcl_kerneldestroy_1_arg, clnt);
    if (result_27 == NULL) {
       clnt_perror(clnt, "call failed:");
    }
 
    vmcl_queueflush_1_arg = vmcl_queuealloc_1_arg.client;
 
-   result_15 = vmcl_queueflush_1(&vmcl_queueflush_1_arg, clnt);
+   result_15 = vmcl_queueflush_2(&vmcl_queueflush_1_arg, clnt);
    if (result_15 == NULL) {
       clnt_perror(clnt, "call failed:");
    }
 
    vmcl_queuedestroy_1_arg = vmcl_queuealloc_1_arg.client;
 
-   result_8 = vmcl_queuedestroy_1(&vmcl_queuedestroy_1_arg, clnt);
+   result_8 = vmcl_queuedestroy_2(&vmcl_queuedestroy_1_arg, clnt);
    if (result_8 == NULL) {
       clnt_perror(clnt, "call failed:");
    }
 
    vmcl_surfacedestroy_1_arg = vmcl_surfacealloc_1_arg.client;
 
-   result_4 = vmcl_surfacedestroy_1(&vmcl_surfacedestroy_1_arg, clnt);
+   result_4 = vmcl_surfacedestroy_2(&vmcl_surfacedestroy_1_arg, clnt);
    if (result_4 == NULL) {
       clnt_perror(clnt, "call failed:");
    }
 
    vmcl_contextdestroy_1_arg = cid;
-   result_2 = vmcl_contextdestroy_1(&vmcl_contextdestroy_1_arg, clnt);
+   result_2 = vmcl_contextdestroy_2(&vmcl_contextdestroy_1_arg, clnt);
    if (result_2 == NULL) {
       clnt_perror(clnt, "call failed:");
    }

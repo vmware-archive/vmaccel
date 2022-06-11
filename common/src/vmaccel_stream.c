@@ -252,16 +252,16 @@ static void *StreamTCPServerThread(void *args) {
 #if DEBUG_STREAMS
             VMACCEL_LOG("Stream[%d][%d]: Type=%d Rx %d bytes\n", s->stream.type,
                         s->stream.index, p.type, p.len);
-            VMACCEL_LOG(
-               "Stream[%d][%d]: Type=%d Mapped sid=%d, generation=%d -> %p len=%d\n",
-               s->stream.type, s->stream.index, p.type, p.desc.cl.op.surf.id,
-               p.desc.cl.op.surf.generation,
-               mapStatus->ptr.ptr_val, mapStatus->ptr.ptr_len);
+            VMACCEL_LOG("Stream[%d][%d]: Type=%d Mapped sid=%d, generation=%d "
+                        "-> %p len=%d\n",
+                        s->stream.type, s->stream.index, p.type,
+                        p.desc.cl.op.surf.id, p.desc.cl.op.surf.generation,
+                        mapStatus->ptr.ptr_val, mapStatus->ptr.ptr_len);
 #endif
 
             if (rxLen > mapStatus->ptr.ptr_len) {
-               VMACCEL_WARNING("Stream[%d][%d]: Overflow detected\n", s->stream.type,
-                               s->stream.index);
+               VMACCEL_WARNING("Stream[%d][%d]: Overflow detected\n",
+                               s->stream.type, s->stream.index);
                rxLen = -1;
                END_TIME_STAT(
                   StreamTCPServerThread_VMACCEL_STREAM_TYPE_VMCL_UPLOAD);
@@ -269,13 +269,14 @@ static void *StreamTCPServerThread(void *args) {
             }
 
             while (g_exitSvrThreads == 0 && rxLen > 0) {
-               rxSize = recv(clntFD, mapStatus->ptr.ptr_val + rxOffset,
-                             rxLen, 0);
+               rxSize =
+                  recv(clntFD, mapStatus->ptr.ptr_val + rxOffset, rxLen, 0);
 
 #if DEBUG_STREAMS
-               VMACCEL_LOG("Stream[%d][%d]: exit=%d rxOffset=%ld rxLen=%ld, rxSize=%d\n",
-                           s->stream.type, s->stream.index, g_exitSvrThreads,
-                           rxOffset, rxLen, rxSize);
+               VMACCEL_LOG(
+                  "Stream[%d][%d]: exit=%d rxOffset=%ld rxLen=%ld, rxSize=%d\n",
+                  s->stream.type, s->stream.index, g_exitSvrThreads, rxOffset,
+                  rxLen, rxSize);
 #endif
                if (rxSize <= 0) {
                   break;
@@ -296,8 +297,7 @@ static void *StreamTCPServerThread(void *args) {
 
 #if DEBUG_STREAMS
             VMACCEL_LOG("Stream[%d][%d]: Type=%d Rx complete in %d passes\n",
-                        s->stream.type, s->stream.index, p.type,
-                        numPasses);
+                        s->stream.type, s->stream.index, p.type, numPasses);
 #endif
 
             if (rxLen < 0) {
@@ -395,7 +395,8 @@ static int StreamTCPClientSend(VMAccelStreamSend *s) {
 
    // Mutex the client FD for the time of the transmission
    if (send(g_clntFD[s->type][s->index], &p, sizeof(p), 0) != sizeof(p)) {
-      VMACCEL_WARNING("Unable to send packet type=%d index=%d\n", s->type, s->index);
+      VMACCEL_WARNING("Unable to send packet type=%d index=%d\n", s->type,
+                      s->index);
       END_TIME_STAT(StreamTCPClientSend);
       return VMACCEL_FAIL;
    }
@@ -429,8 +430,8 @@ static void *StreamTCPClientThread(void *args) {
    START_TIME_STAT(StreamTCPClientThread);
 
 #if DEBUG_STREAMS
-   VMACCEL_LOG("%s: Starting thread type=%d index=%d\n", __FUNCTION__,
-               s->type, s->index);
+   VMACCEL_LOG("%s: Starting thread type=%d index=%d\n", __FUNCTION__, s->type,
+               s->index);
 #endif
 
    ret = pthread_getschedparam(pthread_self(), &policy, &param);
@@ -479,8 +480,8 @@ static void *StreamTCPClientThread(void *args) {
       ConfigureSocket(clntFD, TCP_RCV_BUFFER_SIZE, TCP_SND_BUFFER_SIZE);
 
       if (connect(clntFD, (struct sockaddr *)&clnt, sizeof(clnt)) < 0) {
-         VMACCEL_WARNING("Unable to connect to server %s:%d\n",
-                         host, s->accel.port + s->index);
+         VMACCEL_WARNING("Unable to connect to server %s:%d\n", host,
+                         s->accel.port + s->index);
          close(clntFD);
          clntFD = -1;
          IdentifierDB_ReleaseId(g_svrDB[s->type], s->index);
@@ -529,8 +530,8 @@ int vmaccel_stream_send_async(VMAccelAddress *a, unsigned int type, void *args,
    struct sched_param param;
    START_TIME_STAT(vmaccel_stream_send_async);
 
-   VMACCEL_LOG("%s: addr_val=%p addr_len=%d\n", __FUNCTION__,
-               a->addr.addr_val, a->addr.addr_len);
+   VMACCEL_LOG("%s: addr_val=%p addr_len=%d\n", __FUNCTION__, a->addr.addr_val,
+               a->addr.addr_len);
 
    ret = pthread_getschedparam(pthread_self(), &policy, &param);
 
@@ -615,8 +616,8 @@ int vmaccel_stream_send_async(VMAccelAddress *a, unsigned int type, void *args,
       }
 
 #if DEBUG_STREAMS
-      VMACCEL_LOG("%s: Created client thread type=%d index=%d\n",
-                  __FUNCTION__, type, index);
+      VMACCEL_LOG("%s: Created client thread type=%d index=%d\n", __FUNCTION__,
+                  type, index);
 #endif
       g_clntThread[type][index] = t;
    } else {

@@ -367,8 +367,8 @@ VMAccelAllocateStatus *vmwopencl_poweron(VMCLOps *ops, unsigned int accelArch,
     */
    if ((contexts == NULL) || (contextIds == NULL) || (surfaces == NULL) ||
        (surfaceIds == NULL) || (queues == NULL) || (queueIds == NULL) ||
-       (samplers == NULL) || (samplerIds == NULL) ||
-       (kernels == NULL) || (kernelIds == NULL)) {
+       (samplers == NULL) || (samplerIds == NULL) || (kernels == NULL) ||
+       (kernelIds == NULL)) {
       VMACCEL_WARNING("Unable to allocate object database...\n");
       result.status = VMACCEL_FAIL;
       vmwopencl_poweroff();

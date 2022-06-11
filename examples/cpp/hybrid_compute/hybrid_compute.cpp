@@ -300,8 +300,8 @@ int main(int argc, char **argv) {
    address localAddr(localAddr);
    address mgrAddr(host);
    work_topology workTopology({0}, {numRows}, {numColumns});
-   ref_object<accelerator> localAccel(new accelerator(
-      mgrAddr, VMACCEL_MAX_REF_OBJECTS, true, false));
+   ref_object<accelerator> localAccel(
+      new accelerator(mgrAddr, VMACCEL_MAX_REF_OBJECTS, true, false));
    ref_object<accelerator> remoteAccel(new accelerator(
       mgrAddr, VMACCEL_MAX_REF_OBJECTS, false, ENABLE_DATA_STREAMING));
 

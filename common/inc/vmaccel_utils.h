@@ -29,9 +29,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _VMACCEL_UTILS_H_
 #define _VMACCEL_UTILS_H_ 1
 
+#include "vmaccel_rpc.h"
 #include <stdbool.h>
 #include <time.h>
-#include "vmaccel_rpc.h"
 
 #define DEBUG_OBJECT_LIFETIME 0
 #define DEBUG_TEMPLATE_TYPES 0
