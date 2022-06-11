@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Copyright (c) 2016-2019 VMware, Inc.
+Copyright (c) 2016-2022 VMware, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -40,7 +40,8 @@ typedef struct VMCLOps {
     * Management Plane
     */
    VMAccelAllocateStatus *(*poweron)(struct VMCLOps *, unsigned int accelArch,
-                                     unsigned int accelIndex);
+                                     unsigned int accelIndex,
+                                     unsigned int useDataStreaming);
    VMAccelStatus *(*poweroff)(void);
    VMAccelStatus *(*checkpoint)(void);
    VMAccelStatus *(*restore)(void);
@@ -76,7 +77,8 @@ typedef struct VMCLOps {
    VMAccelStatus *(*dispatch_1)(VMCLDispatchOp *);
 } VMCLOps;
 
-VMAccelAllocateStatus *vmcl_poweron_svc(VMCLOps *ops);
+VMAccelAllocateStatus *vmcl_poweron_svc(VMCLOps *ops,
+                                        unsigned int useDataStreaming);
 VMAccelStatus *vmcl_poweroff_svc();
 
 #endif /* !defined _VMCL_OPS_H_ */

@@ -78,6 +78,8 @@ static void LogThreadScheduleAttr(const char *prefix, int policy,
 }
 
 int vmaccel_stream_poweron() {
+   VMACCEL_LOG("%s: Stream module poweron\n", __FUNCTION__);
+
    for (int j = 0; j < VMACCEL_STREAM_TYPE_MAX; j++) {
       g_svrDB[j] = IdentifierDB_Alloc(VMACCEL_MAX_STREAMS);
       for (int i = 0; i < VMACCEL_MAX_STREAMS; i++) {
@@ -258,16 +260,26 @@ static void *StreamTCPServerThread(void *args) {
 #endif
 
             if (rxLen > mapStatus->ptr.ptr_len) {
-               VMACCEL_WARNING("Overflow detected\n");
+               VMACCEL_WARNING("Stream[%d][%d]: Overflow detected\n", s->stream.type,
+                               s->stream.index);
                rxLen = -1;
                END_TIME_STAT(
                   StreamTCPServerThread_VMACCEL_STREAM_TYPE_VMCL_UPLOAD);
                break;
             }
 
-            while (g_exitSvrThreads == 0 && rxLen > 0 &&
-                   ((rxSize = recv(clntFD, mapStatus->ptr.ptr_val + rxOffset,
-                                   rxLen, 0)) > 0)) {
+            while (g_exitSvrThreads == 0 && rxLen > 0) {
+               rxSize = recv(clntFD, mapStatus->ptr.ptr_val + rxOffset,
+                             rxLen, 0);
+
+#if DEBUG_STREAMS
+               VMACCEL_LOG("Stream[%d][%d]: exit=%d rxOffset=%ld rxLen=%ld, rxSize=%d\n",
+                           s->stream.type, s->stream.index, g_exitSvrThreads,
+                           rxOffset, rxLen, rxSize);
+#endif
+               if (rxSize <= 0) {
+                  break;
+               }
                if (rxLen - rxSize < 0) {
                   rxLen = -1;
                   break;
@@ -417,7 +429,8 @@ static void *StreamTCPClientThread(void *args) {
    START_TIME_STAT(StreamTCPClientThread);
 
 #if DEBUG_STREAMS
-   VMACCEL_LOG("%s: Starting thread\n", __FUNCTION__);
+   VMACCEL_LOG("%s: Starting thread type=%d index=%d\n", __FUNCTION__,
+               s->type, s->index);
 #endif
 
    ret = pthread_getschedparam(pthread_self(), &policy, &param);
@@ -440,6 +453,7 @@ static void *StreamTCPClientThread(void *args) {
 
       if (!VMAccel_AddressOpaqueAddrToString(&s->accel, host, sizeof(host))) {
          VMACCEL_WARNING("Unable to translate VMAccelAddress host=%s\n", host);
+         IdentifierDB_ReleaseId(g_svrDB[s->type], s->index);
          END_TIME_STAT(StreamTCPClientThread);
          return args;
       }
@@ -453,6 +467,7 @@ static void *StreamTCPClientThread(void *args) {
 
       if (clntFD == -1) {
          VMACCEL_WARNING("Server connection unavailable.\n");
+         IdentifierDB_ReleaseId(g_svrDB[s->type], s->index);
          END_TIME_STAT(StreamTCPClientThread);
          return args;
       }
@@ -465,9 +480,10 @@ static void *StreamTCPClientThread(void *args) {
 
       if (connect(clntFD, (struct sockaddr *)&clnt, sizeof(clnt)) < 0) {
          VMACCEL_WARNING("Unable to connect to server %s:%d\n",
-                         s->accel.addr.addr_val, s->accel.port + s->index);
+                         host, s->accel.port + s->index);
          close(clntFD);
          clntFD = -1;
+         IdentifierDB_ReleaseId(g_svrDB[s->type], s->index);
          END_TIME_STAT(StreamTCPClientThread);
          return args;
       }
@@ -483,7 +499,10 @@ static void *StreamTCPClientThread(void *args) {
 
    StreamTCPClientSend(s);
 
+   IdentifierDB_ReleaseId(g_svrDB[s->type], s->index);
+
 #if DEBUG_STREAMS
+   // Do not re-use the connection
    close(g_clntFD[s->type][s->index]);
    g_clntFD[s->type][s->index] = -1;
    VMACCEL_LOG("%s: Exiting thread\n", __FUNCTION__);
@@ -509,6 +528,9 @@ int vmaccel_stream_send_async(VMAccelAddress *a, unsigned int type, void *args,
    int policy, ret;
    struct sched_param param;
    START_TIME_STAT(vmaccel_stream_send_async);
+
+   VMACCEL_LOG("%s: addr_val=%p addr_len=%d\n", __FUNCTION__,
+               a->addr.addr_val, a->addr.addr_len);
 
    ret = pthread_getschedparam(pthread_self(), &policy, &param);
 
@@ -542,7 +564,7 @@ int vmaccel_stream_send_async(VMAccelAddress *a, unsigned int type, void *args,
                   " client threads...\n",
                   __FUNCTION__);
       for (int i = 0; i < VMACCEL_MAX_STREAMS; i++) {
-         if (pthread_join(g_clntThread[type][i], &res)) {
+         if (pthread_join(g_clntThread[type][i], &res) != 0) {
             VMACCEL_WARNING("Unable to join thread 0x%lx\n",
                             g_clntThread[type][i]);
             END_TIME_STAT(vmaccel_stream_send_async);
@@ -592,6 +614,10 @@ int vmaccel_stream_send_async(VMAccelAddress *a, unsigned int type, void *args,
          return VMACCEL_FAIL;
       }
 
+#if DEBUG_STREAMS
+      VMACCEL_LOG("%s: Created client thread type=%d index=%d\n",
+                  __FUNCTION__, type, index);
+#endif
       g_clntThread[type][index] = t;
    } else {
       VMACCEL_WARNING("Unable to set thread attributes\n");
@@ -604,6 +630,8 @@ int vmaccel_stream_send_async(VMAccelAddress *a, unsigned int type, void *args,
 
 
 void vmaccel_stream_poweroff() {
+   VMACCEL_LOG("%s: Stream module poweroff\n", __FUNCTION__);
+
    if ((g_initClntThreads > 0 || g_initSvrThreads > 0) &&
        (g_exitClntThreads > 0 || g_exitSvrThreads > 0)) {
       VMACCEL_WARNING("%s: Called poweroff multiple times for the process\n",

@@ -250,7 +250,7 @@ int main(int argc, char **argv) {
 
    vmaccel_stream_poweron();
 
-   allocStatus = vmcl_poweron_svc(NULL);
+   allocStatus = vmcl_poweron_svc(NULL, ENABLE_DATA_STREAMING);
 
    if ((allocStatus == NULL) || (allocStatus->status != VMACCEL_SUCCESS)) {
       VMACCEL_WARNING("Failed to power on VMCL...\n");

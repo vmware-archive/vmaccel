@@ -251,6 +251,8 @@ bool VMAccel_AddressOpaqueAddrToString(const VMAccelAddress *addr, char *out,
                                        int len) {
    // Enough to hold three digits per byte
    if (len < 4 * addr->addr.addr_len) {
+      VMACCEL_LOG("%s: len=%d addr_len=%d\n", __FUNCTION__,
+                  len, addr->addr.addr_len);
       return false;
    }
    if (addr->addr.addr_len == 4) {
@@ -260,11 +262,15 @@ bool VMAccel_AddressOpaqueAddrToString(const VMAccelAddress *addr, char *out,
       strcpy(out, inet_ntoa(inetaddr));
       return true;
    }
+   VMACCEL_LOG("%s: len=%d addr_val=%p addr_len=%d\n", __FUNCTION__,
+               len, addr->addr.addr_val, addr->addr.addr_len);
    memset(out, 0, len);
    return false;
 }
 
 bool VMAccel_AddressStringToOpaqueAddr(const char *addr, char *out, int len) {
+   VMACCEL_LOG("%s: addr=%s len=%d\n", __FUNCTION__,
+               addr, len);
    if (len == 4) {
       // IPV4
       assert(sizeof(in_addr_t) == 4);
